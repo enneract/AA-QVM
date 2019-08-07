@@ -2704,7 +2704,7 @@ void Cmd_Class_f( gentity_t *ent )
   int       num;
   gentity_t *other;
   qboolean  humanNear = qfalse;
-
+  int       oldBoostTime = -1;
 
   clientNum = ent->client - level.clients;
   trap_Argv( 1, s, sizeof( s ) );
@@ -2892,7 +2892,14 @@ void Cmd_Class_f( gentity_t *ent )
           ent->client->pers.classSelection = newClass;
           ClientUserinfoChanged( clientNum, qfalse );
           VectorCopy( infestOrigin, ent->s.pos.trBase );
+          if( ent->client->ps.stats[ STAT_STATE ] & SS_BOOSTED )
+            oldBoostTime = ent->client->lastBoostedTime;
           ClientSpawn( ent, ent, ent->s.pos.trBase, ent->s.apos.trBase );
+          if( oldBoostTime > 0 )
+          {
+            ent->client->lastBoostedTime = oldBoostTime;
+            ent->client->ps.stats[ STAT_STATE ] |= SS_BOOSTED;
+          }
           return;
         }
         else
