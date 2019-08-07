@@ -1487,9 +1487,6 @@ void ABooster_Touch( gentity_t *self, gentity_t *other, trace_t *trace )
 {
   gclient_t *client = other->client;
 
-  if( other->flags & FL_NOTARGET )
-    return; // notarget cancels even beneficial effects?
-
   if( !self->spawned || self->health <= 0 )
     return;
 
@@ -1502,15 +1499,8 @@ void ABooster_Touch( gentity_t *self, gentity_t *other, trace_t *trace )
   if( client && client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
     return;
 
-  //only allow boostage once every 30 seconds
-  if( client->lastBoostedTime + BOOSTER_INTERVAL > level.time )
-    return;
-
-  if( !( client->ps.stats[ STAT_STATE ] & SS_BOOSTED ) )
-  {
-    client->ps.stats[ STAT_STATE ] |= SS_BOOSTED;
-    client->lastBoostedTime = level.time;
-  }
+  client->ps.stats[ STAT_STATE ] |= SS_BOOSTED;
+  client->lastBoostedTime = level.time;
 }
 
 
