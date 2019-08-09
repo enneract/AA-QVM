@@ -2704,6 +2704,7 @@ void Cmd_Class_f( gentity_t *ent )
   int       num;
   gentity_t *other;
   qboolean  humanNear = qfalse;
+  vec3_t    oldVel;
   int       oldBoostTime = -1;
 
   clientNum = ent->client - level.clients;
@@ -2892,9 +2893,11 @@ void Cmd_Class_f( gentity_t *ent )
           ent->client->pers.classSelection = newClass;
           ClientUserinfoChanged( clientNum, qfalse );
           VectorCopy( infestOrigin, ent->s.pos.trBase );
+          VectorCopy( ent->client->ps.velocity, oldVel );
           if( ent->client->ps.stats[ STAT_STATE ] & SS_BOOSTED )
             oldBoostTime = ent->client->lastBoostedTime;
           ClientSpawn( ent, ent, ent->s.pos.trBase, ent->s.apos.trBase );
+          VectorCopy( oldVel, ent->client->ps.velocity );
           if( oldBoostTime > 0 )
           {
             ent->client->lastBoostedTime = oldBoostTime;
