@@ -1023,7 +1023,7 @@ void poisonCloud( gentity_t *ent )
   vec3_t    range = { LEVEL1_PCLOUD_RANGE, LEVEL1_PCLOUD_RANGE, LEVEL1_PCLOUD_RANGE };
   vec3_t    mins, maxs;
   int       i, num;
-  gentity_t *humanPlayer;
+  gentity_t *target;
   trace_t   tr;
 
   VectorAdd( ent->client->ps.origin, range, maxs );
@@ -1033,29 +1033,39 @@ void poisonCloud( gentity_t *ent )
   num = trap_EntitiesInBox( mins, maxs, entityList, MAX_GENTITIES );
   for( i = 0; i < num; i++ )
   {
-    humanPlayer = &g_entities[ entityList[ i ] ];
+    target = &g_entities[ entityList[ i ] ];
 
-    if( humanPlayer->client && humanPlayer->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
+    if( target->client && target->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
     {
-      if( BG_InventoryContainsUpgrade( UP_LIGHTARMOUR, humanPlayer->client->ps.stats ) )
+      if( BG_InventoryContainsUpgrade( UP_LIGHTARMOUR, target->client->ps.stats ) )
         continue;
 
-      if( BG_InventoryContainsUpgrade( UP_BATTLESUIT, humanPlayer->client->ps.stats ) )
+      if( BG_InventoryContainsUpgrade( UP_BATTLESUIT, target->client->ps.stats ) )
         continue;
 
-      trap_Trace( &tr, muzzle, NULL, NULL, humanPlayer->s.origin, humanPlayer->s.number, MASK_SHOT );
+      trap_Trace( &tr, muzzle, NULL, NULL, target->s.origin, target->s.number, MASK_SHOT );
 
       //can't see target from here
       if( tr.entityNum == ENTITYNUM_WORLD )
         continue;
 
-      if( !( humanPlayer->client->ps.stats[ STAT_STATE ] & SS_POISONCLOUDED ) )
+      if( !( target->client->ps.stats[ STAT_STATE ] & SS_POISONCLOUDED ) )
       {
-        humanPlayer->client->ps.stats[ STAT_STATE ] |= SS_POISONCLOUDED;
-        humanPlayer->client->lastPoisonCloudedTime = level.time;
-        humanPlayer->client->lastPoisonCloudedClient = ent;
-        trap_SendServerCommand( humanPlayer->client->ps.clientNum, "poisoncloud" );
+        target->client->ps.stats[ STAT_STATE ] |= SS_POISONCLOUDED;
+        target->client->lastPoisonCloudedTime = level.time;
+        target->client->lastPoisonCloudedClient = ent;
+        trap_SendServerCommand( target->client->ps.clientNum, "poisoncloud" );
       }
+    }
+    if( target->client && target->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
+    {
+      trap_Trace( &tr, muzzle, NULL, NULL, target->s.origin, target->s.number, MASK_SOLID );
+
+      if( tr.entityNum == ENTITYNUM_WORLD )
+        continue;
+
+      target->client->ps.stats[ STAT_STATE ] |= SS_BOOSTED;
+      target->client->lastBoostedTime = MAX( target->client->lastBoostedTime, level.time - BOOST_TIME + LEVEL1_PCLOUD_BOOST_TIME );
     }
   }
   G_UnlaggedOff( );
