@@ -384,7 +384,13 @@ g_admin_cmd_t g_admin_cmds[ ] =
     {"astage", G_admin_astage, "stage",
       "change the stage for aliens",
       "[^3#^7]"
+    },
+
+    {"bubble", G_admin_bubble, "bubble",
+      "continuously spawn bubbles around a player",
+      "[^3name|slot#^7]"
     }
+
   };
 
 static int adminNumCmds = sizeof( g_admin_cmds ) / sizeof( g_admin_cmds[ 0 ] );
@@ -7525,6 +7531,59 @@ qboolean G_admin_astage( gentity_t *ent, int skiparg )
   lvl -= 1;
   trap_SendConsoleCommand( EXEC_APPEND, va( "g_alienStage %i", lvl ) );
 
+  return qtrue;
+
+}
+
+qboolean G_admin_bubble( gentity_t *ent, int skiparg )
+{
+  int pids[ MAX_CLIENTS ];
+  char name[ MAX_NAME_LENGTH ], err[ MAX_STRING_CHARS ];
+  gentity_t *vic;
+
+  if(g_Bubbles.integer)
+  {
+   if( G_SayArgc() < 2 + skiparg )
+   {
+     ADMP( "^3!bubble: ^7usage: !bubble [name|slot#]\n" );
+     return qfalse;
+   }
+   G_SayArgv( 1 + skiparg, name, sizeof( name ) );
+   if( G_ClientNumbersFromString( name, pids ) != 1 )
+   {
+     G_MatchOnePlayer( pids, err, sizeof( err ) );
+     ADMP( va( "^3!bubble: ^7%s\n", err ) );
+     return qfalse;
+   }
+  vic = &g_entities[ pids[ 0 ] ];
+  if(vic->client->sess.invisible == qtrue)
+ {
+    ADMP( va( "^3!bubble: ^7no connected player by that name or slot #\n" ) );
+    return qfalse;
+ }
+   if( !admin_higher( ent, &g_entities[ pids[ 0 ] ] ) )
+   {
+     ADMP( "^3!bubble: ^7sorry, but your intended victim has a higher admin"
+         " level than you\n" );
+     return qfalse;
+  }
+
+
+  if( vic->client->pers.bubbleTime )
+    vic->client->pers.bubbleTime = 0;
+  else
+    vic->client->pers.bubbleTime = level.time + 500;
+
+  AP( va( "print \"^3!bubble: ^7bubbles %s for %s^7 by %s\n\"",
+    ( vic->client->pers.bubbleTime ) ? "enabled" : "disabled",
+    vic->client->pers.netname,
+    ( ent ) ? G_admin_adminPrintName( ent ) : "console" ) );
+  }
+  else
+  {
+     ADMP( "^3!bubble: ^7sorry, but bubbles have been disabled on this server.\n" );
+     return qfalse;
+  }
   return qtrue;
 
 }

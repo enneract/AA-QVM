@@ -449,6 +449,7 @@ typedef struct
   qboolean            firstConnect;        // This is the first map since connect
   qboolean            useUnlagged;
   statsCounters_t     statscounters;
+  int                 bubbleTime;
 } clientPersistant_t;
 
 #define MAX_UNLAGGED_MARKERS 10
@@ -1482,6 +1483,8 @@ extern  vmCvar_t  g_teamKillThreshold;
 extern  vmCvar_t  g_aimbotAdvertBan;
 extern  vmCvar_t  g_aimbotAdvertBanTime;
 extern  vmCvar_t  g_aimbotAdvertBanReason;
+
+extern  vmCvar_t  g_Bubbles;
 
 void      trap_Printf( const char *fmt );
 void      trap_Error( const char *fmt );

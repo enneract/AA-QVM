@@ -235,6 +235,8 @@ vmCvar_t  g_aimbotAdvertBan;
 vmCvar_t  g_aimbotAdvertBanTime;
 vmCvar_t  g_aimbotAdvertBanReason;
 
+vmCvar_t  g_Bubbles;
+
 static cvarTable_t   gameCvarTable[ ] =
 {
   // don't override the cheat state set by the system
@@ -445,7 +447,9 @@ static cvarTable_t   gameCvarTable[ ] =
 
   { &g_aimbotAdvertBan, "g_aimbotAdvertBan", "0", CVAR_ARCHIVE, 0, qfalse  },
   { &g_aimbotAdvertBanTime, "g_aimbotAdvertBanTime", "0", CVAR_ARCHIVE, 0, qfalse  },
-  { &g_aimbotAdvertBanReason, "g_aimbotAdvertBanReason", "AUTOBAN: AIMBOT", CVAR_ARCHIVE, 0, qfalse  }
+  { &g_aimbotAdvertBanReason, "g_aimbotAdvertBanReason", "AUTOBAN: AIMBOT", CVAR_ARCHIVE, 0, qfalse  },
+
+  { &g_Bubbles, "g_Bubbles", "1", CVAR_ARCHIVE, 0, qfalse  }
 };
 
 static int gameCvarTableSize = sizeof( gameCvarTable ) / sizeof( gameCvarTable[ 0 ] );

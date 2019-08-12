@@ -1874,6 +1874,14 @@ void ClientThink_real( gentity_t *ent )
 
     ent->suicideTime = 0;
   }
+  if( client->pers.bubbleTime && client->pers.bubbleTime < level.time )
+  {
+    gentity_t *bubble;
+
+    client->pers.bubbleTime = level.time + 500;
+    bubble = G_TempEntity( client->ps.origin, EV_PLAYER_TELEPORT_OUT );
+    bubble->s.clientNum = ent->s.clientNum;
+  }
 }
 
 /*
