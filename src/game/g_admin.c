@@ -4597,23 +4597,24 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
   int l;
   char lname_fmt[ 5 ];
 
+  //Get amount of invisible players
   for( i = 0; i < level.maxclients; i++ ) {
     p = &level.clients[ i ];
     if ( p->sess.invisible == qtrue )
       invisiblePlayers++;
   }
-  
+
   ADMBP_begin();
   ADMBP( va( "^3!listplayers^7: %i players connected:\n",
     level.numConnectedClients - invisiblePlayers ) );
   for( i = 0; i < level.maxclients; i++ )
   {
     p = &level.clients[ i ];
-    
+
     // Ignore invisible players
     if ( p->sess.invisible == qtrue )
       continue;
-    
+
     Q_strncpyz( t, "S", sizeof( t ) );
     Q_strncpyz( c, S_COLOR_YELLOW, sizeof( c ) );
     if( p->pers.teamSelection == PTE_HUMANS )
