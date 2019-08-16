@@ -59,6 +59,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  * ACTIVITY - inactivity rules do not apply to them
  * IMMUTABLE - admin commands cannot be used on them
  * INCOGNITO - does not show up as an admin in !listplayers
+ * SEESINCOGNITO - sees registered name of players flagged with INCOGNITO
  * ADMINCHAT - receives and can send /a admin messages
  * SEESFULLLISTPLAYERS - sees all information in !listplayers 
  * DBUILDER - permanent designated builder
@@ -84,6 +85,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define ADMF_IMMUTABLE           "IMMUTABLE"
 #define ADMF_INCOGNITO           "INCOGNITO"
+#define ADMF_SEESINCOGNITO		 "SEESINCOGNITO"
 #define ADMF_ADMINCHAT           "ADMINCHAT"
 #define ADMF_HIGHADMINCHAT       "HIGHADMINCHAT"
 #define ADMF_SEESFULLLISTPLAYERS "SEESFULLLISTPLAYERS"

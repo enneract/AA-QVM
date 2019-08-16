@@ -2320,6 +2320,7 @@ static AdminFlagListEntry_t adminFlagList[] =
   { ADMF_DBUILDER,             "permanent designated builder" },
   { ADMF_FORCETEAMCHANGE,      "team balance rules do not apply" },
   { ADMF_INCOGNITO,            "does not show as admin in !listplayers" },
+  { ADMF_SEESINCOGNITO,        "sees registered name of players flagged with INCOGNITO" },
   { ADMF_IMMUNITY,             "cannot be vote kicked or muted" },
   { ADMF_IMMUTABLE,            "admin commands cannot be used on them" },
   { ADMF_NOCENSORFLOOD,        "no flood protection" },
@@ -4689,7 +4690,7 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
       {
 
         // don't gather aka or level info if the admin is incognito
-        if( ent && G_admin_permission( &g_entities[ i ], ADMF_INCOGNITO ) )
+        if( ent && G_admin_permission( &g_entities[ i ], ADMF_INCOGNITO ) && !G_admin_permission(ent, ADMF_SEESINCOGNITO) )
         {
           break;
         }
