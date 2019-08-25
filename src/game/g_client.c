@@ -1619,6 +1619,11 @@ void ClientBegin( int clientNum )
     // name can change between ClientConnect() and ClientBegin()
     G_admin_namelog_update( client, qfalse );
 
+    if( g_scrimMode.integer == 1 )
+    {
+    ADMP( "^5Scrim mode is enabled. Teams are locked and you can only use spectator chat.\n" );  
+    }
+
     // request the clients PTR code
     trap_SendServerCommand( ent - g_entities, "ptrcrequest" );
   }
