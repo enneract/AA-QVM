@@ -268,6 +268,7 @@ qboolean G_admin_hstage( gentity_t *ent, int skiparg );
 qboolean G_admin_astage( gentity_t *ent, int skiparg );
 qboolean G_admin_bubble( gentity_t *ent, int skiparg );
 qboolean G_admin_scrim( gentity_t *ent, int skiparg );
+qboolean G_admin_give( gentity_t *ent, int skiparg );
 
 void G_admin_print( gentity_t *ent, char *m );
 void G_admin_buffer_print( gentity_t *ent, char *m );
