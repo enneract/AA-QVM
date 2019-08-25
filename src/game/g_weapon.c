@@ -323,7 +323,7 @@ void bulletFire( gentity_t *ent, float spread, int damage, int mod )
   if( traceEnt->takedamage )
   {
     G_Damage( traceEnt, ent, ent, forward, tr.endpos,
-      damage, 0, mod );
+      damage, DAMAGE_NO_KNOCKBACK, mod );
   }
 }
 
@@ -367,7 +367,7 @@ void ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, gentity_t *ent )
     if( !( tr.surfaceFlags & SURF_NOIMPACT ) )
     {
       if( traceEnt->takedamage )
-        G_Damage( traceEnt, ent, ent, forward, tr.endpos,  SHOTGUN_DMG, 0, MOD_SHOTGUN );
+        G_Damage( traceEnt, ent, ent, forward, tr.endpos,  SHOTGUN_DMG, DAMAGE_NO_KNOCKBACK, MOD_SHOTGUN );
     }
   }
 }
@@ -437,7 +437,7 @@ void massDriverFire( gentity_t *ent )
   if( traceEnt->takedamage )
   {
     G_Damage( traceEnt, ent, ent, forward, tr.endpos,
-      MDRIVER_DMG, 0, MOD_MDRIVER );
+      MDRIVER_DMG, DAMAGE_NO_KNOCKBACK, MOD_MDRIVER );
   }
 }
 
@@ -591,7 +591,7 @@ void lasGunFire( gentity_t *ent )
   }
 
   if( traceEnt->takedamage )
-    G_Damage( traceEnt, ent, ent, forward, tr.endpos, LASGUN_DAMAGE, 0, MOD_LASGUN );
+    G_Damage( traceEnt, ent, ent, forward, tr.endpos, LASGUN_DAMAGE, DAMAGE_NO_KNOCKBACK, MOD_LASGUN );
 }
 
 /*
