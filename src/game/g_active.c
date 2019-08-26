@@ -833,7 +833,7 @@ void ClientTimerActions( gentity_t *ent, int msec )
       level.surrenderTeam != PTE_ALIENS )
     {
       int       entityList[ MAX_GENTITIES ];
-      vec3_t    range = { LEVEL4_REGEN_RANGE, LEVEL4_REGEN_RANGE, LEVEL4_REGEN_RANGE };
+      vec3_t    range = { LEVEL1_REGEN_RANGE, LEVEL1_REGEN_RANGE, LEVEL1_REGEN_RANGE };
       vec3_t    mins, maxs;
       int       i, num;
       gentity_t *boostEntity;
@@ -848,9 +848,9 @@ void ClientTimerActions( gentity_t *ent, int msec )
         boostEntity = &g_entities[ entityList[ i ] ];
 
         if( boostEntity->client && boostEntity->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS &&
-            boostEntity->client->ps.stats[ STAT_PCLASS ] == PCL_ALIEN_LEVEL4 )
+            boostEntity->client->ps.stats[ STAT_PCLASS ] == PCL_ALIEN_LEVEL1_UPG )
         {
-          modifier = LEVEL4_REGEN_MOD;
+          modifier = LEVEL1_REGEN_MOD;
           break;
         }
         else if( boostEntity->s.eType == ET_BUILDABLE &&
