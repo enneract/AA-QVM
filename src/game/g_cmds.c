@@ -5094,6 +5094,7 @@ commands_t cmds[ ] = {
   { "say_admins", CMD_MESSAGE|CMD_INTERMISSION, Cmd_Say_f },
   { "say_hadmins", CMD_MESSAGE|CMD_INTERMISSION, Cmd_Say_f },
   { "a", CMD_MESSAGE|CMD_INTERMISSION, Cmd_Say_f },
+  { "ha", CMD_MESSAGE|CMD_INTERMISSION, Cmd_Say_f },
   { "m", CMD_MESSAGE|CMD_INTERMISSION, G_PrivateMessage },
   { "mt", CMD_MESSAGE|CMD_INTERMISSION, G_PrivateMessage },
   { "me", CMD_MESSAGE|CMD_INTERMISSION, Cmd_Say_f },
