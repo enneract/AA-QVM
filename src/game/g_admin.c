@@ -4603,12 +4603,11 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
   char n3[ MAX_NAME_LENGTH ] = {""};
   char lname[ MAX_NAME_LENGTH ];
   char lname2[ MAX_NAME_LENGTH ];
-  char guid_stub[ 9 ];
-  char muted[ 2 ], denied[ 2 ], dbuilder[ 2 ], misc[ 2 ];
+  char muted[ 2 ], denied[ 2 ], dbuilder[ 2 ], immune[ 2 ], guidless[ 2 ];
   int l;
   char lname_fmt[ 5 ];
 
-  //Get amount of invisible players
+  //get amount of invisible players
   for( i = 0; i < level.maxclients; i++ ) {
     p = &level.clients[ i ];
     if ( p->sess.invisible == qtrue )
@@ -4616,7 +4615,7 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
   }
 
   ADMBP_begin();
-  ADMBP( va( "^3!listplayers^7: %i players connected:\n",
+  ADMBP( va( "^3!listplayers^7: %d players connected:\n",
     level.numConnectedClients - invisiblePlayers ) );
   for( i = 0; i < level.maxclients; i++ )
   {
@@ -4649,11 +4648,16 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
       continue;
     }
 
-    for( j = 0; j < 8; j++ )
-      guid_stub[ j ] = p->pers.guid[ j + 24 ];
-    guid_stub[ j ] = '\0';
-
+    guidless[ 0 ] = '\0';
+    if( !Q_stricmp( p->pers.guid, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ) )
+    {
+      Q_strncpyz( guidless, "G", sizeof( guidless ) );
+    }
     muted[ 0 ] = '\0';
+    if( G_admin_permission( &g_entities[ i ], ADMF_NO_VOTE ) )
+    {
+      Q_strncpyz( muted, "V", sizeof( muted ) );
+    }
     if( p->pers.muted )
     {
       Q_strncpyz( muted, "M", sizeof( muted ) );
@@ -4682,15 +4686,17 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
         Q_strncpyz( dbuilder, "D", sizeof( dbuilder ) );
       }
     }
-
-    misc[ 0 ] = '\0';
-    if( G_admin_permission( &g_entities[ i ], ADMF_BAN_IMMUNITY ) )
+    immune[ 0 ] = '\0';
+    if( G_admin_permission( &g_entities[ i ], ADMF_BAN_IMMUNITY ) &&
+        G_admin_permission(ent, ADMF_SEESFULLLISTPLAYERS ) )
     {
-      // use Misc slot for Immunity player status
-      Q_strncpyz( misc, "I", sizeof( misc ) );
-    } else if( p->pers.paused ) {
-      // use Misc slot for paused player status
-      Q_strncpyz( misc, "P", sizeof( misc ) );
+      Q_strncpyz( immune, "I", sizeof( immune ) );
+    }
+
+    if( p->pers.paused )
+    {
+      // use immunity slot for paused player status
+      Q_strncpyz( immune, "L", sizeof( immune ) );
     }
 
     l = 0;
@@ -4726,7 +4732,7 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
         {
           G_DecolorString( lname, lname2 );
           Com_sprintf( lname_fmt, sizeof( lname_fmt ), "%%%is",
-            ( admin_level_maxname + strlen( lname ) - strlen( lname2 ) ) );
+            ( admin_level_maxname + (int)( strlen( lname ) - strlen( lname2 ) ) ) );
           Com_sprintf( lname2, sizeof( lname2 ), lname_fmt, lname );
         }
         break;
@@ -4734,37 +4740,40 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
 
     }
 
-     if( G_admin_permission(ent, ADMF_SEESFULLLISTPLAYERS ) ) {
- 
-      ADMBP( va( "%2i %s%s^7 %-2i %s^7 (*%s) ^1%1s%1s%1s%1s^7 %s^7 %s%s^7%s\n",
+    if ( G_admin_permission(ent, ADMF_SEESFULLLISTPLAYERS ) ) {
+      ADMBP( va( "%2i %s%s^7 %-2i %s^7 ^1%1s%1s%1s%1s%1s^7 %s^7 %s%s^7%s\n",
                i,
                c,
                t,
                l,
                ( *lname ) ? lname2 : "", 
-               guid_stub,
+               immune,
                muted,
                dbuilder,
                denied,
-               misc,
+               guidless,
                p->pers.netname,
                ( *n ) ? "(a.k.a. " : "",
                n,
                ( *n ) ? ")" : ""
              ) );
-     }
-     else
-     {
-      ADMBP( va( "%2i %s%s^7 ^1%1s%1s%1s^7 %s^7\n",
+    } else {
+      ADMBP( va( "%2i %s%s^7 %-2i %s^7 ^1%1s%1s%1s%1s^7 %s^7 %s%s^7%s\n",
                i,
                c,
                t,
+               l,
+               ( *lname ) ? lname2 : "", 
+               immune,
                muted,
                dbuilder,
                denied,
-               p->pers.netname
+               p->pers.netname,
+               ( *n ) ? "(a.k.a. " : "",
+               n,
+               ( *n ) ? ")" : ""
              ) );
-     }
+    }
   }
   ADMBP_end();
   return qtrue;
