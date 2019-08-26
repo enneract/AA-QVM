@@ -399,6 +399,11 @@ g_admin_cmd_t g_admin_cmds[ ] =
     {"give", G_admin_give, "give",
       "give funds to a player",
       "[^3name|slot#^7] [^3amount^7]"
+    },
+
+    {"setrotation", G_admin_setrotation, "setrotation",
+      "sets the map rotation",
+      "[^3rotation^7]"
     }
 
   };
@@ -7744,4 +7749,43 @@ qboolean G_admin_give(gentity_t *ent, int skiparg)
 	   ent ? G_admin_adminPrintName(ent) : "console"));
 
 	return qtrue;
+}
+
+extern mapRotations_t mapRotations;
+
+qboolean G_admin_setrotation(gentity_t *ent, int skiparg)
+{
+  char new_rotation[MAX_NAME_LENGTH];
+  int i;
+
+  if (G_SayArgc() < 2 + skiparg)
+  {
+    ADMP("^3!setrotation: ^7usage: !setrotation [rotation]\n");
+    ADMP("Available rotations:\n");
+    goto rotationlist;
+  }
+
+  G_SayArgv(1 + skiparg, new_rotation, sizeof(new_rotation));
+
+  for( i = 0; i < mapRotations.numRotations; i++ )
+  {
+    if( Q_stricmp( mapRotations.rotations[ i ].name, new_rotation ) == 0 )
+    {
+      G_StartMapRotation(new_rotation, qfalse);
+      trap_SendServerCommand( -1, va("print \"^3!setrotation: ^7rotation ^3%s ^7was started by %s",
+        new_rotation, ent ? G_admin_adminPrintName(ent) : "console"));
+      return qtrue;
+    }
+  }
+  ADMP("^3!setrotation: ^7rotation not found. Available rotations:\n");
+  goto rotationlist;
+  rotationlist:
+  {
+    for( i = 0; i < mapRotations.numRotations; i++ )
+    {
+      ADMP(va("    %s\n", mapRotations.rotations[ i ].name));
+    }
+    ADMP(va("Number of available rotations: ^3%d\n", mapRotations.numRotations));
+  }
+  return qfalse;
 }
