@@ -766,6 +766,11 @@ pain function for Alien Spawn
 void ASpawn_Pain( gentity_t *self, gentity_t *attacker, int damage )
 {
   G_SetBuildableAnim( self, BANIM_PAIN1, qfalse );
+
+  if ( self->s.modelindex == BA_A_OVERMIND && self->health > 0 &&
+       attacker && attacker->client && attacker->client->pers.teamSelection == PTE_ALIENS )
+    G_TeamCommand( PTE_ALIENS, va( "print \"Overmind ^3DAMAGED^7 by ^1TEAMMATE^7 %s^7\n\"",
+                   attacker->client->pers.netname ));
 }
 
 
@@ -1806,6 +1811,27 @@ void HReactor_Think( gentity_t *self )
   }
 
   self->nextthink = level.time + BG_FindNextThinkForBuildable( self->s.modelindex );
+}
+
+/*
+================
+HReactor_Pain
+================
+*/
+
+void HReactor_Pain( gentity_t *self, gentity_t *attacker, int damage)
+{
+	if (self->health <= 0)
+		return;
+
+	if (!attacker || !attacker->client)
+		return;
+
+	if (attacker->client->pers.teamSelection != PTE_HUMANS)
+		return;
+
+	G_TeamCommand(PTE_HUMANS, va( "print \"Reactor ^3DAMAGED^7 by ^1TEAMMATE^7 %s^7\n\"",
+	              attacker->client->pers.netname));
 }
 
 //==================================================================================
@@ -3585,6 +3611,7 @@ static gentity_t *G_Build( gentity_t *builder, buildable_t buildable, vec3_t ori
       built->die = HSpawn_Die;
       built->use = HRepeater_Use;
       built->powered = built->active = qtrue;
+      built->pain = HReactor_Pain;
       break;
 
     case BA_H_REPEATER:
