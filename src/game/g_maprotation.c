@@ -680,8 +680,10 @@ static void G_IssueMapChange( int rotation )
   int   map = G_GetCurrentMap( rotation );
   char  cmd[ MAX_TOKEN_CHARS ];
   char  newmap[ MAX_CVAR_VALUE_STRING ];
+  char  currentmap[ MAX_CVAR_VALUE_STRING ];
 
   Q_strncpyz( newmap, mapRotations.rotations[rotation].maps[map].name, sizeof( newmap ));
+  trap_Cvar_VariableStringBuffer( "mapname", currentmap, sizeof( currentmap ));
 
   if (!Q_stricmp( newmap, "*VOTE*") )
   {
@@ -722,8 +724,14 @@ static void G_IssueMapChange( int rotation )
       mapRotations.rotations[ rotation ].maps[ map ].layouts );
   }
 
-  trap_SendConsoleCommand( EXEC_APPEND, va( "map %s\n",
-    newmap ) );
+  if( !Q_stricmp( currentmap, newmap ) )
+  {
+    trap_SendConsoleCommand( EXEC_APPEND, "map_restart\n" );
+  }
+  else
+  {
+    trap_SendConsoleCommand( EXEC_APPEND, va( "map %s\n", newmap ) );
+  }
 
   // load up map defaults if g_mapConfigs is set
   G_MapConfigs( newmap );
