@@ -503,6 +503,13 @@ static void nullDieFunction( gentity_t *self, gentity_t *inflictor, gentity_t *a
 {
 }
 
+static void G_BuildableDeathSound( gentity_t *self )
+{
+  gentity_t *snd = G_TempEntity( self->r.currentOrigin, EV_GENERAL_SOUND );
+  snd->s.eventParm = G_SoundIndex( BG_FindTeamForBuildable( self->s.modelindex ) == PTE_HUMANS ?
+                                   "sound/buildables/human/destroyed" : "sound/buildables/alien/construct2" );
+}
+
 /*
 ================
 freeBuildable
@@ -644,7 +651,9 @@ void ASpawn_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
   new->fate = ( attacker && attacker->client && attacker->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS ) ? BF_TEAMKILLED : BF_DESTROYED;
   new->next = NULL;
   G_LogBuild( new );
-  
+
+  G_BuildableDeathSound( self );
+
   G_SetBuildableAnim( self, BANIM_DESTROY1, qtrue );
   G_SetIdleBuildableAnim( self, BANIM_DESTROYED );
 
@@ -958,7 +967,9 @@ void ABarricade_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker,
   new->fate = ( attacker && attacker->client && attacker->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS ) ? BF_TEAMKILLED : BF_DESTROYED;
   new->next = NULL;
   G_LogBuild( new );
-    
+
+  G_BuildableDeathSound( self );
+
   G_SetBuildableAnim( self, BANIM_DESTROY1, qtrue );
   G_SetIdleBuildableAnim( self, BANIM_DESTROYED );
 
@@ -1407,6 +1418,8 @@ void AHovel_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
   new->fate = ( attacker && attacker->client && attacker->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS ) ? BF_TEAMKILLED : BF_DESTROYED;
   new->next = NULL;
   G_LogBuild( new );
+
+  G_BuildableDeathSound( self );
 
   VectorCopy( self->s.origin2, dir );
 
@@ -2480,7 +2493,9 @@ void HSpawn_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
   new->fate = ( attacker && attacker->client && attacker->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS ) ? BF_TEAMKILLED : BF_DESTROYED;
   new->next = NULL;
   G_LogBuild( new );
-    
+
+  G_BuildableDeathSound( self );
+
   //pretty events and cleanup
   G_SetBuildableAnim( self, BANIM_DESTROY1, qtrue );
   G_SetIdleBuildableAnim( self, BANIM_DESTROYED );
