@@ -422,6 +422,7 @@ typedef struct
   int                 ping;
 
   int                 lastTeamStatus;
+  int                 lastFreekillTime;
 
   int                 lastFloodTime;         // level.time of last flood-limited command
   int                 floodDemerits;         // number of flood demerits accumulated
@@ -507,8 +508,6 @@ struct gclient_s
   int                 rewardTime;       // clear the EF_AWARD_IMPRESSIVE, etc when time > this
 
   int                 airOutTime;
-
-  int                 lastKillTime;     // for multiple kill rewards
 
   qboolean            fireHeld;         // used for hook
   qboolean            fire2Held;        // used for alt fire
@@ -1486,6 +1485,7 @@ extern  vmCvar_t  g_aimbotAdvertBanReason;
 
 extern  vmCvar_t  g_Bubbles;
 extern  vmCvar_t  g_scrimMode;
+extern  vmCvar_t  g_gradualFreeFunds;
 
 void      trap_Printf( const char *fmt );
 void      trap_Error( const char *fmt );

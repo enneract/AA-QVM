@@ -275,7 +275,8 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
     {
       AddScore( attacker, 1 );
 
-      attacker->client->lastKillTime = level.time;
+      if( g_gradualFreeFunds.integer < 2 )
+        attacker->client->pers.lastFreekillTime = level.time;
       attacker->client->pers.statscounters.kills++;
       if( attacker->client->pers.teamSelection == PTE_ALIENS ) 
       {

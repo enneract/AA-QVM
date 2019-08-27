@@ -656,12 +656,14 @@ void G_ChangeTeam( gentity_t *ent, pTeam_t newTeam )
 {
   pTeam_t oldTeam = ent->client->pers.teamSelection;
   qboolean isFixingImbalance=qfalse;
- 
+
   if( oldTeam == newTeam )
     return;
 
   G_LeaveTeam( ent );
   ent->client->pers.teamSelection = newTeam;
+
+  ent->client->pers.lastFreekillTime = level.time;
 
   // G_LeaveTeam() calls G_StopFollowing() which sets spec mode to free. 
   // Undo that in this case, or else people can freespec while in the spawn queue on their new team

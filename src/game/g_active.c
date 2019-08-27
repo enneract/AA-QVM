@@ -1407,6 +1407,42 @@ static void G_UnlaggedDetectCollisions( gentity_t *ent )
 
 /*
 ==============
+ClientGradualFunds
+
+g_gradualFreeFunds values:
+0 - disabled
+1 - vanilla behavior
+2 - 1 and counters don't reset on death or evolution
+3 - 2 and funds are given even during SD 
+==============
+*/
+static void ClientGradualFunds( gentity_t *ent )
+{
+  if( !g_gradualFreeFunds.integer )
+    return;
+
+  if( ent->client->pers.lastFreekillTime + FREEKILL_PERIOD >= level.time )
+    return;
+
+  if( g_suddenDeath.integer && g_gradualFreeFunds.integer < 3 )
+    return;
+
+  switch ( ent->client->ps.stats[ STAT_PTEAM ] )
+  {
+  case PTE_ALIENS:
+    G_AddCreditToClient( ent->client, FREEKILL_ALIEN, qtrue );
+    break;
+
+  case PTE_HUMANS:
+    G_AddCreditToClient( ent->client, FREEKILL_HUMAN, qtrue );
+    break;
+  }
+
+  ent->client->pers.lastFreekillTime += FREEKILL_PERIOD;
+}
+
+/*
+==============
 ClientThink
 
 This will be called once for each client frame, which will
@@ -1852,16 +1888,7 @@ void ClientThink_real( gentity_t *ent )
   }
 
   // Give clients some credit periodically
-  if( ent->client->lastKillTime + FREEKILL_PERIOD < level.time )
-  {
-    if( !g_suddenDeath.integer ) {
-      if( ent->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
-        G_AddCreditToClient( ent->client, FREEKILL_ALIEN, qtrue );
-      if( ent->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
-        G_AddCreditToClient( ent->client, FREEKILL_HUMAN, qtrue );
-    }
-    ent->client->lastKillTime = level.time;
-  }
+  ClientGradualFunds( ent );
 
   // perform once-a-second actions
   ClientTimerActions( ent, msec );
