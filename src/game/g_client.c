@@ -957,11 +957,7 @@ static void ClientCleanName( const char *in, char *out, int outSize, qboolean sp
         break;
       }
 
-      // don't allow black in a name, unless if special
-      if( ColorIndex( *in ) == 0 && !special )
-        *out++ = COLOR_WHITE;
-      else
-        *out++ = *in;
+	  *out++ = *in;
 
       in++;
       continue;
