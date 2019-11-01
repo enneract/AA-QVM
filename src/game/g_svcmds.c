@@ -703,7 +703,35 @@ qboolean  ConsoleCommand( void )
     G_admin_maplog_result( "d" );
     return qtrue;
   }
-  
+
+  if( !Q_stricmp( cmd, "smr" ) )
+  {
+    if( trap_Argc() >= 2 )
+    {
+      char arg[ 32 ];
+      trap_Argv( 1, arg, sizeof( arg ) );
+
+      if( !Q_stricmp( arg, "ipa" ) && trap_Argc() >= 4 )
+      {
+        int rating;
+        const char *comment = NULL;
+
+        trap_Argv( 3, arg, sizeof( arg ) );
+        rating = atoi( arg );
+        if( trap_Argc() >= 5 )
+          comment = ConcatArgs( 4 );
+        trap_Argv( 2, arg, sizeof( arg ) );
+
+        G_admin_IPA_judgement( arg, rating, comment );
+
+        return qtrue;
+      }
+    }
+
+    G_Printf( "unrecognized Schachtmeister response: %s\n", ConcatArgs( 1 ) );
+    return qtrue;
+  }
+
   // see if this is a a admin command
   if( G_admin_cmd_check( NULL, qfalse ) )
     return qtrue;

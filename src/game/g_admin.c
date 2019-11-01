@@ -421,6 +421,11 @@ g_admin_cmd_t g_admin_cmds[ ] =
     {"tklog", G_admin_tklog, "tklog",
       "list recent teamkill activity",
       "(^5start id#|name|-skip#^7) (^5search skip#^7)"
+    },
+
+    {"sm", G_admin_sm, "schachtmeister",
+      "Schachtmeister",
+      "..."
     }
 
   };
@@ -1471,6 +1476,9 @@ qboolean G_admin_cmd_check( gentity_t *ent, qboolean say )
     return qtrue;
    }
 
+  if( G_admin_is_restricted( ent, qtrue ) )
+    return qtrue;
+
   for( i = 0; i < MAX_ADMIN_COMMANDS && g_admin_commands[ i ]; i++ )
   {
     if( Q_stricmp( cmd, g_admin_commands[ i ]->command ) )
@@ -1519,9 +1527,47 @@ void G_admin_namelog_cleanup( )
 
   for( i = 0; i < MAX_ADMIN_NAMELOGS && g_admin_namelog[ i ]; i++ )
   {
+    if( g_admin_namelog[ i ]->smj.comment )
+      G_Free( g_admin_namelog[ i ]->smj.comment );
     G_Free( g_admin_namelog[ i ] );
     g_admin_namelog[ i ] = NULL;
   }
+}
+
+static void dispatchSchachtmeisterIPAQuery( const char *ipa )
+{
+  trap_SendConsoleCommand( EXEC_APPEND, va( "smq ipa \"%s\"\n", ipa ) );
+}
+
+static void schachtmeisterProcess( g_admin_namelog_t *namelog )
+{
+  schachtmeisterJudgement_t *j = &namelog->smj;
+
+  if( !j->ratingTime || level.time - j->ratingTime >= 600000 )
+  {
+    if( j->queryTime )
+      return;
+
+    j->queryTime = level.time;
+    goto dispatch;
+  }
+
+  if( !j->queryTime || level.time - j->queryTime >= 60000 )
+    return;
+
+  if( j->dispatchTime && level.time - j->dispatchTime < 5000 )
+    return;
+
+  dispatch:
+  j->dispatchTime = level.time;
+  dispatchSchachtmeisterIPAQuery( namelog->ip );
+}
+
+void G_admin_schachtmeisterFrame( void )
+{
+  int i;
+  for( i = 0; i < MAX_ADMIN_NAMELOGS && g_admin_namelog[ i ]; i++ )
+    schachtmeisterProcess( g_admin_namelog[ i ] );
 }
 
 void G_admin_namelog_update( gclient_t *client, qboolean disconnect )
@@ -1659,6 +1705,7 @@ void G_admin_namelog_update( gclient_t *client, qboolean disconnect )
   Q_strncpyz( namelog->name[ 0 ], client->pers.netname,
     sizeof( namelog->name[ 0 ] ) );
   namelog->slot = ( disconnect ) ? -1 : clientNum;
+  schachtmeisterProcess( namelog );
   g_admin_namelog[ i ] = namelog;
 }
 
@@ -2370,7 +2417,8 @@ static AdminFlagListEntry_t adminFlagList[] =
   { ADMF_NOSCRIMRESTRICTION,   "team joining, vote and chat restrictions during scrims do not apply" },
   { ADMF_NO_BUILD,             "can not build" },
   { ADMF_NO_CHAT,              "can not talk" },
-  { ADMF_NO_VOTE,              "can not call votes" }
+  { ADMF_NO_VOTE,              "can not call votes" },
+  { ADMF_NOAUTOBAHN,           "ignored by the Autobahn system" }
 };
 static int adminNumFlags= sizeof( adminFlagList ) / sizeof( adminFlagList[ 0 ] );
 
@@ -2928,6 +2976,102 @@ qboolean G_admin_ban( gentity_t *ent, int skiparg )
       duration,
       ( *reason ) ? reason : "banned by admin" ) );
   return qtrue;
+}
+
+// If true then don't let the player join a team, use the chat or run commands.
+qboolean G_admin_is_restricted(gentity_t *ent, qboolean sendMessage)
+{
+	schachtmeisterJudgement_t *j = NULL;
+	int i;
+
+	// Never restrict admins or whitelisted players.
+	if (G_admin_permission(ent, ADMF_NOAUTOBAHN) ||
+	    G_admin_permission(ent, ADMF_IMMUNITY))
+		return qfalse;
+
+	// Find the relevant namelog.
+	// FIXME: this shouldn't require looping over *all* namelogs.
+	for (i = 0; i < MAX_ADMIN_NAMELOGS && g_admin_namelog[i]; i++) {
+		if (g_admin_namelog[i]->slot == ent - g_entities) {
+			j = &g_admin_namelog[i]->smj;
+			break;
+		}
+	}
+
+	// A missing namelog shouldn't happen.
+	if (!j)
+		return qfalse;
+
+	// Restrictions concern only unrated players.
+	if (j->ratingTime)
+		return qfalse;
+
+	// Don't wait forever, allow up to 15 seconds.
+	if (level.time - j->queryTime >= 15000)
+		return qfalse;
+
+	if (sendMessage)
+		trap_SendServerCommand(ent - g_entities, "print \"Please wait a moment before doing anything.\n\"");
+
+	return qtrue;
+}
+
+static void admin_autobahn(gentity_t *ent, int rating)
+{
+	// Allow per-GUID exceptions and never autoban admins.
+	if (G_admin_permission(ent, ADMF_NOAUTOBAHN) ||
+	    G_admin_permission(ent, ADMF_IMMUNITY))
+		return;
+
+	// Don't do anything if the rating is clear.
+	if (rating >= g_schachtmeisterClearThreshold.integer)
+		return;
+
+	// Ban only if the rating is low enough.
+	if (rating > g_schachtmeisterAutobahnThreshold.integer) {
+		G_AdminsPrintf("%s^7 (#%d) has rating %d\n",
+		               ent->client->pers.netname, ent - g_entities,
+		               rating);
+		return;
+	}
+
+	G_LogAutobahn(ent, NULL, rating, qfalse);
+
+	trap_SendServerCommand(ent - g_entities, va("disconnect \"%s\"\n",
+	                       g_schachtmeisterAutobahnMessage.string));
+	trap_DropClient(ent - g_entities, "dropped by the Autobahn");
+}
+
+void G_admin_IPA_judgement( const char *ipa, int rating, const char *comment )
+{
+  int i;
+  for( i = 0; i < MAX_ADMIN_NAMELOGS && g_admin_namelog[ i ]; i++ )
+  {
+    if( !strcmp( g_admin_namelog[ i ]->ip, ipa ) )
+    {
+      schachtmeisterJudgement_t *j = &g_admin_namelog[ i ]->smj;
+
+      j->ratingTime = level.time;
+      j->queryTime = 0;
+      j->dispatchTime = 0;
+
+      j->rating = rating;
+
+      if( j->comment )
+        G_Free( j->comment );
+
+      if( comment )
+      {
+        j->comment = G_Alloc( strlen( comment ) + 1 );
+        strcpy( j->comment, comment );
+      }
+      else
+        j->comment = NULL;
+
+      if( g_admin_namelog[ i ]->slot != -1 )
+        admin_autobahn( g_entities + g_admin_namelog[ i ]->slot, j->rating );
+    }
+  }
 }
 
 qboolean G_admin_adjustban( gentity_t *ent, int skiparg )
@@ -6121,6 +6265,35 @@ qboolean G_admin_nextmap( gentity_t *ent, int skiparg )
   return qtrue;
 }
 
+static const char *displaySchachtmeisterJudgement(const schachtmeisterJudgement_t *j,
+                                                  g_admin_namelog_t *namelog)
+{
+	static char buffer[20];
+
+    if (G_admin_permission_guid(namelog->guid, ADMF_INCOGNITO)) {
+	    Com_sprintf(buffer, sizeof(buffer), "^2   +0");
+    } else if (strcmp(namelog->guid, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX") &&
+	    (G_admin_permission_guid(namelog->guid, ADMF_NOAUTOBAHN) ||
+	     G_admin_permission_guid(namelog->guid, ADMF_IMMUNITY))) {
+		Com_sprintf(buffer, sizeof(buffer), "^7 N/A ");
+	} else if (!j->ratingTime) {
+		Com_sprintf(buffer, sizeof(buffer), "^5 wait");
+	} else {
+		int color;
+
+		if (j->rating >= g_schachtmeisterClearThreshold.integer)
+			color = 2;
+		else if (j->rating <= g_schachtmeisterAutobahnThreshold.integer)
+			color = 1;
+		else
+			color = 3;
+
+		Com_sprintf(buffer, sizeof(buffer), "^%i%+5i", color, j->rating);
+	}
+
+	return buffer;
+}
+
 qboolean G_admin_namelog( gentity_t *ent, int skiparg )
 {
   int i, j;
@@ -6161,10 +6334,11 @@ qboolean G_admin_namelog( gentity_t *ent, int skiparg )
     guid_stub[ j ] = '\0';
     if( g_admin_namelog[ i ]->slot > -1 )
        ADMBP( "^3" );
-    ADMBP( va( "%-2s (*%s) %15s^7", 
+    ADMBP( va( "%-2s (*%s) %15s %s^7", 
       (g_admin_namelog[ i ]->slot > -1 ) ?
         va( "%d", g_admin_namelog[ i ]->slot ) : "-",
-      guid_stub, g_admin_namelog[ i ]->ip ) );
+      guid_stub, g_admin_namelog[ i ]->ip,
+      displaySchachtmeisterJudgement( &g_admin_namelog[ i ]->smj, g_admin_namelog[ i ] ) ) );
     for( j = 0; j < MAX_ADMIN_NAMELOG_NAMES && 
       g_admin_namelog[ i ]->name[ j ][ 0 ]; j++ )
     {
@@ -8182,6 +8356,69 @@ qboolean G_admin_tklog( gentity_t *ent, int skiparg )
     ADMBP( "^3!tklog:^7 log is empty.\n" );
   }
   ADMBP_end( );
+
+  return qtrue;
+}
+
+qboolean G_admin_sm( gentity_t *ent, int skiparg )
+{
+  const char *s;
+  char feature[ 16 ];
+
+  if( G_SayArgc() < 2 + skiparg )
+  {
+    usage:
+    ADMP( "^3!sm: ^7usage: !sm ipa <IPA>\n" );
+    return qfalse;
+  }
+
+  s = G_SayConcatArgs( 1 + skiparg );
+  if( strchr( s, '\n' ) || strchr( s, '\r' ) )
+  {
+    ADMP( "^3!sm: ^7invalid character\n" );
+    return qfalse;
+  }
+
+  G_SayArgv( 1 + skiparg, feature, sizeof( feature ) );
+
+  if( !Q_stricmp( feature, "ipa" ) )
+  {
+    char ipa[ 32 ];
+    int parts[ 4 ];
+
+    if( G_SayArgc() > 3 + skiparg )
+    {
+      ADMP( "^3!sm: ^7excessive arguments\n" );
+      goto usage;
+    }
+    G_SayArgv( 2 + skiparg, ipa, sizeof( ipa ) );
+
+    // have a well-formed IPv4 address, because Schachtmeister silently drops all invalid requests
+
+    if( sscanf( ipa, "%i.%i.%i.%i", &parts[0], &parts[1], &parts[2], &parts[3] ) != 4
+        || parts[0] < 0 || parts[0] > 255
+        || parts[1] < 0 || parts[1] > 255
+        || parts[2] < 0 || parts[2] > 255
+        || parts[3] < 0 || parts[3] > 255 )
+    {
+      ADMP( "^3!sm: ^7invalid IP address\n" );
+      return qfalse;
+    }
+
+    Com_sprintf( ipa, sizeof( ipa ), "%i.%i.%i.%i", parts[0], parts[1], parts[2], parts[3] );
+
+    if( rand() % 2 /* FIXME cache hit */ )
+    {
+      const char *answer = "interesting";
+      ADMP( va( "^3!sm: ^7IP address %s is: %s\n", ipa, answer ) );
+      return qtrue;
+    }
+
+    ADMP( "^3!sm: ^7hmm...\n" );
+    trap_SendConsoleCommand( EXEC_APPEND, va( "smq ipa \"%s\"\n", ipa ) );
+  }
+  else
+    goto usage;
 
   return qtrue;
 }

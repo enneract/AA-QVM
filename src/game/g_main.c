@@ -239,6 +239,10 @@ vmCvar_t  g_Bubbles;
 vmCvar_t  g_scrimMode;
 vmCvar_t  g_gradualFreeFunds;
 vmCvar_t  g_bleedingSpree;
+vmCvar_t  g_schachtmeisterClearThreshold;
+vmCvar_t  g_schachtmeisterAutobahnThreshold;
+vmCvar_t  g_schachtmeisterAutobahnMessage;
+vmCvar_t  g_adminAutobahnNotify;
 
 static cvarTable_t   gameCvarTable[ ] =
 {
@@ -455,7 +459,12 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_Bubbles, "g_Bubbles", "1", CVAR_ARCHIVE, 0, qfalse  },
   { &g_scrimMode, "g_scrimMode", "0", CVAR_ARCHIVE, 0, qfalse },
   { &g_gradualFreeFunds, "g_gradualFreeFunds", "2", CVAR_ARCHIVE, 0, qtrue  },
-  { &g_bleedingSpree, "g_bleedingSpree", "0", CVAR_ARCHIVE, 0, qfalse  }
+  { &g_bleedingSpree, "g_bleedingSpree", "0", CVAR_ARCHIVE, 0, qfalse  },
+  { &g_gradualFreeFunds, "g_gradualFreeFunds", "2", CVAR_ARCHIVE, 0, qtrue  },
+  { &g_schachtmeisterClearThreshold, "g_schachtmeisterClearThreshold", "-10", CVAR_ARCHIVE, 0, qfalse },
+  { &g_schachtmeisterAutobahnThreshold, "g_schachtmeisterAutobahnThreshold", "-30", CVAR_ARCHIVE, 0, qfalse },
+  { &g_schachtmeisterAutobahnMessage, "g_schachtmeisterAutobahnMessage", "Your host is blacklisted.", CVAR_ARCHIVE, 0, qfalse },
+  { &g_adminAutobahnNotify, "g_adminAutobahnNotify", "1", CVAR_ARCHIVE, 0, qfalse }
 };
 
 static int gameCvarTableSize = sizeof( gameCvarTable ) / sizeof( gameCvarTable[ 0 ] );
@@ -3004,6 +3013,8 @@ void G_RunFrame( int levelTime )
   // check team votes
   CheckTeamVote( PTE_HUMANS );
   CheckTeamVote( PTE_ALIENS );
+
+  G_admin_schachtmeisterFrame();
 
   // for tracking changes
   CheckCvars( );

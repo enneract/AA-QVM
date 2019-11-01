@@ -100,6 +100,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ADMF_SPECIALNAME         "SPECIALNAME"
 
 #define ADMF_NOSCRIMRESTRICTION  "NOSCRIMRESTRICTION"
+#define ADMF_NOAUTOBAHN          "NOAUTOBAHN"
 
 #define ADMF_NO_BUILD            ".NOBUILD"
 #define ADMF_NO_CHAT             ".NOCHAT"
@@ -163,6 +164,15 @@ typedef struct g_admin_command
 }
 g_admin_command_t;
 
+typedef struct
+{
+  int ratingTime;
+  int queryTime;
+  int dispatchTime;
+  int rating;
+  char *comment;
+} schachtmeisterJudgement_t;
+
 typedef struct g_admin_namelog
 {
   char      name[ MAX_ADMIN_NAMELOG_NAMES ][MAX_NAME_LENGTH ];
@@ -177,6 +187,7 @@ typedef struct g_admin_namelog
   int       denyAlienClasses;
   int       specExpires;
   int       voteCount;
+  schachtmeisterJudgement_t smj;
 }
 g_admin_namelog_t;
 
@@ -290,6 +301,10 @@ qboolean G_admin_showff(gentity_t *ent, int skiparg);
 qboolean G_admin_tklog( gentity_t *ent, int skiparg );
 void G_admin_tklog_cleanup( void );
 void G_admin_tklog_log( gentity_t *attacker, gentity_t *victim, int meansOfDeath );
+void G_admin_IPA_judgement( const char *ipa, int rating, const char *comment );
+qboolean G_admin_sm( gentity_t *ent, int skiparg );
+void G_admin_schachtmeisterFrame( void );
+qboolean G_admin_is_restricted(gentity_t *ent, qboolean sendMessage);
 
 void G_admin_print( gentity_t *ent, char *m );
 void G_admin_buffer_print( gentity_t *ent, char *m );

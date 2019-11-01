@@ -1377,6 +1377,36 @@ void ClientUserinfoChanged( int clientNum, qboolean forceName )
   /*G_LogPrintf( "ClientUserinfoChanged: %i %s\n", clientNum, userinfo );*/
 }
 
+/*
+===========
+LogAutobahn
+===========
+*/
+void G_LogAutobahn(gentity_t *ent, const char *userinfo, int rating,
+                   qboolean onConnect)
+{
+	char ip_buffer[20];
+	const char *ip, *name, *verb;
+
+	verb = (onConnect ? "refused" : "dropped");
+
+	if (userinfo) {
+		Q_strncpyz(ip_buffer, Info_ValueForKey(userinfo, "ip"),
+		           sizeof(ip_buffer));
+		ip = ip_buffer;
+		name = Info_ValueForKey(userinfo, "name");
+	} else {
+		ip = ent->client->pers.ip;
+		name = ent->client->pers.netname;
+	}
+
+	G_LogPrintf("Autobahn: %s %i %s %+i \"%s^7\"\n", verb, ent - g_entities,
+	            ip, rating, name);
+
+	if (g_adminAutobahnNotify.integer)
+		G_AdminsPrintf("Autobahn %s '%s^7' with rating %+i, connecting from %s.\n",
+		               verb, name, rating, ip);
+}
 
 /*
 ===========
@@ -1452,6 +1482,34 @@ char *ClientConnect( int clientNum, qboolean firstTime )
   if( g_password.string[ 0 ] && Q_stricmp( g_password.string, "none" ) &&
       strcmp( g_password.string, value ) != 0 )
     return "Invalid password";
+
+  schachtmeisterJudgement_t *smj = NULL;
+
+  if (!(G_admin_permission_guid(guid, ADMF_NOAUTOBAHN)
+     || G_admin_permission_guid(guid, ADMF_IMMUNITY)))
+  {
+    extern g_admin_namelog_t *g_admin_namelog[128];
+    for (i = 0; i < MAX_ADMIN_NAMELOGS && g_admin_namelog[i]; ++i)
+    {
+      if (!Q_stricmp(g_admin_namelog[i]->ip, ip)
+       || !Q_stricmp(g_admin_namelog[i]->guid, guid))
+      {
+        schachtmeisterJudgement_t *j = &g_admin_namelog[i]->smj;
+        if (j->ratingTime)
+        {
+          if (j->rating >= g_schachtmeisterClearThreshold.integer)
+            break;
+          else if (j->rating <= g_schachtmeisterAutobahnThreshold.integer)
+          {
+            G_LogAutobahn( ent, userinfo, j->rating, qtrue );
+            return g_schachtmeisterAutobahnMessage.string;
+          }
+          smj = j;
+        }
+        break;
+      }
+    }
+  }
 
   // they can connect
   ent->client = level.clients + clientNum;
@@ -1541,7 +1599,6 @@ char *ClientConnect( int clientNum, qboolean firstTime )
     CalculateRanks( );
     G_admin_namelog_update( client, qfalse );
   }
-  
 
   // if this is after !restart keepteams or !restart switchteams, apply said selection
   if ( client->sess.restartTeam != PTE_NONE ) {
@@ -1549,6 +1606,27 @@ char *ClientConnect( int clientNum, qboolean firstTime )
     client->sess.restartTeam = PTE_NONE;
   }
 
+	if( !( G_admin_permission( ent, ADMF_NOAUTOBAHN ) ||
+	      G_admin_permission( ent, ADMF_IMMUNITY ) ) )
+  {
+    extern g_admin_namelog_t *g_admin_namelog[ 128 ];
+    for( i = 0; i < MAX_ADMIN_NAMELOGS && g_admin_namelog[ i ]; i++ )
+    {
+      if( !Q_stricmp( ip, g_admin_namelog[ i ]->ip ) || !Q_stricmp( guid, g_admin_namelog[ i ]->guid ) )
+      {
+        schachtmeisterJudgement_t *j = &g_admin_namelog[i]->smj;
+        if( j->ratingTime )
+        {
+          if( j->rating >= g_schachtmeisterClearThreshold.integer )
+            break;
+          else if( j->rating <= g_schachtmeisterAutobahnThreshold.integer )
+            return g_schachtmeisterAutobahnMessage.string;
+          G_AdminsPrintf( "%s^7 (#%d) has rating %d\n", ent->client->pers.netname, ent - g_entities, j->rating );
+        }
+        break;
+      }
+    }
+  }
   
   return NULL;
 }

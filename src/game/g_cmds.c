@@ -5081,7 +5081,7 @@ static void Cmd_Ignore_f( gentity_t *ent )
 commands_t cmds[ ] = {
   // normal commands
   { "team", 0, Cmd_Team_f },
-  { "vote", CMD_INTERMISSION, Cmd_Vote_f },
+  { "vote", CMD_MESSAGE|CMD_INTERMISSION, Cmd_Vote_f },
   { "ignore", 0, Cmd_Ignore_f },
   { "unignore", 0, Cmd_Ignore_f },
 
@@ -5236,6 +5236,14 @@ void ClientCommand( int clientNum )
   {
     trap_SendServerCommand( clientNum,
       "print \"Must be living to use this command\n\"" );
+    return;
+  }
+
+  // Disallow a large class of commands if a player is restricted.
+  if( G_admin_is_restricted( ent, qtrue ) &&
+      ( !Q_stricmp( cmd, "team" ) ||
+      ( cmds[ i ].cmdFlags & ( CMD_MESSAGE | CMD_TEAM | CMD_NOTEAM ) ) ) )
+  {
     return;
   }
 

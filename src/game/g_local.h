@@ -1100,6 +1100,7 @@ void      ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t a
 void      player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod );
 qboolean  SpotWouldTelefrag( gentity_t *spot );
 char     *G_NextNewbieName( gentity_t *ent );
+void      G_LogAutobahn( gentity_t *ent, const char *userinfo, int rating, qboolean onConnect );
 
 //
 // g_svcmds.c
@@ -1488,6 +1489,10 @@ extern  vmCvar_t  g_Bubbles;
 extern  vmCvar_t  g_scrimMode;
 extern  vmCvar_t  g_gradualFreeFunds;
 extern  vmCvar_t  g_bleedingSpree;
+extern  vmCvar_t  g_schachtmeisterClearThreshold;
+extern  vmCvar_t  g_schachtmeisterAutobahnThreshold;
+extern  vmCvar_t  g_schachtmeisterAutobahnMessage;
+extern  vmCvar_t  g_adminAutobahnNotify;
 
 void      trap_Printf( const char *fmt );
 void      trap_Error( const char *fmt );
