@@ -2349,6 +2349,7 @@ static AdminFlagListEntry_t adminFlagList[] =
 {
   { ADMF_ACTIVITY,             "inactivity rules do not apply" },
   { ADMF_ADMINCHAT,            "can see and use admin chat" },
+  { ADMF_HIGHADMINCHAT,        "can see and use high admin chat" },
   { ADMF_ALLFLAGS,             "has all flags and can use any command" },
   { ADMF_BAN_IMMUNITY,         "immune from IP bans" },
   { ADMF_CAN_PERM_BAN,         "can permanently ban players" },
