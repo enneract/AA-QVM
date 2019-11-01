@@ -1625,18 +1625,11 @@ void ClientBegin( int clientNum )
   }
   G_LogPrintf( "ClientBegin: %i\n", clientNum );
 
-  if( g_clientUpgradeNotice.integer )
+  if( !Q_stricmp( ent->client->pers.guid, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ) &&
+      g_outdatedClientMessage.string[0] )
   {
-    if( !Q_stricmp( ent->client->pers.guid, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ) )
-    {
-      trap_SendServerCommand( client->ps.clientNum, va( "print \"^3Your client is out of date. Updating your client will allow you to "
-          "become an admin on servers and download maps much more quickly. Please replace your client executable with a newer client. \n\"" ) );
-
-      trap_SendServerCommand( client->ps.clientNum, va("print \"^3Some available clients: \n"
-          "^2TremFusion^7- ^3http://www.tremfusion.net/download/^7\n"
-          "^2FSM-Trem^7 - ^3http://code.google.com/p/fsm-trem/^7\n"
-          "^2MGClient^7 - ^3http://releases.mercenariesguild.net/client/^7\n\"" ) );
-    }
+    trap_SendServerCommand( client->ps.clientNum, va(
+      "print \"%s\n\"", g_outdatedClientMessage.string ) );
   }
 
   // count current clients and rank for scoreboard
