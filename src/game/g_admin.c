@@ -4679,7 +4679,7 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
       Q_strncpyz( guidless, "G", sizeof( guidless ) );
     }
     muted[ 0 ] = '\0';
-    if( G_admin_permission( &g_entities[ i ], ADMF_NO_VOTE ) )
+    if( G_admin_permission( &g_entities[ i ], ADMF_NO_VOTE ) || G_admin_permission( &g_entities[ i ], ADMF_FAKE_NO_VOTE )  )
     {
       Q_strncpyz( muted, "V", sizeof( muted ) );
     }
