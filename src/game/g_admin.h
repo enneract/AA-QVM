@@ -44,6 +44,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_ADMIN_CMD_LEN 20
 #define MAX_ADMIN_BAN_REASON 50
 #define MAX_ADMIN_BANSUSPEND_DAYS 14
+#define MAX_ADMIN_TKLOGS 64
 
 /*
  * IMMUNITY - cannot be vote kicked, vote muted
@@ -190,6 +191,19 @@ typedef struct g_admin_adminlog
 }
 g_admin_adminlog_t;
 
+typedef struct g_admin_tklog
+{
+  char      name[ MAX_NAME_LENGTH ];
+  char      victim[ MAX_NAME_LENGTH ];
+  int       id;
+  int       time;
+  int       damage;
+  int       value;
+  int       team;
+  int       weapon;
+}
+g_admin_tklog_t;
+
 qboolean G_admin_ban_check( char *userinfo, char *reason, int rlen );
 qboolean G_admin_cmd_check( gentity_t *ent, qboolean say );
 qboolean G_admin_readconfig( gentity_t *ent, int skiparg );
@@ -270,6 +284,11 @@ qboolean G_admin_bubble( gentity_t *ent, int skiparg );
 qboolean G_admin_scrim( gentity_t *ent, int skiparg );
 qboolean G_admin_give( gentity_t *ent, int skiparg );
 qboolean G_admin_setrotation( gentity_t *ent, int skiparg );
+qboolean G_admin_versions( gentity_t *ent, int skiparg );
+qboolean G_admin_showff(gentity_t *ent, int skiparg);
+qboolean G_admin_tklog( gentity_t *ent, int skiparg );
+void G_admin_tklog_cleanup( void );
+void G_admin_tklog_log( gentity_t *attacker, gentity_t *victim, int meansOfDeath );
 
 void G_admin_print( gentity_t *ent, char *m );
 void G_admin_buffer_print( gentity_t *ent, char *m );

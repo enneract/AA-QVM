@@ -361,6 +361,7 @@ typedef struct
   int jetpackusewallwalkusetime;
   int timeLastViewed;
   int AllstatstimeLastViewed;
+  int spreebleeds;
 } statsCounters_t;
 
 typedef struct
@@ -1486,6 +1487,7 @@ extern  vmCvar_t  g_aimbotAdvertBanReason;
 extern  vmCvar_t  g_Bubbles;
 extern  vmCvar_t  g_scrimMode;
 extern  vmCvar_t  g_gradualFreeFunds;
+extern  vmCvar_t  g_bleedingSpree;
 
 void      trap_Printf( const char *fmt );
 void      trap_Error( const char *fmt );
