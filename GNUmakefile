@@ -88,7 +88,7 @@ endif
 export CROSS_COMPILING
 
 ifndef VERSION
-VERSION=slackers
+VERSION=aa
 endif
 
 ifndef CLIENTBIN
