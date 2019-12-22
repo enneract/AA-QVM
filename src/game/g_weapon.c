@@ -262,7 +262,7 @@ void meleeAttack( gentity_t *ent, float range, float width, int damage, meansOfD
   }
 
   if( traceEnt->takedamage )
-    G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, DAMAGE_NO_KNOCKBACK, mod );
+    G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, 0, mod );
 }
 
 /*
@@ -937,7 +937,7 @@ qboolean CheckVenomAttack( gentity_t *ent )
     tent->s.generic1 = ent->s.generic1; //weaponMode
   }
 
-  G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, DAMAGE_NO_KNOCKBACK, MOD_LEVEL0_BITE );
+  G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, 0, MOD_LEVEL0_BITE );
 
   return qtrue;
 }
@@ -1292,7 +1292,7 @@ void G_UpdateZaps( int msec )
           if( damage )
           {
             G_Damage( target, source, zap->creator, forward, target->s.origin,
-                    damage, DAMAGE_NO_KNOCKBACK | DAMAGE_NO_LOCDAMAGE, MOD_LEVEL2_ZAP );
+                    damage, DAMAGE_NO_LOCDAMAGE, MOD_LEVEL2_ZAP );
             zap->damageUsed += damage;
           }
         }
@@ -1407,7 +1407,7 @@ qboolean CheckPounceAttack( gentity_t *ent )
   ent->client->pmext.pouncePayload = 0;
 
   G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage,
-      DAMAGE_NO_KNOCKBACK|DAMAGE_NO_LOCDAMAGE, MOD_LEVEL3_POUNCE );
+      DAMAGE_NO_LOCDAMAGE, MOD_LEVEL3_POUNCE );
 
   ent->client->allowedToPounce = qfalse;
 

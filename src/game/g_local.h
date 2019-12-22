@@ -181,6 +181,7 @@ struct gentity_s
   qboolean          takedamage;
 
   int               damage;
+  int               dflags;
   int               splashDamage; // quad will increase this without increasing radius
   int               splashRadius;
   int               methodOfDeath;
@@ -999,7 +1000,7 @@ void      G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 void      G_SelectiveDamage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t dir,
                              vec3_t point, int damage, int dflags, int mod, int team );
 qboolean  G_RadiusDamage( vec3_t origin, gentity_t *attacker, float damage, float radius,
-                          gentity_t *ignore, int mod );
+                          gentity_t *ignore, int dflags, int mod );
 qboolean  G_SelectiveRadiusDamage( vec3_t origin, gentity_t *attacker, float damage, float radius,
                                    gentity_t *ignore, int mod, int team );
 void      G_Knockback( gentity_t *targ, vec3_t dir, int knockback );
@@ -1011,7 +1012,7 @@ void      G_InitDamageLocations( void );
 // damage flags
 #define DAMAGE_RADIUS         0x00000001  // damage was indirect
 #define DAMAGE_NO_ARMOR       0x00000002  // armour does not protect from this damage
-#define DAMAGE_NO_KNOCKBACK   0x00000004  // do not affect velocity, just view angles
+#define DAMAGE_KNOCKBACK      0x00000004  // affect velocity, not just view angles
 #define DAMAGE_NO_PROTECTION  0x00000008  // armor, shields, invulnerability, and godmode have no effect
 #define DAMAGE_NO_LOCDAMAGE   0x00000010  // do not apply locational damage
 

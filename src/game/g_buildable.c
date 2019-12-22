@@ -2458,7 +2458,7 @@ void HSpawn_Blast( gentity_t *self )
 
   //do some radius damage
   G_RadiusDamage( self->s.pos.trBase, self, self->splashDamage,
-    self->splashRadius, self, self->splashMethodOfDeath );
+    self->splashRadius, self, 0, self->splashMethodOfDeath );
 
   self->think = freeBuildable;
   self->nextthink = level.time + 100;

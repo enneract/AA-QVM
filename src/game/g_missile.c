@@ -92,7 +92,7 @@ void G_ExplodeMissile( gentity_t *ent )
   // splash damage
   if( ent->splashDamage )
     G_RadiusDamage( ent->r.currentOrigin, ent->parent, ent->splashDamage,
-                    ent->splashRadius, ent, ent->splashMethodOfDeath );
+                    ent->splashRadius, ent, ent->dflags, ent->splashMethodOfDeath );
 
   trap_LinkEntity( ent );
 }
@@ -199,7 +199,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace )
         velocity[ 2 ] = 1;  // stepped on a grenade
 
       G_Damage( other, ent, attacker, velocity, ent->s.origin, ent->damage,
-        0, ent->methodOfDeath );
+        ent->dflags, ent->methodOfDeath );
     }
   }
 
@@ -231,7 +231,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace )
   // splash damage (doesn't apply to person directly hit)
   if( ent->splashDamage )
     G_RadiusDamage( trace->endpos, ent->parent, ent->splashDamage, ent->splashRadius,
-                    other, ent->splashMethodOfDeath );
+                    other, ent->dflags, ent->splashMethodOfDeath );
 
   trap_LinkEntity( ent );
 }
@@ -459,6 +459,7 @@ gentity_t *fire_luciferCannon( gentity_t *self, vec3_t start, vec3_t dir, int da
   bolt->r.ownerNum = self->s.number;
   bolt->parent = self;
   bolt->damage = localDamage;
+  bolt->dflags = DAMAGE_KNOCKBACK;
   bolt->splashDamage = localDamage / 2;
   bolt->splashRadius = radius;
   bolt->methodOfDeath = MOD_LCANNON;
@@ -501,6 +502,7 @@ gentity_t *launch_grenade( gentity_t *self, vec3_t start, vec3_t dir )
   bolt->r.ownerNum = self->s.number;
   bolt->parent = self;
   bolt->damage = GRENADE_DAMAGE;
+  bolt->dflags = DAMAGE_KNOCKBACK;
   bolt->splashDamage = GRENADE_DAMAGE;
   bolt->splashRadius = GRENADE_RANGE;
   bolt->methodOfDeath = MOD_GRENADE;
@@ -790,6 +792,7 @@ gentity_t *fire_bounceBall( gentity_t *self, vec3_t start, vec3_t dir )
   bolt->r.ownerNum = self->s.number;
   bolt->parent = self;
   bolt->damage = LEVEL3_BOUNCEBALL_DMG;
+  bolt->dflags = DAMAGE_KNOCKBACK;
   bolt->splashDamage = 0;
   bolt->splashRadius = 0;
   bolt->methodOfDeath = MOD_LEVEL3_BOUNCEBALL;

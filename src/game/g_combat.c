@@ -1138,7 +1138,7 @@ inflictor, attacker, dir, and point can be NULL for environmental effects
 dflags    these flags are used to control how T_Damage works
   DAMAGE_RADIUS     damage was indirect (from a nearby explosion)
   DAMAGE_NO_ARMOR     armor does not protect from this damage
-  DAMAGE_NO_KNOCKBACK   do not affect velocity, just view angles
+  DAMAGE_KNOCKBACK      affect velocity, not just view angles
   DAMAGE_NO_PROTECTION  kills godmode, armor, everything
 ============
 */
@@ -1158,7 +1158,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
   int     take;
   int     save;
   int     asave = 0;
-  int     knockback;
+  int     knockback = 0;
   float damagemodifier=0.0;
   int takeNoOverkill;
 
@@ -1200,32 +1200,32 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
   }
 
   if( !dir )
-    dflags |= DAMAGE_NO_KNOCKBACK;
+    dflags &= ~DAMAGE_KNOCKBACK;
   else
     VectorNormalize( dir );
 
-  knockback = damage;
-
-  if( inflictor->s.weapon != WP_NONE )
+  if( dflags & DAMAGE_KNOCKBACK )
   {
-    knockback = (int)( (float)knockback *
-      BG_FindKnockbackScaleForWeapon( inflictor->s.weapon ) );
+    knockback = damage;
+
+    if( inflictor->s.weapon != WP_NONE )
+    {
+      knockback = (int)( (float)knockback *
+        BG_FindKnockbackScaleForWeapon( inflictor->s.weapon ) );
+    }
+
+    if( targ->client )
+    {
+      knockback = (int)( (float)knockback *
+        BG_FindKnockbackScaleForClass( targ->client->ps.stats[ STAT_PCLASS ] ) );
+    }
+
+    if( knockback > 200 )
+      knockback = 200;
+
+    if( targ->flags & FL_NO_KNOCKBACK )
+      knockback = 0;
   }
-
-  if( targ->client )
-  {
-    knockback = (int)( (float)knockback *
-      BG_FindKnockbackScaleForClass( targ->client->ps.stats[ STAT_PCLASS ] ) );
-  }
-
-  if( knockback > 200 )
-    knockback = 200;
-
-  if( targ->flags & FL_NO_KNOCKBACK )
-    knockback = 0;
-
-  if( dflags & DAMAGE_NO_KNOCKBACK )
-    knockback = 0;
 
   // figure momentum add, even if the damage won't be taken
   if( knockback && targ->client )
@@ -1649,7 +1649,7 @@ G_RadiusDamage
 ============
 */
 qboolean G_RadiusDamage( vec3_t origin, gentity_t *attacker, float damage,
-                         float radius, gentity_t *ignore, int mod )
+                         float radius, gentity_t *ignore, int dflags, int mod )
 {
   float     points, dist;
   gentity_t *ent;
@@ -1706,7 +1706,7 @@ qboolean G_RadiusDamage( vec3_t origin, gentity_t *attacker, float damage,
       // get knocked into the air more
       dir[ 2 ] += 24;
       G_Damage( ent, NULL, attacker, dir, origin,
-          (int)points, DAMAGE_RADIUS|DAMAGE_NO_LOCDAMAGE, mod );
+          (int)points, DAMAGE_RADIUS|DAMAGE_NO_LOCDAMAGE|dflags, mod );
     }
   }
 
