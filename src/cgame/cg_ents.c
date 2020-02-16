@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,13 +17,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
 // cg_ents.c -- present snapshot entities, happens every single frame
-
 
 #include "cg_local.h"
 
@@ -251,7 +251,7 @@ static void CG_EntityEffects( centity_t *cent )
 
   if( CG_IsTrailSystemValid( &cent->muzzleTS ) )
   {
-		//FIXME hack to prevent tesla trails reaching too far
+    //FIXME hack to prevent tesla trails reaching too far
     if( cent->currentState.eType == ET_BUILDABLE )
     {
       vec3_t  front, back;
@@ -311,6 +311,136 @@ static void CG_General( centity_t *cent )
 
 /*
 ==================
+CG_WeaponDrop
+==================
+*/
+static void CG_WeaponDrop( centity_t *cent )
+{
+	refEntity_t		ent;
+	entityState_t	*es;
+	int				msec;
+	float			frac;
+	float			scale;
+	weaponInfo_t	*wi;
+
+	es = &cent->currentState;
+
+    if (BG_Weapon(es->modelindex) == WP_NONE)
+    {
+        CG_Printf("Bad weapon index %i on entity", es->modelindex);
+        return;
+    }
+
+	// if set to invisible, skip
+	if (es->eFlags & EF_NODRAW)
+		return;
+
+
+	// items bob up and down continuously
+	scale = 0.005 + cent->currentState.number * 0.00001;
+	cent->lerpOrigin[2] += 4 + cos( ( cg.time + 1000 ) *  scale ) * 4;
+
+	memset (&ent, 0, sizeof(ent));
+
+	// autorotate at one of two speeds
+	VectorCopy( cg.autoAnglesFast, cent->lerpAngles );
+	AxisCopy( cg.autoAxisFast, ent.axis );
+//		VectorCopy( cg.autoAngles, cent->lerpAngles );
+//		AxisCopy( cg.autoAxis, ent.axis );
+
+    wi = &cg_weapons[ es->modelindex ];
+
+	// the weapons have their origin where they attatch to player
+	// models, so we need to offset them or they will rotate
+	// eccentricly
+
+	cent->lerpOrigin[0] -= wi->weaponMidpoint[0] * ent.axis[0][0]
+                         + wi->weaponMidpoint[1] * ent.axis[1][0]
+                         + wi->weaponMidpoint[2] * ent.axis[2][0];
+	cent->lerpOrigin[1] -= wi->weaponMidpoint[0] * ent.axis[0][1]
+               			 + wi->weaponMidpoint[1] * ent.axis[1][1]
+               			 + wi->weaponMidpoint[2] * ent.axis[2][1];
+	cent->lerpOrigin[2] -= wi->weaponMidpoint[0] * ent.axis[0][2]
+            			 + wi->weaponMidpoint[1] * ent.axis[1][2]
+            			 + wi->weaponMidpoint[2] * ent.axis[2][2];
+	cent->lerpOrigin[2] += 8;	// an extra height boost
+	
+#if 0
+	if( item->giType == IT_WEAPON && item->giTag == WP_RAILGUN ) {
+		clientInfo_t *ci = &cgs.clientinfo[cg.snap->ps.clientNum];
+		Byte4Copy( ci->c1RGBA, ent.shaderRGBA );
+	}
+#endif
+
+	ent.hModel = wi->weaponModel;
+
+	VectorCopy( cent->lerpOrigin, ent.origin);
+	VectorCopy( cent->lerpOrigin, ent.oldorigin);
+
+	ent.nonNormalizedAxes = qfalse;
+
+	// if just respawned, slowly scale up
+	msec = cg.time - cent->miscTime;
+	if ( msec >= 0 && msec < ITEM_SCALEUP_TIME )
+    {
+		frac = (float)msec / ITEM_SCALEUP_TIME;
+		VectorScale( ent.axis[0], frac, ent.axis[0] );
+		VectorScale( ent.axis[1], frac, ent.axis[1] );
+		VectorScale( ent.axis[2], frac, ent.axis[2] );
+		ent.nonNormalizedAxes = qtrue;
+	}
+    else
+    {
+		frac = 1.0;
+	}
+
+	// items without glow textures need to keep a minimum light value
+	// so they are always visible
+	ent.renderfx |= RF_MINLIGHT;
+
+	// increase the size of the weapons when they are presented as items
+	VectorScale( ent.axis[0], 1.5, ent.axis[0] );
+	VectorScale( ent.axis[1], 1.5, ent.axis[1] );
+	VectorScale( ent.axis[2], 1.5, ent.axis[2] );
+	ent.nonNormalizedAxes = qtrue;
+#ifdef MISSIONPACK
+	trap_S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, cgs.media.weaponHoverSound );
+#endif
+
+	// add to refresh list
+	trap_R_AddRefEntityToScene(&ent);
+
+#if 0
+	if ( item->giType == IT_WEAPON && wi && wi->barrelModel )
+    {
+		refEntity_t	barrel;
+		vec3_t		angles;
+
+		memset( &barrel, 0, sizeof( barrel ) );
+
+		barrel.hModel = wi->barrelModel;
+
+		VectorCopy( ent.lightingOrigin, barrel.lightingOrigin );
+		barrel.shadowPlane = ent.shadowPlane;
+		barrel.renderfx = ent.renderfx;
+
+		angles[YAW] = 0;
+		angles[PITCH] = 0;
+		angles[ROLL] = 0;
+		AnglesToAxis( angles, barrel.axis );
+
+		CG_PositionRotatedEntityOnTag( &barrel, &ent, wi->weaponModel, "tag_barrel" );
+
+		barrel.nonNormalizedAxes = ent.nonNormalizedAxes;
+
+		trap_R_AddRefEntityToScene( &barrel );
+	}
+#endif
+}
+
+
+/*
+==================
 CG_Speaker
 
 Speaker entities can automatically play sounds
@@ -367,6 +497,7 @@ static void CG_LaunchMissile( centity_t *cent )
     {
       CG_SetAttachmentCent( &ps->attachment, cent );
       CG_AttachToCent( &ps->attachment );
+      ps->charge = es->torsoAnim;
     }
   }
 
@@ -407,9 +538,6 @@ static void CG_Missile( centity_t *cent )
 
   wim = &wi->wim[ weaponMode ];
 
-  // calculate the axis
-  VectorCopy( es->angles, cent->lerpAngles );
-
   // add dynamic light
   if( wim->missileDlight )
   {
@@ -437,7 +565,8 @@ static void CG_Missile( centity_t *cent )
   if( wim->usesSpriteMissle )
   {
     ent.reType = RT_SPRITE;
-    ent.radius = wim->missileSpriteSize;
+    ent.radius = wim->missileSpriteSize +
+                 wim->missileSpriteCharge * es->torsoAnim;
     ent.rotation = 0;
     ent.customShader = wim->missileSprite;
     ent.shaderRGBA[ 0 ] = 0xFF;
@@ -497,6 +626,9 @@ static void CG_Mover( centity_t *cent )
   entityState_t   *s1;
 
   s1 = &cent->currentState;
+
+  if( !s1->modelindex )
+    return;
 
   // create the render entity
   memset( &ent, 0, sizeof( ent ) );
@@ -653,7 +785,7 @@ static void CG_LightFlare( centity_t *cent )
   flare.renderfx |= RF_DEPTHHACK;
 
   //bunch of geometry
-  AngleVectors( es->angles, forward, NULL, NULL );
+  AngleVectors( cent->lerpAngles, forward, NULL, NULL );
   VectorCopy( cent->lerpOrigin, flare.origin );
   VectorSubtract( flare.origin, cg.refdef.vieworg, delta );
   len = VectorLength( delta );
@@ -788,37 +920,27 @@ static void CG_Lev2ZapChain( centity_t *cent )
   int           i;
   entityState_t *es;
   centity_t     *source = NULL, *target = NULL;
+  int           entityNums[ LEVEL2_AREAZAP_MAX_TARGETS + 1 ];
+  int           count;
 
   es = &cent->currentState;
 
-  for( i = 0; i <= 2; i++ )
+  count = BG_UnpackEntityNumbers( es, entityNums, LEVEL2_AREAZAP_MAX_TARGETS + 1 );
+
+  for( i = 1; i < count; i++ )
   {
-    switch( i )
+    if( i == 1 )
     {
-      case 0:
-        if( es->time <= 0 )
-          continue;
-
-        source = &cg_entities[ es->misc ];
-        target = &cg_entities[ es->time ];
-        break;
-
-      case 1:
-        if( es->time2 <= 0 )
-          continue;
-
-        source = &cg_entities[ es->time ];
-        target = &cg_entities[ es->time2 ];
-        break;
-
-      case 2:
-        if( es->constantLight <= 0 )
-          continue;
-
-        source = &cg_entities[ es->time2 ];
-        target = &cg_entities[ es->constantLight ];
-        break;
+      // First entity is the attacker
+      source = &cg_entities[ entityNums[ 0 ] ];
     }
+    else
+    {
+      // Subsequent zaps come from the first target
+      source = &cg_entities[ entityNums[ 1 ] ];
+    }
+
+    target = &cg_entities[ entityNums[ i ] ];
 
     if( !CG_IsTrailSystemValid( &cent->level2ZapTS[ i ] ) )
       cent->level2ZapTS[ i ] = CG_SpawnNewTrailSystem( cgs.media.level2ZapTS );
@@ -844,7 +966,7 @@ void CG_AdjustPositionForMover( const vec3_t in, int moverNum, int fromTime, int
 {
   centity_t *cent;
   vec3_t    oldOrigin, origin, deltaOrigin;
-  vec3_t    oldAngles, angles, deltaAngles;
+  vec3_t    oldAngles, angles;
 
   if( moverNum <= 0 || moverNum >= ENTITYNUM_MAX_NORMAL )
   {
@@ -867,7 +989,6 @@ void CG_AdjustPositionForMover( const vec3_t in, int moverNum, int fromTime, int
   BG_EvaluateTrajectory( &cent->currentState.apos, toTime, angles );
 
   VectorSubtract( origin, oldOrigin, deltaOrigin );
-  VectorSubtract( angles, oldAngles, deltaAngles );
 
   VectorAdd( in, deltaOrigin, out );
 
@@ -947,9 +1068,10 @@ static void CG_CalcEntityLerpPositions( centity_t *cent )
     return;
   }
 
-  if( cg_projectileNudge.integer > 0 &&
-    cent->currentState.eType == ET_MISSILE &&
-    !( cg.snap->ps.pm_flags & PMF_FOLLOW ) )
+  if( cg_projectileNudge.integer &&
+      !cg.demoPlayback &&
+      cent->currentState.eType == ET_MISSILE &&
+      !( cg.snap->ps.pm_flags & PMF_FOLLOW ) )
   {
     timeshift = cg.ping;
   }
@@ -972,7 +1094,7 @@ static void CG_CalcEntityLerpPositions( centity_t *cent )
 	
     // don't let the projectile go through the floor
     if( tr.fraction < 1.0f )
-      VectorLerp( tr.fraction, lastOrigin, cent->lerpOrigin, cent->lerpOrigin );
+      VectorLerp2( tr.fraction, lastOrigin, cent->lerpOrigin, cent->lerpOrigin );
   }
 
   // adjust for riding a mover if it wasn't rolled into the predicted
@@ -983,7 +1105,6 @@ static void CG_CalcEntityLerpPositions( centity_t *cent )
                                cg.snap->serverTime, cg.time, cent->lerpOrigin );
   }
 }
-
 
 /*
 ===============
@@ -1002,6 +1123,10 @@ static void CG_CEntityPVSEnter( centity_t *cent )
   {
     case ET_MISSILE:
       CG_LaunchMissile( cent );
+      break;
+
+    case ET_BUILDABLE:
+      cent->lastBuildableHealth = es->misc;
       break;
   }
 
@@ -1034,11 +1159,10 @@ static void CG_CEntityPVSLeave( centity_t *cent )
 
   if( cg_debugPVS.integer )
     CG_Printf( "Entity %d left PVS\n", cent->currentState.number );
-
   switch( es->eType )
   {
     case ET_LEV2_ZAP_CHAIN:
-      for( i = 0; i <= 2; i++ )
+      for( i = 0; i <= LEVEL2_AREAZAP_MAX_TARGETS; i++ )
       {
         if( CG_IsTrailSystemValid( &cent->level2ZapTS[ i ] ) )
           CG_DestroyTrailSystem( &cent->level2ZapTS[ i ] );
@@ -1069,16 +1193,21 @@ static void CG_AddCEntity( centity_t *cent )
   switch( cent->currentState.eType )
   {
     default:
-      CG_Error( "Bad entity type: %i\n", cent->currentState.eType );
+      CG_Error( "Bad entity type: %i", cent->currentState.eType );
       break;
 
     case ET_INVISIBLE:
     case ET_PUSH_TRIGGER:
     case ET_TELEPORT_TRIGGER:
+    case ET_LOCATION:
       break;
 
     case ET_GENERAL:
       CG_General( cent );
+      break;
+
+    case ET_WEAPON_DROP:
+      CG_WeaponDrop( cent );
       break;
 
     case ET_CORPSE:
@@ -1091,6 +1220,10 @@ static void CG_AddCEntity( centity_t *cent )
 
     case ET_BUILDABLE:
       CG_Buildable( cent );
+      break;
+
+    case ET_RANGE_MARKER:
+      CG_RangeMarker( cent );
       break;
 
     case ET_MISSILE:
@@ -1253,4 +1386,3 @@ void CG_AddPacketEntities( void )
     }
   }
 }
-

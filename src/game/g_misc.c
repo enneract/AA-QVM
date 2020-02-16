@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,8 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
@@ -44,7 +45,7 @@ target_position does the same thing
 */
 void SP_info_notnull( gentity_t *self )
 {
-  G_SetOrigin( self, self->s.origin );
+  G_SetOrigin( self, self->r.currentOrigin );
 }
 
 
@@ -70,39 +71,47 @@ TELEPORTERS
 =================================================================================
 */
 
-void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles )
+void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles, float speed )
 {
   // unlink to make sure it can't possibly interfere with G_KillBox
   trap_UnlinkEntity( player );
 
   VectorCopy( origin, player->client->ps.origin );
-  player->client->ps.origin[ 2 ] += 1;
+  player->client->ps.groundEntityNum = ENTITYNUM_NONE;
+  player->client->ps.stats[ STAT_STATE ] &= ~SS_GRABBED;
 
-  // spit the player out
   AngleVectors( angles, player->client->ps.velocity, NULL, NULL );
-  VectorScale( player->client->ps.velocity, 400, player->client->ps.velocity );
-  player->client->ps.pm_time = 160;   // hold time
-  player->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
+  VectorScale( player->client->ps.velocity, speed, player->client->ps.velocity );
+  player->client->ps.pm_time = 0.4f * fabs( speed ); // duration of loss of control
+  if( player->client->ps.pm_time > 160 )
+    player->client->ps.pm_time = 160;
+  if( player->client->ps.pm_time != 0 )
+    player->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
 
   // toggle the teleport bit so the client knows to not lerp
   player->client->ps.eFlags ^= EF_TELEPORT_BIT;
   G_UnlaggedClear( player );
 
+  // cut all relevant zap beams
+  G_ClearPlayerZapEffects( player );
+
   // set angles
   G_SetClientViewAngle( player, angles );
-
-  // kill anything at the destination
-  if( player->client->sess.sessionTeam != TEAM_SPECTATOR )
-    G_KillBox( player );
 
   // save results of pmove
   BG_PlayerStateToEntityState( &player->client->ps, &player->s, qtrue );
 
   // use the precise origin for linking
   VectorCopy( player->client->ps.origin, player->r.currentOrigin );
+  VectorCopy( player->client->ps.viewangles, player->r.currentAngles );
 
-  if( player->client->sess.sessionTeam != TEAM_SPECTATOR )
+  if( player->client->sess.spectatorState == SPECTATOR_NOT )
+  {
+    // kill anything at the destination
+    G_KillBox( player );
+
     trap_LinkEntity (player);
+  }
 }
 
 
@@ -129,8 +138,7 @@ void SP_misc_model( gentity_t *ent )
   VectorSet (ent->maxs, 16, 16, 16);
   trap_LinkEntity (ent);
 
-  G_SetOrigin( ent, ent->s.origin );
-  VectorCopy( ent->s.angles, ent->s.apos.trBase );
+  G_SetOrigin( ent, ent->r.currentOrigin );
 #else
   G_FreeEntity( ent );
 #endif
@@ -171,19 +179,23 @@ void locateCamera( gentity_t *ent )
   // clientNum holds the rotate offset
   ent->s.clientNum = owner->s.clientNum;
 
-  VectorCopy( owner->s.origin, ent->s.origin2 );
+  VectorCopy( owner->r.currentOrigin, ent->s.origin2 );
 
   // see if the portal_camera has a target
   target = G_PickTarget( owner->target );
   if( target )
   {
-    VectorSubtract( target->s.origin, owner->s.origin, dir );
+    VectorSubtract( target->r.currentOrigin, owner->r.currentOrigin, dir );
     VectorNormalize( dir );
   }
   else
-    G_SetMovedir( owner->s.angles, dir );
+    G_SetMovedir( owner->r.currentAngles, dir );
 
   ent->s.eventParm = DirToByte( dir );
+
+  ByteToDir( ent->s.eventParm, dir );
+  vectoangles( dir, ent->r.currentAngles );
+  ent->r.currentAngles[ 2 ] = ent->s.clientNum * 360.0f / 256;
 }
 
 /*QUAKED misc_portal_surface (0 0 1) (-8 -8 -8) (8 8 8)
@@ -201,7 +213,7 @@ void SP_misc_portal_surface( gentity_t *ent )
 
   if( !ent->target )
   {
-    VectorCopy( ent->s.origin, ent->s.origin2 );
+    VectorCopy( ent->r.currentOrigin, ent->s.origin2 );
   }
   else
   {
@@ -273,7 +285,7 @@ void SP_misc_particle_system( gentity_t *self )
 {
   char  *s;
 
-  G_SetOrigin( self, self->s.origin );
+  G_SetOrigin( self, self->r.currentOrigin );
 
   G_SpawnString( "psName", "", &s );
   G_SpawnFloat( "wait", "0", &self->wait );
@@ -420,7 +432,7 @@ void SP_misc_light_flare( gentity_t *self )
 
   //try to find a spot near to the flare which is empty. This
   //is used to facilitate visibility testing
-  findEmptySpot( self->s.origin, 8.0f, self->s.angles2 );
+  findEmptySpot( self->r.currentOrigin, 8.0f, self->s.angles2 );
 
   self->use = SP_use_light_flare;
 

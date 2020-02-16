@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,8 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
@@ -26,8 +27,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 void InitTrigger( gentity_t *self )
 {
-  if( !VectorCompare( self->s.angles, vec3_origin ) )
-    G_SetMovedir( self->s.angles, self->movedir );
+  if( !VectorCompare( self->r.currentAngles, vec3_origin ) )
+    G_SetMovedir( self->r.currentAngles, self->movedir );
 
   trap_SetBrushModel( self, self->model );
   self->r.contents = CONTENTS_TRIGGER;    // replaces the -1 from trap_SetBrushModel
@@ -42,6 +43,24 @@ void multi_wait( gentity_t *ent )
 }
 
 
+void trigger_check_wait( gentity_t *self )
+{
+  if( self->wait > 0 )
+  {
+    self->think = multi_wait;
+    self->nextthink = level.time + ( self->wait + self->random * crandom( ) ) * 1000;
+  }
+  else
+  {
+    // we can't just remove (self) here, because this is a touch function
+    // called while looping through area links...
+    self->touch = 0;
+    self->nextthink = level.time + FRAMETIME;
+    self->think = G_FreeEntity;
+  }
+}
+
+
 // the trigger was just activated
 // ent->activator should be set to the activator so it can be held through a delay
 // so wait for the delay time before firing
@@ -51,32 +70,19 @@ void multi_trigger( gentity_t *ent, gentity_t *activator )
   if( ent->nextthink )
     return;   // can't retrigger until the wait is over
 
-  if( activator->client )
+  if( activator && activator->client )
   {
     if( ( ent->spawnflags & 1 ) &&
-        activator->client->ps.stats[ STAT_PTEAM ] != PTE_HUMANS )
+        activator->client->ps.stats[ STAT_TEAM ] != TEAM_HUMANS )
       return;
 
     if( ( ent->spawnflags & 2 ) &&
-        activator->client->ps.stats[ STAT_PTEAM ] != PTE_ALIENS )
+        activator->client->ps.stats[ STAT_TEAM ] != TEAM_ALIENS )
       return;
   }
 
   G_UseTargets( ent, ent->activator );
-
-  if( ent->wait > 0 )
-  {
-    ent->think = multi_wait;
-    ent->nextthink = level.time + ( ent->wait + ent->random * crandom( ) ) * 1000;
-  }
-  else
-  {
-    // we can't just remove (self) here, because this is a touch function
-    // called while looping through area links...
-    ent->touch = 0;
-    ent->nextthink = level.time + FRAMETIME;
-    ent->think = G_FreeEntity;
-  }
+  trigger_check_wait( ent );
 }
 
 void Use_Multi( gentity_t *ent, gentity_t *other, gentity_t *activator )
@@ -184,7 +190,7 @@ void AimAtTarget( gentity_t *self )
     return;
   }
 
-  height = ent->s.origin[ 2 ] - origin[ 2 ];
+  height = ent->r.currentOrigin[ 2 ] - origin[ 2 ];
   gravity = g_gravity.value;
   time = sqrt( height / ( 0.5 * gravity ) );
 
@@ -195,7 +201,7 @@ void AimAtTarget( gentity_t *self )
   }
 
   // set s.origin2 to the push velocity
-  VectorSubtract( ent->s.origin, origin, self->s.origin2 );
+  VectorSubtract( ent->r.currentOrigin, origin, self->s.origin2 );
   self->s.origin2[ 2 ] = 0;
   dist = VectorNormalize( self->s.origin2 );
 
@@ -227,7 +233,7 @@ void SP_trigger_push( gentity_t *self )
 
 void Use_target_push( gentity_t *self, gentity_t *other, gentity_t *activator )
 {
-  if( !activator->client )
+  if( !activator || !activator->client )
     return;
 
   if( activator->client->ps.pm_type != PM_NORMAL )
@@ -246,13 +252,13 @@ void SP_target_push( gentity_t *self )
   if( !self->speed )
     self->speed = 1000;
 
-  G_SetMovedir( self->s.angles, self->s.origin2 );
+  G_SetMovedir( self->r.currentAngles, self->s.origin2 );
   VectorScale( self->s.origin2, self->speed, self->s.origin2 );
 
   if( self->target )
   {
-    VectorCopy( self->s.origin, self->r.absmin );
-    VectorCopy( self->s.origin, self->r.absmax );
+    VectorCopy( self->r.currentOrigin, self->r.absmin );
+    VectorCopy( self->r.currentOrigin, self->r.absmax );
     self->think = AimAtTarget;
     self->nextthink = level.time + FRAMETIME;
   }
@@ -283,7 +289,7 @@ void trigger_teleporter_touch( gentity_t *self, gentity_t *other, trace_t *trace
 
   // Spectators only?
   if( ( self->spawnflags & 1 ) &&
-      other->client->sess.sessionTeam != TEAM_SPECTATOR )
+      other->client->sess.spectatorState == SPECTATOR_NOT )
     return;
 
 
@@ -295,7 +301,7 @@ void trigger_teleporter_touch( gentity_t *self, gentity_t *other, trace_t *trace
     return;
   }
 
-  TeleportPlayer( other, dest->s.origin, dest->s.angles );
+  TeleportPlayer( other, dest->r.currentOrigin, dest->r.currentAngles, self->speed );
 }
 
 /*
@@ -320,6 +326,8 @@ automatically near doors to allow spectators to move through them
 void SP_trigger_teleport( gentity_t *self )
 {
   InitTrigger( self );
+
+  G_SpawnFloat( "speed", "400", &self->speed );
 
   // unlike other triggers, we need to send this one to the client
   // unless is a spectator trigger
@@ -407,11 +415,12 @@ void SP_trigger_hurt( gentity_t *self )
 
   self->r.contents = CONTENTS_TRIGGER;
 
-  if( self->spawnflags & 2 )
-    self->use = hurt_use;
+  self->use = hurt_use;
 
   // link in to the world if starting active
-  if( !( self->spawnflags & 1 ) )
+  if( self->spawnflags & 1 )
+    trap_UnlinkEntity( self );
+  else
     trap_LinkEntity( self );
 }
 
@@ -469,7 +478,7 @@ void SP_func_timer( gentity_t *self )
   if( self->random >= self->wait )
   {
     self->random = self->wait - FRAMETIME;
-    G_Printf( "func_timer at %s has random >= wait\n", vtos( self->s.origin ) );
+    G_Printf( "func_timer at %s has random >= wait\n", vtos( self->r.currentOrigin ) );
   }
 
   if( self->spawnflags & 1 )
@@ -489,7 +498,7 @@ G_Checktrigger_stages
 Called when stages change
 ===============
 */
-void G_Checktrigger_stages( pTeam_t team, stage_t stage )
+void G_Checktrigger_stages( team_t team, stage_t stage )
 {
   int i;
   gentity_t *ent;
@@ -558,6 +567,9 @@ qboolean trigger_buildable_match( gentity_t *self, gentity_t *activator )
 {
   int i = 0;
 
+  if( !activator )
+    return qfalse;
+
   //if there is no buildable list every buildable triggers
   if( self->bTriggers[ i ] == BA_NONE )
     return qtrue;
@@ -592,26 +604,18 @@ void trigger_buildable_trigger( gentity_t *self, gentity_t *activator )
   if( self->s.eFlags & EF_DEAD )
   {
     if( !trigger_buildable_match( self, activator ) )
+    {
       G_UseTargets( self, activator );
+      trigger_check_wait( self );
+    }
   }
   else
   {
     if( trigger_buildable_match( self, activator ) )
+    {
       G_UseTargets( self, activator );
-  }
-
-  if( self->wait > 0 )
-  {
-    self->think = multi_wait;
-    self->nextthink = level.time + ( self->wait + self->random * crandom( ) ) * 1000;
-  }
-  else
-  {
-    // we can't just remove (self) here, because this is a touch function
-    // called while looping through area links...
-    self->touch = 0;
-    self->nextthink = level.time + FRAMETIME;
-    self->think = G_FreeEntity;
+      trigger_check_wait( self );
+    }
   }
 }
 
@@ -686,6 +690,9 @@ qboolean trigger_class_match( gentity_t *self, gentity_t *activator )
 {
   int i = 0;
 
+  if( !activator )
+    return qfalse;
+
   //if there is no class list every class triggers (stupid case)
   if( self->cTriggers[ i ] == PCL_NONE )
     return qtrue;
@@ -694,7 +701,7 @@ qboolean trigger_class_match( gentity_t *self, gentity_t *activator )
     //otherwise check against the list
     for( i = 0; self->cTriggers[ i ] != PCL_NONE; i++ )
     {
-      if( activator->client->ps.stats[ STAT_PCLASS ] == self->cTriggers[ i ] )
+      if( activator->client->ps.stats[ STAT_CLASS ] == self->cTriggers[ i ] )
         return qtrue;
     }
   }
@@ -710,10 +717,10 @@ trigger_class_trigger
 void trigger_class_trigger( gentity_t *self, gentity_t *activator )
 {
   //sanity check
-  if( !activator->client )
+  if( !activator || !activator->client )
     return;
 
-  if( activator->client->ps.stats[ STAT_PTEAM ] != PTE_ALIENS )
+  if( activator->client->ps.stats[ STAT_TEAM ] != TEAM_ALIENS )
     return;
 
   if( self->s.eFlags & EF_NODRAW )
@@ -726,27 +733,20 @@ void trigger_class_trigger( gentity_t *self, gentity_t *activator )
   if( self->s.eFlags & EF_DEAD )
   {
     if( !trigger_class_match( self, activator ) )
+    {
       G_UseTargets( self, activator );
+      trigger_check_wait( self );
+    }
   }
   else
   {
     if( trigger_class_match( self, activator ) )
+    {
       G_UseTargets( self, activator );
+      trigger_check_wait( self );
+    }
   }
 
-  if( self->wait > 0 )
-  {
-    self->think = multi_wait;
-    self->nextthink = level.time + ( self->wait + self->random * crandom( ) ) * 1000;
-  }
-  else
-  {
-    // we can't just remove (self) here, because this is a touch function
-    // called while looping through area links...
-    self->touch = 0;
-    self->nextthink = level.time + FRAMETIME;
-    self->think = G_FreeEntity;
-  }
 }
 
 /*
@@ -820,6 +820,9 @@ qboolean trigger_equipment_match( gentity_t *self, gentity_t *activator )
 {
   int i = 0;
 
+  if( !activator )
+    return qfalse;
+
   //if there is no equipment list all equipment triggers (stupid case)
   if( self->wTriggers[ i ] == WP_NONE && self->uTriggers[ i ] == UP_NONE )
     return qtrue;
@@ -850,10 +853,10 @@ trigger_equipment_trigger
 void trigger_equipment_trigger( gentity_t *self, gentity_t *activator )
 {
   //sanity check
-  if( !activator->client )
+  if( !activator || !activator->client )
     return;
 
-  if( activator->client->ps.stats[ STAT_PTEAM ] != PTE_HUMANS )
+  if( activator->client->ps.stats[ STAT_TEAM ] != TEAM_HUMANS )
     return;
 
   if( self->s.eFlags & EF_NODRAW )
@@ -866,26 +869,18 @@ void trigger_equipment_trigger( gentity_t *self, gentity_t *activator )
   if( self->s.eFlags & EF_DEAD )
   {
     if( !trigger_equipment_match( self, activator ) )
+    {
       G_UseTargets( self, activator );
+      trigger_check_wait( self );
+    }
   }
   else
   {
     if( trigger_equipment_match( self, activator ) )
+    {
       G_UseTargets( self, activator );
-  }
-
-  if( self->wait > 0 )
-  {
-    self->think = multi_wait;
-    self->nextthink = level.time + ( self->wait + self->random * crandom( ) ) * 1000;
-  }
-  else
-  {
-    // we can't just remove (self) here, because this is a touch function
-    // called while looping through area links...
-    self->touch = 0;
-    self->nextthink = level.time + FRAMETIME;
-    self->think = G_FreeEntity;
+      trigger_check_wait( self );
+    }
   }
 }
 
@@ -1061,7 +1056,9 @@ void SP_trigger_heal( gentity_t *self )
   InitTrigger( self );
 
   // link in to the world if starting active
-  if( !( self->spawnflags & 1 ) )
+  if( self->spawnflags & 1 )
+    trap_UnlinkEntity( self );
+  else
     trap_LinkEntity( self );
 }
 
@@ -1073,12 +1070,13 @@ trigger_ammo_touch
 */
 void trigger_ammo_touch( gentity_t *self, gentity_t *other, trace_t *trace )
 {
-  int ammo, clips, maxClips, maxAmmo;
+  int maxClips, maxAmmo;
+  weapon_t weapon;
 
   if( !other->client )
     return;
 
-  if( other->client->ps.stats[ STAT_PTEAM ] != PTE_HUMANS )
+  if( other->client->ps.stats[ STAT_TEAM ] != TEAM_HUMANS )
     return;
 
   if( self->timestamp > level.time )
@@ -1087,10 +1085,11 @@ void trigger_ammo_touch( gentity_t *self, gentity_t *other, trace_t *trace )
   if( other->client->ps.weaponstate != WEAPON_READY )
     return;
 
-  if( BG_FindUsesEnergyForWeapon( other->client->ps.weapon ) && self->spawnflags & 2 )
+  weapon = other->client->ps.stats[ STAT_WEAPON ];
+  if( BG_Weapon( weapon )->usesEnergy && self->spawnflags & 2 )
     return;
 
-  if( !BG_FindUsesEnergyForWeapon( other->client->ps.weapon ) && self->spawnflags & 4 )
+  if( !BG_Weapon( weapon )->usesEnergy && self->spawnflags & 4 )
     return;
 
   if( self->spawnflags & 1 )
@@ -1098,25 +1097,21 @@ void trigger_ammo_touch( gentity_t *self, gentity_t *other, trace_t *trace )
   else
     self->timestamp = level.time + FRAMETIME;
 
-  BG_FindAmmoForWeapon( other->client->ps.weapon, &maxAmmo, &maxClips );
-  ammo = other->client->ps.ammo;
-  clips = other->client->ps.clips;
+  maxAmmo = BG_Weapon( weapon )->maxAmmo;
+  maxClips = BG_Weapon( weapon )->maxClips;
 
-  if( ( ammo + self->damage ) > maxAmmo )
+  if( ( other->client->ps.ammo + self->damage ) > maxAmmo )
   {
-    if( clips < maxClips )
+    if( other->client->ps.clips < maxClips )
     {
-      clips++;
-      ammo = 1;
+      other->client->ps.clips++;
+      other->client->ps.ammo = 1;
     }
     else
-      ammo = maxAmmo;
+      other->client->ps.ammo = maxAmmo;
   }
   else
-    ammo += self->damage;
-
-  other->client->ps.ammo = ammo;
-  other->client->ps.clips = clips;
+    other->client->ps.ammo += self->damage;
 }
 
 /*

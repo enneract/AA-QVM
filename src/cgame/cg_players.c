@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,13 +17,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
 // cg_players.c -- handle the media and animation for player entities
-
 
 #include "cg_local.h"
 
@@ -107,12 +107,12 @@ static qboolean CG_ParseAnimationFile( const char *filename, clientInfo_t *ci )
 
   // load the file
   len = trap_FS_FOpenFile( filename, &f, FS_READ );
-  if( len <= 0 )
+  if( len < 0 )
     return qfalse;
 
-  if( len >= sizeof( text ) - 1 )
+  if( len == 0 || len >= sizeof( text ) - 1 )
   {
-    CG_Printf( "File %s too long\n", filename );
+    CG_Printf( "File %s is %s\n", filename, len == 0 ? "empty" : "too long" );
     trap_FS_FCloseFile( f );
     return qfalse;
   }
@@ -480,49 +480,15 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
   // if any skins failed to load, return failure
   if( !CG_RegisterClientSkin( ci, modelName, skinName ) )
   {
-    Com_Printf( "Failed to load skin file: %s : %s\n", modelName, skinName );
-    return qfalse;
+    Com_Printf( "Failed to load skin file: %s : %s. Loading default\n", modelName, skinName );
+    if( !CG_RegisterClientSkin( ci, modelName, "default" ) )
+    {
+        Com_Printf( S_COLOR_RED "Failed to load default skin file!\n" );
+        return qfalse;
+    }
   }
-
-  //FIXME: skins do not load without icon present. do we want icons anyway?
-/*  Com_sprintf( filename, sizeof( filename ), "models/players/%s/icon_%s.tga", modelName, skinName );
-  ci->modelIcon = trap_R_RegisterShaderNoMip( filename );
-  if( !ci->modelIcon )
-  {
-    Com_Printf( "Failed to load icon file: %s\n", filename );
-    return qfalse;
-  }*/
 
   return qtrue;
-}
-
-/*
-====================
-CG_ColorFromString
-====================
-*/
-static void CG_ColorFromString( const char *v, vec3_t color )
-{
-  int val;
-
-  VectorClear( color );
-
-  val = atoi( v );
-
-  if( val < 1 || val > 7 )
-  {
-    VectorSet( color, 1, 1, 1 );
-    return;
-  }
-
-  if( val & 1 )
-    color[ 2 ] = 1.0f;
-
-  if( val & 2 )
-    color[ 1 ] = 1.0f;
-
-  if( val & 4 )
-    color[ 0 ] = 1.0f;
 }
 
 
@@ -535,24 +501,16 @@ Load it now, taking the disk hits
 */
 static void CG_LoadClientInfo( clientInfo_t *ci )
 {
-  const char  *dir, *fallback;
+  const char  *dir;
   int         i;
   const char  *s;
   int         clientNum;
 
   if( !CG_RegisterClientModelname( ci, ci->modelName, ci->skinName ) )
-  {
-    if( cg_buildScript.integer )
-      CG_Error( "CG_RegisterClientModelname( %s, %s ) failed", ci->modelName, ci->skinName );
-
-    // fall back
-    if( !CG_RegisterClientModelname( ci, DEFAULT_MODEL, "default" ) )
-      CG_Error( "DEFAULT_MODEL (%s) failed to register", DEFAULT_MODEL );
-  }
+    CG_Error( "CG_RegisterClientModelname( %s, %s ) failed", ci->modelName, ci->skinName );
 
   // sounds
   dir = ci->modelName;
-  fallback = DEFAULT_MODEL;
 
   for( i = 0; i < MAX_CUSTOM_SOUNDS; i++ )
   {
@@ -578,15 +536,11 @@ static void CG_LoadClientInfo( clientInfo_t *ci )
           s = cg_customSoundNames[ 0 ]; //death1
 
         ci->sounds[ i ] = trap_S_RegisterSound( va( "sound/player/%s/%s", dir, s + 1 ), qfalse );
-        if( !ci->sounds[ i ] )
-          ci->sounds[ i ] = trap_S_RegisterSound( va( "sound/player/%s/%s", fallback, s + 1 ), qfalse );
       }
     }
     else
     {
       ci->sounds[ i ] = trap_S_RegisterSound( va( "sound/player/%s/%s", dir, s + 1 ), qfalse );
-      if( !ci->sounds[ i ] )
-        ci->sounds[ i ] = trap_S_RegisterSound( va( "sound/player/%s/%s", fallback, s + 1 ), qfalse );
     }
   }
 
@@ -649,15 +603,15 @@ static void CG_CopyClientInfoModel( clientInfo_t *from, clientInfo_t *to )
 CG_GetCorpseNum
 ======================
 */
-static int CG_GetCorpseNum( pClass_t class )
+static int CG_GetCorpseNum( class_t class )
 {
   int           i;
   clientInfo_t  *match;
   char          *modelName;
   char          *skinName;
 
-  modelName = BG_FindModelNameForClass( class );
-  skinName = BG_FindSkinNameForClass( class );
+  modelName = BG_ClassConfig( class )->modelName;
+  skinName = BG_ClassConfig( class )->skinName;
 
   for( i = PCL_NONE + 1; i < PCL_NUM_CLASSES; i++ )
   {
@@ -666,10 +620,10 @@ static int CG_GetCorpseNum( pClass_t class )
     if( !match->infoValid )
       continue;
 
-    if( !Q_stricmp( modelName, match->modelName )
-      && !Q_stricmp( skinName, match->skinName ) )
+    if( !Q_stricmp( modelName, match->modelName ) &&
+        !Q_stricmp( skinName, match->skinName ) )
     {
-      // this clientinfo is identical, so use it's handles
+      // this clientinfo is identical, so use its handles
       return i;
     }
   }
@@ -716,7 +670,7 @@ static qboolean CG_ScanForExistingClientInfo( clientInfo_t *ci )
 CG_PrecacheClientInfo
 ======================
 */
-void CG_PrecacheClientInfo( pClass_t class, char *model, char *skin )
+void CG_PrecacheClientInfo( class_t class, char *model, char *skin )
 {
   clientInfo_t  *ci;
   clientInfo_t  newInfo;
@@ -728,19 +682,12 @@ void CG_PrecacheClientInfo( pClass_t class, char *model, char *skin )
 
   // model
   Q_strncpyz( newInfo.modelName, model, sizeof( newInfo.modelName ) );
-  Q_strncpyz( newInfo.headModelName, model, sizeof( newInfo.headModelName ) );
 
-  // modelName didn not include a skin name
+  // modelName did not include a skin name
   if( !skin )
-  {
     Q_strncpyz( newInfo.skinName, "default", sizeof( newInfo.skinName ) );
-    Q_strncpyz( newInfo.headSkinName, "default", sizeof( newInfo.headSkinName ) );
-  }
   else
-  {
     Q_strncpyz( newInfo.skinName, skin, sizeof( newInfo.skinName ) );
-    Q_strncpyz( newInfo.headSkinName, skin, sizeof( newInfo.headSkinName ) );
-  }
 
   newInfo.infoValid = qtrue;
 
@@ -749,6 +696,34 @@ void CG_PrecacheClientInfo( pClass_t class, char *model, char *skin )
   CG_LoadClientInfo( ci );
 }
 
+/*
+=============
+CG_StatusMessages
+
+Print messages for player status changes
+=============
+*/
+static void CG_StatusMessages( clientInfo_t *new, clientInfo_t *old )
+{
+  if( !old->infoValid )
+    return;
+
+  if( strcmp( new->name, old->name ) )
+    CG_Printf( "%s" S_COLOR_WHITE " renamed to %s\n", old->name, new->name );
+
+  if( old->team != new->team )
+  {
+    if( new->team == TEAM_NONE )
+      CG_Printf( "%s" S_COLOR_WHITE " left the %ss\n", new->name,
+        BG_TeamName( old->team ) );
+    else if( old->team == TEAM_NONE )
+      CG_Printf( "%s" S_COLOR_WHITE " joined the %ss\n", new->name,
+        BG_TeamName( new->team ) );
+    else
+      CG_Printf( "%s" S_COLOR_WHITE " left the %ss and joined the %ss\n",
+        new->name, BG_TeamName( old->team ), BG_TeamName( new->team ) );
+  }
+}
 
 /*
 ======================
@@ -774,45 +749,35 @@ void CG_NewClientInfo( int clientNum )
 
   // the old value
   memset( &newInfo, 0, sizeof( newInfo ) );
-
+ 
   // isolate the player's name
   v = Info_ValueForKey( configstring, "n" );
   Q_strncpyz( newInfo.name, v, sizeof( newInfo.name ) );
-
-  // colors
-  v = Info_ValueForKey( configstring, "c1" );
-  CG_ColorFromString( v, newInfo.color1 );
-
-  v = Info_ValueForKey( configstring, "c2" );
-  CG_ColorFromString( v, newInfo.color2 );
-
-  // bot skill
-  v = Info_ValueForKey( configstring, "skill" );
-  newInfo.botSkill = atoi( v );
-
-  // handicap
-  v = Info_ValueForKey( configstring, "hc" );
-  newInfo.handicap = atoi( v );
-
-  // wins
-  v = Info_ValueForKey( configstring, "w" );
-  newInfo.wins = atoi( v );
-
-  // losses
-  v = Info_ValueForKey( configstring, "l" );
-  newInfo.losses = atoi( v );
 
   // team
   v = Info_ValueForKey( configstring, "t" );
   newInfo.team = atoi( v );
 
-  // team task
-  v = Info_ValueForKey( configstring, "tt" );
-  newInfo.teamTask = atoi( v );
+  // if this is us, execute team-specific config files
+  // the spectator config is a little unreliable because it's easy to get on
+  // to the spectator team without joining it - e.g. when a new game starts.
+  // It's not a big deal because the spec config is the least important
+  // slash used anyway.
+  // I guess it's possible for someone to change teams during a restart and
+  // for that to then be missed here. But that's rare enough that people can
+  // just exec the configs manually, I think.
+  if( clientNum == cg.clientNum && ci->infoValid &&
+      ci->team != newInfo.team )
+  {
+    char config[ MAX_CVAR_VALUE_STRING ];
 
-  // team leader
-  v = Info_ValueForKey( configstring, "tl" );
-  newInfo.teamLeader = atoi( v );
+    trap_Cvar_VariableStringBuffer(
+      va( "cg_%sConfig", BG_TeamName( newInfo.team ) ),
+      config, sizeof( config ) );
+
+    if( config[ 0 ] )
+      trap_SendConsoleCommand( va( "exec \"%s\"\n", config ) );
+  }
 
   // model
   v = Info_ValueForKey( configstring, "model" );
@@ -832,25 +797,11 @@ void CG_NewClientInfo( int clientNum )
     *slash = 0;
   }
 
-  //CG_Printf( "NCI: %s\n", v );
+  // voice
+  v = Info_ValueForKey( configstring, "v" );
+  Q_strncpyz( newInfo.voice, v, sizeof( newInfo.voice ) );
 
-  // head model
-  v = Info_ValueForKey( configstring, "hmodel" );
-  Q_strncpyz( newInfo.headModelName, v, sizeof( newInfo.headModelName ) );
-
-  slash = strchr( newInfo.headModelName, '/' );
-
-  if( !slash )
-  {
-    // modelName didn not include a skin name
-    Q_strncpyz( newInfo.headSkinName, "default", sizeof( newInfo.headSkinName ) );
-  }
-  else
-  {
-    Q_strncpyz( newInfo.headSkinName, slash + 1, sizeof( newInfo.headSkinName ) );
-    // truncate modelName
-    *slash = 0;
-  }
+  CG_StatusMessages( &newInfo, ci );
 
   // replace whatever was there with the new one
   newInfo.infoValid = qtrue;
@@ -909,90 +860,11 @@ cg.time should be between oldFrameTime and frameTime after exit
 */
 static void CG_RunPlayerLerpFrame( clientInfo_t *ci, lerpFrame_t *lf, int newAnimation, float speedScale )
 {
-  int         f, numFrames;
-  animation_t *anim;
-
-  // debugging tool to get no animations
-  if( cg_animSpeed.integer == 0 )
-  {
-    lf->oldFrame = lf->frame = lf->backlerp = 0;
-    return;
-  }
-
   // see if the animation sequence is switching
   if( newAnimation != lf->animationNumber || !lf->animation )
-  {
     CG_SetLerpFrameAnimation( ci, lf, newAnimation );
-  }
 
-  // if we have passed the current frame, move it to
-  // oldFrame and calculate a new frame
-  if( cg.time >= lf->frameTime )
-  {
-    lf->oldFrame = lf->frame;
-    lf->oldFrameTime = lf->frameTime;
-
-    // get the next frame based on the animation
-    anim = lf->animation;
-    if( !anim->frameLerp )
-      return;   // shouldn't happen
-
-    if( cg.time < lf->animationTime )
-      lf->frameTime = lf->animationTime;    // initial lerp
-    else
-      lf->frameTime = lf->oldFrameTime + anim->frameLerp;
-
-    f = ( lf->frameTime - lf->animationTime ) / anim->frameLerp;
-    f *= speedScale;    // adjust for haste, etc
-    numFrames = anim->numFrames;
-
-    if( anim->flipflop )
-      numFrames *= 2;
-
-    if( f >= numFrames )
-    {
-      f -= numFrames;
-      if( anim->loopFrames )
-      {
-        f %= anim->loopFrames;
-        f += anim->numFrames - anim->loopFrames;
-      }
-      else
-      {
-        f = numFrames - 1;
-        // the animation is stuck at the end, so it
-        // can immediately transition to another sequence
-        lf->frameTime = cg.time;
-      }
-    }
-
-    if( anim->reversed )
-      lf->frame = anim->firstFrame + anim->numFrames - 1 - f;
-    else if( anim->flipflop && f>=anim->numFrames )
-      lf->frame = anim->firstFrame + anim->numFrames - 1 - ( f % anim->numFrames );
-    else
-      lf->frame = anim->firstFrame + f;
-
-    if( cg.time > lf->frameTime )
-    {
-      lf->frameTime = cg.time;
-
-      if( cg_debugAnim.integer )
-        CG_Printf( "Clamp lf->frameTime\n" );
-    }
-  }
-
-  if( lf->frameTime > cg.time + 200 )
-    lf->frameTime = cg.time;
-
-  if( lf->oldFrameTime > cg.time )
-    lf->oldFrameTime = cg.time;
-
-  // calculate current lerp value
-  if( lf->frameTime == lf->oldFrameTime )
-    lf->backlerp = 0;
-  else
-    lf->backlerp = 1.0 - (float)( cg.time - lf->oldFrameTime ) / ( lf->frameTime - lf->oldFrameTime );
+  CG_RunLerpFrame( lf, speedScale );
 }
 
 
@@ -1735,13 +1607,6 @@ static void CG_PlayerSprites( centity_t *cent )
     CG_PlayerFloatSprite( cent, cgs.media.connectionShader );
     return;
   }
-
-  if( cent->currentState.eFlags & EF_TALK )
-  {
-    // the masses have decreed this to be wrong
-/*    CG_PlayerFloatSprite( cent, cgs.media.balloonShader );
-    return;*/
-  }
 }
 
 /*
@@ -1754,7 +1619,7 @@ Returns the Z component of the surface being shadowed
 ===============
 */
 #define SHADOW_DISTANCE   128
-static qboolean CG_PlayerShadow( centity_t *cent, float *shadowPlane, pClass_t class )
+static qboolean CG_PlayerShadow( centity_t *cent, float *shadowPlane, class_t class )
 {
   vec3_t        end, mins, maxs;
   trace_t       trace;
@@ -1762,7 +1627,7 @@ static qboolean CG_PlayerShadow( centity_t *cent, float *shadowPlane, pClass_t c
   entityState_t *es = &cent->currentState;
   vec3_t        surfNormal = { 0.0f, 0.0f, 1.0f };
 
-  BG_FindBBoxForClass( class, mins, maxs, NULL, NULL, NULL );
+  BG_ClassBoundingBox( class, mins, maxs, NULL, NULL, NULL );
   mins[ 2 ] = 0.0f;
   maxs[ 2 ] = 2.0f;
 
@@ -1808,7 +1673,7 @@ static qboolean CG_PlayerShadow( centity_t *cent, float *shadowPlane, pClass_t c
   // without taking a spot in the cg_marks array
   CG_ImpactMark( cgs.media.shadowMarkShader, trace.endpos, trace.plane.normal,
                  cent->pe.legs.yawAngle, 0.0f, 0.0f, 0.0f, alpha, qfalse,
-                 24.0f * BG_FindShadowScaleForClass( class ), qtrue );
+                 24.0f * BG_ClassConfig( class )->shadowScale, qtrue );
 
   return qtrue;
 }
@@ -1821,7 +1686,7 @@ CG_PlayerSplash
 Draw a mark at the water surface
 ===============
 */
-static void CG_PlayerSplash( centity_t *cent, pClass_t class )
+static void CG_PlayerSplash( centity_t *cent, class_t class )
 {
   vec3_t      start, end;
   vec3_t      mins, maxs;
@@ -1831,7 +1696,7 @@ static void CG_PlayerSplash( centity_t *cent, pClass_t class )
   if( !cg_shadows.integer )
     return;
 
-  BG_FindBBoxForClass( class, mins, maxs, NULL, NULL, NULL );
+  BG_ClassBoundingBox( class, mins, maxs, NULL, NULL, NULL );
 
   VectorCopy( cent->lerpOrigin, end );
   end[ 2 ] += mins[ 2 ];
@@ -1861,7 +1726,7 @@ static void CG_PlayerSplash( centity_t *cent, pClass_t class )
 
   CG_ImpactMark( cgs.media.wakeMarkShader, trace.endpos, trace.plane.normal,
                  cent->pe.legs.yawAngle, 1.0f, 1.0f, 1.0f, 1.0f, qfalse,
-                 32.0f * BG_FindShadowScaleForClass( class ), qtrue );
+                 32.0f * BG_ClassConfig( class )->shadowScale, qtrue );
 }
 
 
@@ -2012,7 +1877,7 @@ void CG_Player( centity_t *cent )
   qboolean      shadow = qfalse;
   float         shadowPlane = 0.0f;
   entityState_t *es = &cent->currentState;
-  pClass_t      class = ( es->misc >> 8 ) & 0xFF;
+  class_t       class = ( es->misc >> 8 ) & 0xFF;
   float         scale;
   vec3_t        tempAxis[ 3 ], tempAxis2[ 3 ];
   vec3_t        angles;
@@ -2051,7 +1916,7 @@ void CG_Player( centity_t *cent )
   {
     vec3_t  mins, maxs;
 
-    BG_FindBBoxForClass( class, mins, maxs, NULL, NULL, NULL );
+    BG_ClassBoundingBox( class, mins, maxs, NULL, NULL, NULL );
     CG_DrawBoundingBox( cent->lerpOrigin, mins, maxs );
   }
 
@@ -2150,7 +2015,7 @@ void CG_Player( centity_t *cent )
     else
       VectorCopy( es->angles2, surfNormal );
 
-    BG_FindBBoxForClass( class, mins, maxs, NULL, NULL, NULL );
+    BG_ClassBoundingBox( class, mins, maxs, NULL, NULL, NULL );
 
     VectorMA( legs.origin, -TRACE_DEPTH, surfNormal, end );
     VectorMA( legs.origin, 1.0f, surfNormal, start );
@@ -2166,7 +2031,7 @@ void CG_Player( centity_t *cent )
   }
 
   //rescale the model
-  scale = BG_FindModelScaleForClass( class );
+  scale = BG_ClassConfig( class )->modelScale;
 
   if( scale != 1.0f )
   {
@@ -2178,7 +2043,7 @@ void CG_Player( centity_t *cent )
   }
 
   //offset on the Z axis if required
-  VectorMA( legs.origin, BG_FindZOffsetForClass( class ), surfNormal, legs.origin );
+  VectorMA( legs.origin, BG_ClassConfig( class )->zOffset, surfNormal, legs.origin );
   VectorCopy( legs.origin, legs.lightingOrigin );
   VectorCopy( legs.origin, legs.oldorigin ); // don't positionally lerp at all
 
@@ -2233,6 +2098,21 @@ void CG_Player( centity_t *cent )
     head.renderfx = renderfx;
 
     trap_R_AddRefEntityToScene( &head );
+
+    // if this player has been hit with poison cloud, add an effect PS
+    if( ( es->eFlags & EF_POISONCLOUDED ) &&
+        ( es->number != cg.snap->ps.clientNum || cg.renderingThirdPerson ) )
+    {
+      if( !CG_IsParticleSystemValid( &cent->poisonCloudedPS ) )
+        cent->poisonCloudedPS = CG_SpawnNewParticleSystem( cgs.media.poisonCloudedPS );
+
+      CG_SetAttachmentTag( &cent->poisonCloudedPS->attachment,
+                           head, head.hModel, "tag_head" );
+      CG_SetAttachmentCent( &cent->poisonCloudedPS->attachment, cent );
+      CG_AttachToTag( &cent->poisonCloudedPS->attachment );
+    }
+    else if( CG_IsParticleSystemValid( &cent->poisonCloudedPS ) )
+      CG_DestroyParticleSystem( &cent->poisonCloudedPS );
   }
 
   //
@@ -2247,7 +2127,7 @@ void CG_Player( centity_t *cent )
   }
 
   CG_PlayerUpgrades( cent, &torso );
-
+  
   //sanity check that particle systems are stopped when dead
   if( es->eFlags & EF_DEAD )
   {
@@ -2277,7 +2157,7 @@ void CG_Corpse( centity_t *cent )
   int           renderfx;
   qboolean      shadow = qfalse;
   float         shadowPlane;
-  vec3_t        origin, liveZ, deadZ;
+  vec3_t        origin, aliveZ, deadZ;
   float         scale;
 
   corpseNum = CG_GetCorpseNum( es->clientNum );
@@ -2297,10 +2177,8 @@ void CG_Corpse( centity_t *cent )
   memset( &head, 0, sizeof( head ) );
 
   VectorCopy( cent->lerpOrigin, origin );
-  BG_FindBBoxForClass( es->clientNum, liveZ, NULL, NULL, deadZ, NULL );
-  origin[ 2 ] -= ( liveZ[ 2 ] - deadZ[ 2 ] );
-
-  VectorCopy( es->angles, cent->lerpAngles );
+  BG_ClassBoundingBox( es->clientNum, aliveZ, NULL, NULL, deadZ, NULL );
+  origin[ 2 ] -= ( aliveZ[ 2 ] - deadZ[ 2 ] );
 
   // get the rotation information
   if( !ci->nonsegmented )
@@ -2364,11 +2242,11 @@ void CG_Corpse( centity_t *cent )
   VectorCopy( origin, legs.lightingOrigin );
   legs.shadowPlane = shadowPlane;
   legs.renderfx = renderfx;
-  legs.origin[ 2 ] += BG_FindZOffsetForClass( es->clientNum );
+  legs.origin[ 2 ] += BG_ClassConfig( es->clientNum )->zOffset;
   VectorCopy( legs.origin, legs.oldorigin ); // don't positionally lerp at all
 
   //rescale the model
-  scale = BG_FindModelScaleForClass( es->clientNum );
+  scale = BG_ClassConfig( es->clientNum )->modelScale;
 
   if( scale != 1.0f )
   {
@@ -2379,7 +2257,6 @@ void CG_Corpse( centity_t *cent )
     legs.nonNormalizedAxes = qtrue;
   }
 
-  //CG_AddRefEntityWithPowerups( &legs, es->misc, ci->team );
   trap_R_AddRefEntityToScene( &legs );
 
   // if the model failed, allow the default nullmodel to be displayed
@@ -2404,7 +2281,6 @@ void CG_Corpse( centity_t *cent )
     torso.shadowPlane = shadowPlane;
     torso.renderfx = renderfx;
 
-    //CG_AddRefEntityWithPowerups( &torso, es->misc, ci->team );
     trap_R_AddRefEntityToScene( &torso );
 
     //
@@ -2423,7 +2299,6 @@ void CG_Corpse( centity_t *cent )
     head.shadowPlane = shadowPlane;
     head.renderfx = renderfx;
 
-    //CG_AddRefEntityWithPowerups( &head, es->misc, ci->team );
     trap_R_AddRefEntityToScene( &head );
   }
 }
@@ -2475,7 +2350,7 @@ void CG_ResetPlayerEntity( centity_t *cent )
   cent->pe.nonseg.pitching = qfalse;
 
   if( cg_debugPosition.integer )
-    CG_Printf( "%i ResetPlayerEntity yaw=%i\n", cent->currentState.number, cent->pe.torso.yawAngle );
+    CG_Printf( "%i ResetPlayerEntity yaw=%f\n", cent->currentState.number, cent->pe.torso.yawAngle );
 }
 
 /*
@@ -2500,66 +2375,35 @@ void CG_PlayerDisconnect( vec3_t org )
   }
 }
 
-/*
-=================
-CG_Bleed
-
-This is the spurt of blood when a character gets hit
-=================
-*/
-void CG_Bleed( vec3_t origin, vec3_t normal, int entityNum )
+centity_t *CG_GetPlayerLocation( void )
 {
-  pTeam_t           team = cgs.clientinfo[ entityNum ].team;
-  qhandle_t         bleedPS;
-  particleSystem_t  *ps;
+  int i;
+  centity_t   *eloc, *best;
+  float       bestlen, len;
+  vec3_t      origin;
 
-  if( !cg_blood.integer )
-    return;
+  best = NULL;
+  bestlen = 0.0f;
 
-  if( team == PTE_ALIENS )
-    bleedPS = cgs.media.alienBleedPS;
-  else if( team == PTE_HUMANS )
-    bleedPS = cgs.media.humanBleedPS;
-  else
-    return;
+  VectorCopy( cg.predictedPlayerState.origin, origin );
 
-  ps = CG_SpawnNewParticleSystem( bleedPS );
-
-  if( CG_IsParticleSystemValid( &ps ) )
+  for( i = MAX_CLIENTS; i < MAX_GENTITIES; i++ )
   {
-    CG_SetAttachmentPoint( &ps->attachment, origin );
-    CG_SetAttachmentCent( &ps->attachment, &cg_entities[ entityNum ] );
-    CG_AttachToPoint( &ps->attachment );
+    eloc = &cg_entities[ i ];
+    if( !eloc->valid || eloc->currentState.eType != ET_LOCATION )
+      continue;
 
-    CG_SetParticleSystemNormal( ps, normal );
-  }
-}
+    len = DistanceSquared(origin, eloc->lerpOrigin);
 
-/*
-===============
-CG_AtHighestClass
+    if( best != NULL && len > bestlen )
+      continue;
 
-Is the local client at the highest class possible?
-===============
-*/
-qboolean CG_AtHighestClass( void )
-{
-  int       i;
-  qboolean  superiorClasses = qfalse;
+    if( !trap_R_inPVS( origin, eloc->lerpOrigin ) )
+      continue;
 
-  for( i = PCL_NONE + 1; i < PCL_NUM_CLASSES; i++ )
-  {
-    if( BG_ClassCanEvolveFromTo(
-          cg.predictedPlayerState.stats[ STAT_PCLASS ], i,
-          ALIEN_MAX_KILLS, 0 ) >= 0 &&
-        BG_FindStagesForClass( i, cgs.alienStage ) &&
-        BG_ClassIsAllowed( i ) )
-    {
-      superiorClasses = qtrue;
-      break;
-    }
+    bestlen = len;
+    best = eloc;
   }
 
-  return !superiorClasses;
+  return best;
 }
-

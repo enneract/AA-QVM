@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,15 +17,16 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
-#include "../../qcommon/q_platform.h"
+#include "qcommon/q_platform.h"
+
 #include "cmdlib.h"
 #include "mathlib.h"
-#include "../../qcommon/qfiles.h"
+#include "qfiles.h"
 
 /* 19079 total symbols in FI, 2002 Jan 23 */
 #define DEFAULT_HASHTABLE_SIZE 2048
@@ -478,7 +480,7 @@ static unsigned int HashString (const char *key)
     acc = (acc << 2) | (acc >> 30);
     acc &= 0xffffffffU;
     }
-    return abs((int)acc);
+    return acc;
 }
 
 
@@ -1645,4 +1647,3 @@ Motivation: not wanting to scrollback for pages to find asm error.
 
 	return errorCount;
 }
-

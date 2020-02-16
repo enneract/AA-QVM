@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,8 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
@@ -31,6 +32,7 @@ qboolean G_SpawnString( const char *key, const char *defaultString, char **out )
   {
     *out = (char *)defaultString;
 //    G_Error( "G_SpawnString() called while not spawning" );
+    return qfalse;
   }
 
   for( i = 0; i < level.numSpawnVars; i++ )
@@ -95,55 +97,45 @@ typedef enum
 {
   F_INT,
   F_FLOAT,
-  F_LSTRING,      // string on disk, pointer in memory, TAG_LEVEL
-  F_GSTRING,      // string on disk, pointer in memory, TAG_GAME
+  F_STRING,
   F_VECTOR,
-  F_VECTOR4,    //TA
-  F_ANGLEHACK,
-  F_ENTITY,     // index on disk, pointer in memory
-  F_ITEM,       // index on disk, pointer in memory
-  F_CLIENT,     // index on disk, pointer in memory
-  F_IGNORE
+  F_VECTOR4,
+  F_ANGLEHACK
 } fieldtype_t;
 
 typedef struct
 {
   char  *name;
-  int   ofs;
+  size_t ofs;
   fieldtype_t type;
-  int   flags;
 } field_t;
 
 field_t fields[ ] =
 {
-  {"classname", FOFS(classname), F_LSTRING},
-  {"origin", FOFS(s.origin), F_VECTOR},
-  {"model", FOFS(model), F_LSTRING},
-  {"model2", FOFS(model2), F_LSTRING},
+  {"acceleration", FOFS(acceleration), F_VECTOR},
+  {"alpha", FOFS(pos1), F_VECTOR},
+  {"angle", FOFS(s.apos.trBase), F_ANGLEHACK},
+  {"angles", FOFS(s.apos.trBase), F_VECTOR},
+  {"animation", FOFS(animation), F_VECTOR4},
+  {"bounce", FOFS(physicsBounce), F_FLOAT},
+  {"classname", FOFS(classname), F_STRING},
+  {"count", FOFS(count), F_INT},
+  {"dmg", FOFS(damage), F_INT},
+  {"health", FOFS(health), F_INT},
+  {"message", FOFS(message), F_STRING},
+  {"model", FOFS(model), F_STRING},
+  {"model2", FOFS(model2), F_STRING},
+  {"origin", FOFS(s.pos.trBase), F_VECTOR},
+  {"radius", FOFS(pos2), F_VECTOR},
+  {"random", FOFS(random), F_FLOAT},
+  {"rotatorAngle", FOFS(rotatorAngle), F_FLOAT},
   {"spawnflags", FOFS(spawnflags), F_INT},
   {"speed", FOFS(speed), F_FLOAT},
-  {"target", FOFS(target), F_LSTRING},
-  {"targetname", FOFS(targetname), F_LSTRING},
-  {"message", FOFS(message), F_LSTRING},
-  {"team", FOFS(team), F_LSTRING},
-  {"wait", FOFS(wait), F_FLOAT},
-  {"random", FOFS(random), F_FLOAT},
-  {"count", FOFS(count), F_INT},
-  {"health", FOFS(health), F_INT},
-  {"light", 0, F_IGNORE},
-  {"dmg", FOFS(damage), F_INT},
-  {"angles", FOFS(s.angles), F_VECTOR},
-  {"angle", FOFS(s.angles), F_ANGLEHACK},
-  {"bounce", FOFS(physicsBounce), F_FLOAT},
-  {"alpha", FOFS(pos1), F_VECTOR},
-  {"radius", FOFS(pos2), F_VECTOR},
-  {"acceleration", FOFS(acceleration), F_VECTOR},
-  {"animation", FOFS(animation), F_VECTOR4},
-  {"rotatorAngle", FOFS(rotatorAngle), F_FLOAT},
-  {"targetShaderName", FOFS(targetShaderName), F_LSTRING},
-  {"targetShaderNewName", FOFS(targetShaderNewName), F_LSTRING},
-
-  {NULL}
+  {"target", FOFS(target), F_STRING},
+  {"targetname", FOFS(targetname), F_STRING},
+  {"targetShaderName", FOFS(targetShaderName), F_STRING},
+  {"targetShaderNewName", FOFS(targetShaderNewName), F_STRING},
+  {"wait", FOFS(wait), F_FLOAT}
 };
 
 
@@ -159,11 +151,6 @@ void SP_info_player_intermission( gentity_t *ent );
 
 void SP_info_alien_intermission( gentity_t *ent );
 void SP_info_human_intermission( gentity_t *ent );
-
-void SP_info_firstplace( gentity_t *ent );
-void SP_info_secondplace( gentity_t *ent );
-void SP_info_thirdplace( gentity_t *ent );
-void SP_info_podium( gentity_t *ent );
 
 void SP_func_plat( gentity_t *ent );
 void SP_func_static( gentity_t *ent );
@@ -194,7 +181,6 @@ void SP_trigger_ammo( gentity_t *ent );
 void SP_target_delay( gentity_t *ent );
 void SP_target_speaker( gentity_t *ent );
 void SP_target_print( gentity_t *ent );
-void SP_target_character( gentity_t *ent );
 void SP_target_score( gentity_t *ent );
 void SP_target_teleporter( gentity_t *ent );
 void SP_target_relay( gentity_t *ent );
@@ -210,7 +196,6 @@ void SP_target_hurt( gentity_t *ent );
 void SP_light( gentity_t *self );
 void SP_info_null( gentity_t *self );
 void SP_info_notnull( gentity_t *self );
-void SP_info_camp( gentity_t *self );
 void SP_path_corner( gentity_t *self );
 
 void SP_misc_teleporter_dest( gentity_t *self );
@@ -218,41 +203,60 @@ void SP_misc_model( gentity_t *ent );
 void SP_misc_portal_camera( gentity_t *ent );
 void SP_misc_portal_surface( gentity_t *ent );
 
-void SP_shooter_rocket( gentity_t *ent );
-void SP_shooter_plasma( gentity_t *ent );
-void SP_shooter_grenade( gentity_t *ent );
-
 void SP_misc_particle_system( gentity_t *ent );
 void SP_misc_anim_model( gentity_t *ent );
 void SP_misc_light_flare( gentity_t *ent );
 
 spawn_t spawns[ ] =
 {
-  // info entities don't do anything at all, but provide positional
-  // information for things controlled by other processes
-  { "info_player_start",        SP_info_player_start },
-  { "info_player_deathmatch",   SP_info_player_deathmatch },
-  { "info_player_intermission", SP_info_player_intermission },
-
-  //TA: extra bits
-  { "info_alien_intermission",  SP_info_alien_intermission },
-  { "info_human_intermission",  SP_info_human_intermission },
-
-  { "info_null",                SP_info_null },
-  { "info_notnull",             SP_info_notnull },    // use target_position instead
-
-  { "func_plat",                SP_func_plat },
+  { "func_bobbing",             SP_func_bobbing },
   { "func_button",              SP_func_button },
   { "func_door",                SP_func_door },
-  { "func_door_rotating",       SP_func_door_rotating }, //TA
-  { "func_door_model",          SP_func_door_model }, //TA
-  { "func_static",              SP_func_static },
-  { "func_rotating",            SP_func_rotating },
-  { "func_bobbing",             SP_func_bobbing },
-  { "func_pendulum",            SP_func_pendulum },
-  { "func_train",               SP_func_train },
+  { "func_door_model",          SP_func_door_model },
+  { "func_door_rotating",       SP_func_door_rotating },
   { "func_group",               SP_info_null },
+  { "func_pendulum",            SP_func_pendulum },
+  { "func_plat",                SP_func_plat },
+  { "func_rotating",            SP_func_rotating },
+  { "func_static",              SP_func_static },
   { "func_timer",               SP_func_timer },      // rename trigger_timer?
+  { "func_train",               SP_func_train },
+
+  // info entities don't do anything at all, but provide positional
+  // information for things controlled by other processes
+  { "info_alien_intermission",  SP_info_alien_intermission },
+  { "info_human_intermission",  SP_info_human_intermission },
+  { "info_notnull",             SP_info_notnull },    // use target_position instead
+  { "info_null",                SP_info_null },
+  { "info_player_deathmatch",   SP_info_player_deathmatch },
+  { "info_player_intermission", SP_info_player_intermission },
+  { "info_player_start",        SP_info_player_start },
+  { "light",                    SP_light },
+  { "misc_anim_model",          SP_misc_anim_model },
+  { "misc_light_flare",         SP_misc_light_flare },
+  { "misc_model",               SP_misc_model },
+  { "misc_particle_system",     SP_misc_particle_system },
+  { "misc_portal_camera",       SP_misc_portal_camera },
+  { "misc_portal_surface",      SP_misc_portal_surface },
+  { "misc_teleporter_dest",     SP_misc_teleporter_dest },
+  { "path_corner",              SP_path_corner },
+
+  // targets perform no action by themselves, but must be triggered
+  // by another entity
+  { "target_alien_win",         SP_target_alien_win },
+  { "target_delay",             SP_target_delay },
+  { "target_human_win",         SP_target_human_win },
+  { "target_hurt",              SP_target_hurt },
+  { "target_kill",              SP_target_kill },
+  { "target_location",          SP_target_location },
+  { "target_position",          SP_target_position },
+  { "target_print",             SP_target_print },
+  { "target_push",              SP_target_push },
+  { "target_relay",             SP_target_relay },
+  { "target_rumble",            SP_target_rumble },
+  { "target_score",             SP_target_score },
+  { "target_speaker",           SP_target_speaker },
+  { "target_teleporter",        SP_target_teleporter },
 
   // Triggers are brush objects that cause an effect when contacted
   // by a living player, usually involving firing targets.
@@ -260,49 +264,18 @@ spawn_t spawns[ ] =
   // a single trigger class and different targets, triggered effects
   // could not be client side predicted (push and teleport).
   { "trigger_always",           SP_trigger_always },
-  { "trigger_multiple",         SP_trigger_multiple },
-  { "trigger_push",             SP_trigger_push },
-  { "trigger_teleport",         SP_trigger_teleport },
-  { "trigger_hurt",             SP_trigger_hurt },
-  { "trigger_stage",            SP_trigger_stage },
-  { "trigger_win",              SP_trigger_win },
+  { "trigger_ammo",             SP_trigger_ammo },
   { "trigger_buildable",        SP_trigger_buildable },
   { "trigger_class",            SP_trigger_class },
   { "trigger_equipment",        SP_trigger_equipment },
   { "trigger_gravity",          SP_trigger_gravity },
   { "trigger_heal",             SP_trigger_heal },
-  { "trigger_ammo",             SP_trigger_ammo },
-
-  // targets perform no action by themselves, but must be triggered
-  // by another entity
-  { "target_delay",             SP_target_delay },
-  { "target_speaker",           SP_target_speaker },
-  { "target_print",             SP_target_print },
-  { "target_score",             SP_target_score },
-  { "target_teleporter",        SP_target_teleporter },
-  { "target_relay",             SP_target_relay },
-  { "target_kill",              SP_target_kill },
-  { "target_position",          SP_target_position },
-  { "target_location",          SP_target_location },
-  { "target_push",              SP_target_push },
-  { "target_rumble",            SP_target_rumble },
-  { "target_alien_win",         SP_target_alien_win },
-  { "target_human_win",         SP_target_human_win },
-  { "target_hurt",              SP_target_hurt },
-
-  { "light",                    SP_light },
-  { "path_corner",              SP_path_corner },
-
-  { "misc_teleporter_dest",     SP_misc_teleporter_dest },
-  { "misc_model",               SP_misc_model },
-  { "misc_portal_surface",      SP_misc_portal_surface },
-  { "misc_portal_camera",       SP_misc_portal_camera },
-
-  { "misc_particle_system",     SP_misc_particle_system },
-  { "misc_anim_model",          SP_misc_anim_model },
-  { "misc_light_flare",         SP_misc_light_flare },
-
-  { NULL, 0 }
+  { "trigger_hurt",             SP_trigger_hurt },
+  { "trigger_multiple",         SP_trigger_multiple },
+  { "trigger_push",             SP_trigger_push },
+  { "trigger_stage",            SP_trigger_stage },
+  { "trigger_teleport",         SP_trigger_teleport },
+  { "trigger_win",              SP_trigger_win }
 };
 
 /*
@@ -325,16 +298,18 @@ qboolean G_CallSpawn( gentity_t *ent )
   }
 
   //check buildable spawn functions
-  if( ( buildable = BG_FindBuildNumForEntityName( ent->classname ) ) != BA_NONE )
+  buildable = BG_BuildableByEntityName( ent->classname )->number;
+  if( buildable != BA_NONE )
   {
     // don't spawn built-in buildings if we are using a custom layout
     if( level.layout[ 0 ] && Q_stricmp( level.layout, "*BUILTIN*" ) )
-      return qtrue;
+      return qfalse;
 
     if( buildable == BA_A_SPAWN || buildable == BA_H_SPAWN )
     {
-      ent->s.angles[ YAW ] += 180.0f;
-      AngleNormalize360( ent->s.angles[ YAW ] );
+      ent->r.currentAngles[ YAW ] += 180.0f;
+      AngleNormalize360( ent->r.currentAngles[ YAW ] );
+      ent->s.apos.trBase[ YAW ] = ent->r.currentAngles[ YAW ];
     }
 
     G_SpawnBuildable( ent, buildable );
@@ -342,14 +317,13 @@ qboolean G_CallSpawn( gentity_t *ent )
   }
 
   // check normal spawn functions
-  for( s = spawns; s->name; s++ )
+  s = bsearch( ent->classname, spawns, ARRAY_LEN( spawns ),
+    sizeof( spawn_t ), cmdcmp );
+  if( s )
   {
-    if( !strcmp( s->name, ent->classname ) )
-    {
-      // found it
-      s->spawn( ent );
-      return qtrue;
-    }
+    // found it
+    s->spawn( ent );
+    return qtrue;
   }
 
   G_Printf( "%s doesn't have a spawn function\n", ent->classname );
@@ -371,7 +345,7 @@ char *G_NewString( const char *string )
 
   l = strlen( string ) + 1;
 
-  newb = G_Alloc( l );
+  newb = BG_Alloc( l );
 
   new_p = newb;
 
@@ -412,58 +386,49 @@ void G_ParseField( const char *key, const char *value, gentity_t *ent )
   vec3_t  vec;
   vec4_t  vec4;
 
-  for( f = fields; f->name; f++ )
+  f = bsearch( key, fields, ARRAY_LEN( fields ),
+    sizeof( field_t ), cmdcmp );
+  if( !f )
+    return;
+  b = (byte *)ent;
+
+  switch( f->type )
   {
-    if( !Q_stricmp( f->name, key ) )
-    {
-      // found it
-      b = (byte *)ent;
+    case F_STRING:
+      *(char **)( b + f->ofs ) = G_NewString( value );
+      break;
 
-      switch( f->type )
-      {
-        case F_LSTRING:
-          *(char **)( b + f->ofs ) = G_NewString( value );
-          break;
+    case F_VECTOR:
+      sscanf( value, "%f %f %f", &vec[ 0 ], &vec[ 1 ], &vec[ 2 ] );
 
-        case F_VECTOR:
-          sscanf( value, "%f %f %f", &vec[ 0 ], &vec[ 1 ], &vec[ 2 ] );
+      ( (float *)( b + f->ofs ) )[ 0 ] = vec[ 0 ];
+      ( (float *)( b + f->ofs ) )[ 1 ] = vec[ 1 ];
+      ( (float *)( b + f->ofs ) )[ 2 ] = vec[ 2 ];
+      break;
 
-          ( (float *)( b + f->ofs ) )[ 0 ] = vec[ 0 ];
-          ( (float *)( b + f->ofs ) )[ 1 ] = vec[ 1 ];
-          ( (float *)( b + f->ofs ) )[ 2 ] = vec[ 2 ];
-          break;
+    case F_VECTOR4:
+      sscanf( value, "%f %f %f %f", &vec4[ 0 ], &vec4[ 1 ], &vec4[ 2 ], &vec4[ 3 ] );
 
-        case F_VECTOR4:
-          sscanf( value, "%f %f %f %f", &vec4[ 0 ], &vec4[ 1 ], &vec4[ 2 ], &vec4[ 3 ] );
+      ( (float *)( b + f->ofs ) )[ 0 ] = vec4[ 0 ];
+      ( (float *)( b + f->ofs ) )[ 1 ] = vec4[ 1 ];
+      ( (float *)( b + f->ofs ) )[ 2 ] = vec4[ 2 ];
+      ( (float *)( b + f->ofs ) )[ 3 ] = vec4[ 3 ];
+      break;
 
-          ( (float *)( b + f->ofs ) )[ 0 ] = vec4[ 0 ];
-          ( (float *)( b + f->ofs ) )[ 1 ] = vec4[ 1 ];
-          ( (float *)( b + f->ofs ) )[ 2 ] = vec4[ 2 ];
-          ( (float *)( b + f->ofs ) )[ 3 ] = vec4[ 3 ];
-          break;
+    case F_INT:
+      *(int *)( b + f->ofs ) = atoi( value );
+      break;
 
-        case F_INT:
-          *(int *)( b + f->ofs ) = atoi( value );
-          break;
+    case F_FLOAT:
+      *(float *)( b + f->ofs ) = atof( value );
+      break;
 
-        case F_FLOAT:
-          *(float *)( b + f->ofs ) = atof( value );
-          break;
-
-        case F_ANGLEHACK:
-          v = atof( value );
-          ( (float *)( b + f->ofs ) )[ 0 ] = 0;
-          ( (float *)( b + f->ofs ) )[ 1 ] = v;
-          ( (float *)( b + f->ofs ) )[ 2 ] = 0;
-          break;
-
-        default:
-        case F_IGNORE:
-          break;
-      }
-
-      return;
-    }
+    case F_ANGLEHACK:
+      v = atof( value );
+      ( (float *)( b + f->ofs ) )[ 0 ] = 0;
+      ( (float *)( b + f->ofs ) )[ 1 ] = v;
+      ( (float *)( b + f->ofs ) )[ 2 ] = 0;
+      break;
   }
 }
 
@@ -497,9 +462,8 @@ void G_SpawnGEntityFromSpawnVars( void )
     return;
   }
 
-  // move editor origin to pos
-  VectorCopy( ent->s.origin, ent->s.pos.trBase );
-  VectorCopy( ent->s.origin, ent->r.currentOrigin );
+  VectorCopy( ent->s.pos.trBase, ent->r.currentOrigin );
+  VectorCopy( ent->s.apos.trBase, ent->r.currentAngles );
 
   // if we didn't get a classname, don't bother spawning anything
   if( !G_CallSpawn( ent ) )
@@ -617,38 +581,23 @@ void SP_worldspawn( void )
 
   trap_SetConfigstring( CS_MOTD, g_motd.string );   // message of the day
 
-  G_SpawnString( "gravity", "800", &s );
-  trap_Cvar_Set( "g_gravity", s );
+  if( G_SpawnString( "gravity", "", &s ) )
+    trap_Cvar_Set( "g_gravity", s );
 
-  G_SpawnString( "humanBuildPoints", DEFAULT_HUMAN_BUILDPOINTS, &s );
-  trap_Cvar_Set( "g_humanBuildPoints", s );
+  if( G_SpawnString( "humanMaxStage", "", &s ) )
+    trap_Cvar_Set( "g_humanMaxStage", s );
 
-  G_SpawnString( "humanMaxStage", DEFAULT_HUMAN_MAX_STAGE, &s );
-  trap_Cvar_Set( "g_humanMaxStage", s );
+  if( G_SpawnString( "alienMaxStage", "", &s ) )
+    trap_Cvar_Set( "g_alienMaxStage", s );
 
-  G_SpawnString( "humanStage2Threshold", DEFAULT_HUMAN_STAGE2_THRESH, &s );
-  trap_Cvar_Set( "g_humanStage2Threshold", s );
+  if( G_SpawnString( "humanRepeaterBuildPoints", "", &s ) )
+    trap_Cvar_Set( "g_humanRepeaterBuildPoints", s );
 
-  G_SpawnString( "humanStage3Threshold", DEFAULT_HUMAN_STAGE3_THRESH, &s );
-  trap_Cvar_Set( "g_humanStage3Threshold", s );
+  if( G_SpawnString( "humanBuildPoints", "", &s ) )
+    trap_Cvar_Set( "g_humanBuildPoints", s );
 
-  G_SpawnString( "alienBuildPoints", DEFAULT_ALIEN_BUILDPOINTS, &s );
-  trap_Cvar_Set( "g_alienBuildPoints", s );
-
-  G_SpawnString( "alienMaxStage", DEFAULT_ALIEN_MAX_STAGE, &s );
-  trap_Cvar_Set( "g_alienMaxStage", s );
-
-  G_SpawnString( "alienStage2Threshold", DEFAULT_ALIEN_STAGE2_THRESH, &s );
-  trap_Cvar_Set( "g_alienStage2Threshold", s );
-
-  G_SpawnString( "alienStage3Threshold", DEFAULT_ALIEN_STAGE3_THRESH, &s );
-  trap_Cvar_Set( "g_alienStage3Threshold", s );
-
-  G_SpawnString( "enableDust", "0", &s );
-  trap_Cvar_Set( "g_enableDust", s );
-
-  G_SpawnString( "enableBreath", "0", &s );
-  trap_Cvar_Set( "g_enableBreath", s );
+  if( G_SpawnString( "alienBuildPoints", "", &s ) )
+    trap_Cvar_Set( "g_alienBuildPoints", s );
 
   G_SpawnString( "disabledEquipment", "", &s );
   trap_Cvar_Set( "g_disabledEquipment", s );
@@ -660,10 +609,24 @@ void SP_worldspawn( void )
   trap_Cvar_Set( "g_disabledBuildables", s );
 
   g_entities[ ENTITYNUM_WORLD ].s.number = ENTITYNUM_WORLD;
+  g_entities[ ENTITYNUM_WORLD ].r.ownerNum = ENTITYNUM_NONE;
   g_entities[ ENTITYNUM_WORLD ].classname = "worldspawn";
+
+  g_entities[ ENTITYNUM_NONE ].s.number = ENTITYNUM_NONE;
+  g_entities[ ENTITYNUM_NONE ].r.ownerNum = ENTITYNUM_NONE;
+  g_entities[ ENTITYNUM_NONE ].classname = "nothing";
 
   if( g_restarted.integer )
     trap_Cvar_Set( "g_restarted", "0" );
+
+  // see if we want a warmup time
+  trap_SetConfigstring( CS_WARMUP, "-1" );
+  if( g_doWarmup.integer )
+  {
+    level.warmupTime = level.time - level.startTime + ( g_warmup.integer * 1000 );
+    trap_SetConfigstring( CS_WARMUP, va( "%i", level.warmupTime ) );
+    G_LogPrintf( "Warmup: %i\n", g_warmup.integer );
+  }
 
 }
 
@@ -677,8 +640,6 @@ Parses textual entity definitions out of an entstring and spawns gentities.
 */
 void G_SpawnEntitiesFromString( void )
 {
-  // allow calls to G_Spawn*()
-  level.spawning = qtrue;
   level.numSpawnVars = 0;
 
   // the worldspawn is not an actual entity, but it still
@@ -692,7 +653,4 @@ void G_SpawnEntitiesFromString( void )
   // parse ents
   while( G_ParseSpawnVars( ) )
     G_SpawnGEntityFromSpawnVars( );
-
-  level.spawning = qfalse;      // any future calls to G_Spawn*() will be errors
 }
-

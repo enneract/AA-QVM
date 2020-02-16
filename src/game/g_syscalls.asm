@@ -1,6 +1,6 @@
 code
 
-equ trap_Printf                       -1
+equ trap_Print                        -1
 equ trap_Error                        -2
 equ trap_Milliseconds                 -3
 equ trap_Cvar_Register                -4
@@ -54,6 +54,7 @@ equ trap_SendGameStat                 -49
 
 equ trap_AddCommand                   -50
 equ trap_RemoveCommand                -51
+equ trap_FS_GetFilteredFiles           -52
 
 equ memset                            -101
 equ memcpy                            -102

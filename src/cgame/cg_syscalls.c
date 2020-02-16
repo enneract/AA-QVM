@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,14 +17,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
 // cg_syscalls.c -- this file is only included when building a dll
 // cg_syscalls.asm is included instead when building a qvm
-
 
 #include "cg_local.h"
 
@@ -38,9 +38,9 @@ Q_EXPORT void dllEntry( intptr_t (QDECL  *syscallptr)( intptr_t arg,... ) )
 
 int PASSFLOAT( float x )
 {
-  float floatTemp;
-  floatTemp = x;
-  return *(int *)&floatTemp;
+  floatint_t fi;
+  fi.f = x;
+  return fi.i;
 }
 
 void trap_Print( const char *fmt )
@@ -51,6 +51,8 @@ void trap_Print( const char *fmt )
 void trap_Error( const char *fmt )
 {
   syscall( CG_ERROR, fmt );
+  // shut up GCC warning about returning functions, because we know better
+  exit(1);
 }
 
 int trap_Milliseconds( void )
@@ -98,7 +100,7 @@ void  trap_LiteralArgs( char *buffer, int bufferLength )
   syscall( CG_LITERAL_ARGS, buffer, bufferLength );
 }
 
-int trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode )
+int trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, enum FS_Mode mode )
 {
   return syscall( CG_FS_FOPENFILE, qpath, f, mode );
 }
@@ -118,7 +120,7 @@ void  trap_FS_FCloseFile( fileHandle_t f )
   syscall( CG_FS_FCLOSEFILE, f );
 }
 
-void trap_FS_Seek( fileHandle_t f, long offset, fsOrigin_t origin )
+void trap_FS_Seek( fileHandle_t f, long offset, enum FS_Origin origin )
 {
   syscall( CG_FS_SEEK, f, offset, origin );
 }
@@ -290,6 +292,13 @@ sfxHandle_t trap_S_RegisterSound( const char *sample, qboolean compressed )
   return syscall( CG_S_REGISTERSOUND, sample, compressed );
 }
 
+#ifndef MODULE_INTERFACE_11
+int trap_S_SoundDuration( sfxHandle_t handle )
+{
+  return syscall( CG_S_SOUNDDURATION, handle );
+}
+#endif
+
 void  trap_S_StartBackgroundTrack( const char *intro, const char *loop )
 {
   syscall( CG_S_STARTBACKGROUNDTRACK, intro, loop );
@@ -340,6 +349,11 @@ void trap_R_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *
   syscall( CG_R_ADDPOLYTOSCENE, hShader, numVerts, verts );
 }
 
+qboolean trap_R_inPVS( const vec3_t p1, const vec3_t p2 )
+{
+  return syscall( CG_R_INPVS, p1, p2 );
+}
+
 void trap_R_AddPolysToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num )
 {
   syscall( CG_R_ADDPOLYSTOSCENE, hShader, numVerts, verts, num );
@@ -369,6 +383,13 @@ void  trap_R_SetColor( const float *rgba )
 {
   syscall( CG_R_SETCOLOR, rgba );
 }
+
+#ifndef MODULE_INTERFACE_11
+void  trap_R_SetClipRegion( const float *region )
+{
+  syscall( CG_R_SETCLIPREGION, region );
+}
+#endif
 
 void  trap_R_DrawStretchPic( float x, float y, float w, float h,
                  float s1, float t1, float s2, float t2, qhandle_t hShader )
@@ -572,3 +593,16 @@ void trap_Key_SetBinding( int keynum, const char *binding ) {
   syscall( CG_KEY_SETBINDING, keynum, binding );
 }
 
+#ifndef MODULE_INTERFACE_11
+void trap_Key_SetOverstrikeMode( qboolean state ) {
+  syscall( CG_KEY_SETOVERSTRIKEMODE, state );
+}
+
+qboolean trap_Key_GetOverstrikeMode( void ) {
+  return syscall( CG_KEY_GETOVERSTRIKEMODE );
+}
+
+void trap_Field_CompleteList( char *listJson ) {
+  syscall( CG_FIELD_COMPLETELIST, listJson );
+}
+#endif

@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,8 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
@@ -25,7 +26,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // With normal play, this will be done after local prediction, but when
 // following another player or playing back a demo, it will be checked
 // when the snapshot transitions like all the other entities
-
 
 #include "cg_local.h"
 
@@ -245,10 +245,8 @@ CG_CheckLocalSounds
 */
 void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops )
 {
-  int reward;
-
-  // don't play the sounds if the player just changed teams
-  if( ps->persistant[ PERS_TEAM ] != ops->persistant[ PERS_TEAM ] )
+  // don't play the sounds if the player just spawned
+  if( ps->persistant[ PERS_SPECSTATE ] != ops->persistant[ PERS_SPECSTATE ] )
     return;
 
   // health changes of more than -1 should make pain sounds
@@ -257,14 +255,6 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops )
     if( ps->stats[ STAT_HEALTH ] > 0 )
       CG_PainEvent( &cg.predictedPlayerEntity, ps->stats[ STAT_HEALTH ] );
   }
-
-
-  // if we are going into the intermission, don't start any voices
-  if( cg.intermissionStarted )
-    return;
-
-  // reward sounds
-  reward = qfalse;
 }
 
 
@@ -301,7 +291,7 @@ void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops )
   }
 
   if( cg.snap->ps.pm_type != PM_INTERMISSION &&
-      ps->persistant[ PERS_TEAM ] != TEAM_SPECTATOR )
+      ps->persistant[ PERS_SPECSTATE ] == SPECTATOR_NOT )
     CG_CheckLocalSounds( ps, ops );
 
   // run events
@@ -313,5 +303,11 @@ void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops )
     cg.duckChange = ps->viewheight - ops->viewheight;
     cg.duckTime = cg.time;
   }
+  
+  // changed team
+  if( ps->stats[ STAT_TEAM ] != ops->stats[ STAT_TEAM ] )
+  {
+    cg.lastHealthCross = 0;
+    cg.chargeMeterAlpha = 0.0f;
+  }
 }
-

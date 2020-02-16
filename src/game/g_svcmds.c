@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,323 +17,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
 // this file holds commands that can be executed by the server console, but not remote clients
 
 #include "g_local.h"
-
-
-/*
-==============================================================================
-
-PACKET FILTERING
-
-
-You can add or remove addresses from the filter list with:
-
-addip <ip>
-removeip <ip>
-
-The ip address is specified in dot format, and you can use '*' to match any value
-so you can specify an entire class C network with "addip 192.246.40.*"
-
-Removeip will only remove an address specified exactly the same way.  You cannot addip a subnet, then removeip a single host.
-
-listip
-Prints the current list of filters.
-
-g_filterban <0 or 1>
-
-If 1 (the default), then ip addresses matching the current list will be prohibited from entering the game.  This is the default setting.
-
-If 0, then only addresses matching the list will be allowed.  This lets you easily set up a private game, or a game that only allows players from your local network.
-
-TTimo NOTE: for persistence, bans are stored in g_banIPs cvar MAX_CVAR_VALUE_STRING
-The size of the cvar string buffer is limiting the banning to around 20 masks
-this could be improved by putting some g_banIPs2 g_banIps3 etc. maybe
-still, you should rely on PB for banning instead
-
-==============================================================================
-*/
-
-// extern vmCvar_t  g_banIPs;
-// extern vmCvar_t  g_filterBan;
-
-
-typedef struct ipFilter_s
-{
-  unsigned  mask;
-  unsigned  compare;
-} ipFilter_t;
-
-#define MAX_IPFILTERS 1024
-
-static ipFilter_t ipFilters[ MAX_IPFILTERS ];
-static int        numIPFilters;
-
-/*
-=================
-StringToFilter
-=================
-*/
-static qboolean StringToFilter( char *s, ipFilter_t *f )
-{
-  char  num[ 128 ];
-  int   i, j;
-  byte  b[ 4 ];
-  byte  m[ 4 ];
-
-  for( i = 0; i < 4; i++ )
-  {
-    b[ i ] = 0;
-    m[ i ] = 0;
-  }
-
-  for( i = 0; i < 4; i++ )
-  {
-    if( *s < '0' || *s > '9' )
-    {
-      if( *s == '*' ) // 'match any'
-      {
-        //b[ i ] and m[ i ] to 0
-        s++;
-        if ( !*s )
-          break;
-
-        s++;
-        continue;
-      }
-
-      G_Printf( "Bad filter address: %s\n", s );
-      return qfalse;
-    }
-
-    j = 0;
-    while( *s >= '0' && *s <= '9' )
-      num[ j++ ] = *s++;
-
-    num[ j ] = 0;
-    b[ i ] = atoi( num );
-
-    m[ i ] = 255;
-
-    if( !*s )
-      break;
-
-    s++;
-  }
-
-  f->mask = *(unsigned *)m;
-  f->compare = *(unsigned *)b;
-
-  return qtrue;
-}
-
-/*
-=================
-UpdateIPBans
-=================
-*/
-static void UpdateIPBans( void )
-{
-  byte  b[ 4 ];
-  byte  m[ 4 ];
-  int    i, j;
-  char  iplist_final[ MAX_CVAR_VALUE_STRING ];
-  char  ip[ 64 ];
-
-  *iplist_final = 0;
-
-  for( i = 0 ; i < numIPFilters ; i++ )
-  {
-    if( ipFilters[ i ].compare == 0xffffffff )
-      continue;
-
-    *(unsigned *)b = ipFilters[ i ].compare;
-    *(unsigned *)m = ipFilters[ i ].mask;
-    *ip = 0;
-
-    for( j = 0 ; j < 4 ; j++ )
-    {
-      if( m[ j ] != 255 )
-        Q_strcat( ip, sizeof( ip ), "*" );
-      else
-        Q_strcat( ip, sizeof( ip ), va( "%i", b[ j ] ) );
-
-      Q_strcat( ip, sizeof( ip ), ( j < 3 ) ? "." : " " );
-    }
-
-    if( strlen( iplist_final ) + strlen( ip ) < MAX_CVAR_VALUE_STRING )
-      Q_strcat( iplist_final, sizeof( iplist_final ), ip );
-    else
-    {
-      Com_Printf( "g_banIPs overflowed at MAX_CVAR_VALUE_STRING\n" );
-      break;
-    }
-  }
-
-  trap_Cvar_Set( "g_banIPs", iplist_final );
-}
-
-/*
-=================
-G_FilterPacket
-=================
-*/
-qboolean G_FilterPacket( char *from )
-{
-  int       i;
-  unsigned  in;
-  byte      m[ 4 ];
-  char      *p;
-
-  i = 0;
-  p = from;
-  while( *p && i < 4 )
-  {
-    m[ i ] = 0;
-    while( *p >= '0' && *p <= '9' )
-    {
-      m[ i ] = m[ i ] * 10 + ( *p - '0' );
-      p++;
-    }
-
-    if( !*p || *p == ':' )
-      break;
-
-    i++, p++;
-  }
-
-  in = *(unsigned *)m;
-
-  for( i = 0; i < numIPFilters; i++ )
-    if( ( in & ipFilters[ i ].mask ) == ipFilters[ i ].compare )
-      return g_filterBan.integer != 0;
-
-  return g_filterBan.integer == 0;
-}
-
-/*
-=================
-AddIP
-=================
-*/
-static void AddIP( char *str )
-{
-  int   i;
-
-  for( i = 0 ; i < numIPFilters ; i++ )
-    if( ipFilters[ i ].compare == 0xffffffff )
-      break;    // free spot
-
-  if( i == numIPFilters )
-  {
-    if( numIPFilters == MAX_IPFILTERS )
-    {
-      G_Printf( "IP filter list is full\n" );
-      return;
-    }
-
-    numIPFilters++;
-  }
-
-  if( !StringToFilter( str, &ipFilters[ i ] ) )
-    ipFilters[ i ].compare = 0xffffffffu;
-
-  UpdateIPBans( );
-}
-
-/*
-=================
-G_ProcessIPBans
-=================
-*/
-void G_ProcessIPBans( void )
-{
-  char *s, *t;
-  char str[ MAX_CVAR_VALUE_STRING ];
-
-  Q_strncpyz( str, g_banIPs.string, sizeof( str ) );
-
-  for( t = s = g_banIPs.string; *t; /* */ )
-  {
-    s = strchr( s, ' ' );
-
-    if( !s )
-      break;
-
-    while( *s == ' ' )
-      *s++ = 0;
-
-    if( *t )
-      AddIP( t );
-
-    t = s;
-  }
-}
-
-
-/*
-=================
-Svcmd_AddIP_f
-=================
-*/
-void Svcmd_AddIP_f( void )
-{
-  char str[ MAX_TOKEN_CHARS ];
-
-  if( trap_Argc( ) < 2 )
-  {
-    G_Printf( "Usage:  addip <ip-mask>\n" );
-    return;
-  }
-
-  trap_Argv( 1, str, sizeof( str ) );
-
-  AddIP( str );
-}
-
-/*
-=================
-Svcmd_RemoveIP_f
-=================
-*/
-void Svcmd_RemoveIP_f( void )
-{
-  ipFilter_t  f;
-  int         i;
-  char        str[ MAX_TOKEN_CHARS ];
-
-  if( trap_Argc( ) < 2 )
-  {
-    G_Printf( "Usage:  sv removeip <ip-mask>\n" );
-    return;
-  }
-
-  trap_Argv( 1, str, sizeof( str ) );
-
-  if( !StringToFilter( str, &f ) )
-    return;
-
-  for( i = 0; i < numIPFilters; i++ )
-  {
-    if( ipFilters[ i ].mask == f.mask &&
-        ipFilters[ i ].compare == f.compare)
-    {
-      ipFilters[ i ].compare = 0xffffffffu;
-      G_Printf ( "Removed.\n" );
-
-      UpdateIPBans( );
-      return;
-    }
-  }
-
-  G_Printf ( "Didn't find %s.\n", str );
-}
 
 /*
 ===================
@@ -367,6 +59,12 @@ void  Svcmd_EntityList_f( void )
       case ET_BUILDABLE:
         G_Printf( "ET_BUILDABLE        " );
         break;
+      case ET_RANGE_MARKER:
+        G_Printf( "ET_RANGE_MARKER     " );
+        break;
+      case ET_LOCATION:
+        G_Printf( "ET_LOCATION         " );
+        break;
       case ET_MISSILE:
         G_Printf( "ET_MISSILE          " );
         break;
@@ -394,8 +92,26 @@ void  Svcmd_EntityList_f( void )
       case ET_GRAPPLE:
         G_Printf( "ET_GRAPPLE          " );
         break;
+      case ET_CORPSE:
+        G_Printf( "ET_CORPSE           " );
+        break;
+      case ET_PARTICLE_SYSTEM:
+        G_Printf( "ET_PARTICLE_SYSTEM  " );
+        break;
+      case ET_ANIMMAPOBJ:
+        G_Printf( "ET_ANIMMAPOBJ       " );
+        break;
+      case ET_MODELDOOR:
+        G_Printf( "ET_MODELDOOR        " );
+        break;
+      case ET_LIGHTFLARE:
+        G_Printf( "ET_LIGHTFLARE       " );
+        break;
+      case ET_LEV2_ZAP_CHAIN:
+        G_Printf( "ET_LEV2_ZAP_CHAIN   " );
+        break;
       default:
-        G_Printf( "%3i                 ", check->s.eType );
+        G_Printf( "%-3i                 ", check->s.eType );
         break;
     }
 
@@ -406,48 +122,52 @@ void  Svcmd_EntityList_f( void )
   }
 }
 
-gclient_t *ClientForString( const char *s )
+static gclient_t *ClientForString( char *s )
 {
-  gclient_t *cl;
-  int       i;
-  int       idnum;
+  int  idnum;
+  char err[ MAX_STRING_CHARS ];
 
-  // numeric values are just slot numbers
-  if( s[ 0 ] >= '0' && s[ 0 ] <= '9' )
+  idnum = G_ClientNumberFromString( s, err, sizeof( err ) );
+  if( idnum == -1 )
   {
-    idnum = atoi( s );
-
-    if( idnum < 0 || idnum >= level.maxclients )
-    {
-      Com_Printf( "Bad client slot: %i\n", idnum );
-      return NULL;
-    }
-
-    cl = &level.clients[ idnum ];
-
-    if( cl->pers.connected == CON_DISCONNECTED )
-    {
-      G_Printf( "Client %i is not connected\n", idnum );
-      return NULL;
-    }
-
-    return cl;
+    G_Printf( "%s", err );
+    return NULL;
   }
 
-  // check for a name match
-  for( i = 0; i < level.maxclients; i++ )
+  return &level.clients[ idnum ];
+}
+
+static void Svcmd_Status_f( void )
+{
+  int       i;
+  gclient_t *cl;
+  char      userinfo[ MAX_INFO_STRING ];
+
+  G_Printf( "slot score ping address               rate     name\n" );
+  G_Printf( "---- ----- ---- -------               ----     ----\n" );
+  for( i = 0, cl = level.clients; i < level.maxclients; i++, cl++ )
   {
-    cl = &level.clients[ i ];
     if( cl->pers.connected == CON_DISCONNECTED )
       continue;
 
-    if( !Q_stricmp( cl->pers.netname, s ) )
-      return cl;
+    G_Printf( "%-4d ", i );
+    G_Printf( "%-5d ", cl->ps.persistant[ PERS_SCORE ] );
+
+    if( cl->pers.connected == CON_CONNECTING )
+      G_Printf( "CNCT " );
+    else
+      G_Printf( "%-4d ", cl->ps.ping );
+
+    trap_GetUserinfo( i, userinfo, sizeof( userinfo ) );
+    G_Printf( "%-21s ", Info_ValueForKey( userinfo, "ip" ) );
+    G_Printf( "%-8d ", atoi( Info_ValueForKey( userinfo, "rate" ) ) );
+    G_Printf( "%s\n", cl->pers.netname ); // Info_ValueForKey( userinfo, "name" )
   }
+}
 
-  G_Printf( "User %s is not on the server\n", s );
-
-  return NULL;
+static void Svcmd_SMR_f( void )
+{
+  G_Printf( "unrecognized Schachtmeister response: %s\n", ConcatArgs( 1 ) );
 }
 
 /*
@@ -457,22 +177,32 @@ Svcmd_ForceTeam_f
 forceteam <player> <team>
 ===================
 */
-void  Svcmd_ForceTeam_f( void )
+static void Svcmd_ForceTeam_f( void )
 {
   gclient_t *cl;
   char      str[ MAX_TOKEN_CHARS ];
+  team_t    team;
 
-  // find the player
+  if( trap_Argc( ) != 3 )
+  {
+    G_Printf( "usage: forceteam <player> <team>\n" );
+    return;
+  }
+
   trap_Argv( 1, str, sizeof( str ) );
   cl = ClientForString( str );
 
   if( !cl )
     return;
 
-  // set the team
   trap_Argv( 2, str, sizeof( str ) );
-  /*SetTeam( &g_entities[cl - level.clients], str );*/
-  //FIXME: tremulise this
+  team = G_TeamFromString( str );
+  if( team == NUM_TEAMS )
+  {
+    G_Printf( "forceteam: invalid team \"%s\"\n", str );
+    return;
+  }
+  G_ChangeTeam( &g_entities[ cl - level.clients ], team );
 }
 
 /*
@@ -482,37 +212,40 @@ Svcmd_LayoutSave_f
 layoutsave <name>
 ===================
 */
-void  Svcmd_LayoutSave_f( void )
+static void Svcmd_LayoutSave_f( void )
 {
   char str[ MAX_QPATH ];
   char str2[ MAX_QPATH - 4 ];
   char *s;
   int i = 0;
+  qboolean pipeEncountered = qfalse;
 
   if( trap_Argc( ) != 2 )
   {
-    G_Printf( "usage: layoutsave LAYOUTNAME\n" );
+    G_Printf( "usage: layoutsave <name>\n" );
     return;
   }
   trap_Argv( 1, str, sizeof( str ) );
 
   // sanitize name
+  str2[ 0 ] = '\0';
   s = &str[ 0 ];
   while( *s && i < sizeof( str2 ) - 1 )
   {
-    if( ( *s >= '0' && *s <= '9' ) ||
-      ( *s >= 'a' && *s <= 'z' ) ||
-      ( *s >= 'A' && *s <= 'Z' ) || *s == '-' || *s == '_' )
+    if( isalnum( *s ) || *s == '-' || *s == '_' ||
+        ( ( *s == '|' || *s == ',' ) && !pipeEncountered ) )
     {
       str2[ i++ ] = *s;
       str2[ i ] = '\0';
+      if( *s == '|' )
+        pipeEncountered = qtrue;
     }
     s++;
   }
 
   if( !str2[ 0 ] )
   {
-    G_Printf("layoutsave: invalid name \"%s\"\n", str );
+    G_Printf( "layoutsave: invalid name \"%s\"\n", str );
     return;
   }
 
@@ -528,18 +261,27 @@ Svcmd_LayoutLoad_f
 layoutload [<name> [<name2> [<name3 [...]]]]
 
 This is just a silly alias for doing:
- set g_layouts "name name2 name3"
+ set g_nextLayout "name name2 name3"
  map_restart
 ===================
 */
-void  Svcmd_LayoutLoad_f( void )
+static void Svcmd_LayoutLoad_f( void )
 {
   char layouts[ MAX_CVAR_VALUE_STRING ];
+  char map[ MAX_CVAR_VALUE_STRING ];
   char *s;
+
+  if( trap_Argc( ) < 2 )
+  {
+    G_Printf( "usage: layoutload <name> ...\n" );
+    return;
+  }
 
   s = ConcatArgs( 1 );
   Q_strncpyz( layouts, s, sizeof( layouts ) );
-  trap_Cvar_Set( "g_layouts", layouts ); 
+  trap_Cvar_Set( "g_nextLayout", layouts );
+  trap_Cvar_VariableStringBuffer( "mapname", map, sizeof( map ) );
+  G_MapConfigs( map );
   trap_SendConsoleCommand( EXEC_APPEND, "map_restart\n" );
   level.restarted = qtrue;
 }
@@ -555,26 +297,303 @@ static void Svcmd_AdmitDefeat_f( void )
     return;
   }
   trap_Argv( 1, teamNum, sizeof( teamNum ) );
-  team = atoi( teamNum );
-  if( team == PTE_ALIENS || teamNum[ 0 ] == 'a' )
+  team = G_TeamFromString( teamNum );
+  if( team == TEAM_ALIENS )
   {
-    level.surrenderTeam = PTE_ALIENS;
-    G_BaseSelfDestruct( PTE_ALIENS );
-    G_TeamCommand( PTE_ALIENS, "cp \"Hivemind Link Broken\" 1");
+    G_TeamCommand( TEAM_ALIENS, "cp \"Hivemind Link Broken\" 1");
     trap_SendServerCommand( -1, "print \"Alien team has admitted defeat\n\"" );
   }
-  else if( team == PTE_HUMANS || teamNum[ 0 ] == 'h' )
+  else if( team == TEAM_HUMANS )
   {
-    level.surrenderTeam = PTE_HUMANS;
-    G_BaseSelfDestruct( PTE_HUMANS );
-    G_TeamCommand( PTE_HUMANS, "cp \"Life Support Terminated\" 1");
+    G_TeamCommand( TEAM_HUMANS, "cp \"Life Support Terminated\" 1");
     trap_SendServerCommand( -1, "print \"Human team has admitted defeat\n\"" );
   }
   else
   {
     G_Printf("admitdefeat: invalid team\n");
-  } 
+    return;
+  }
+  level.surrenderTeam = team;
+  G_BaseSelfDestruct( team );
 }
+
+static void Svcmd_TeamWin_f( void )
+{
+  // this is largely made redundant by admitdefeat <team>
+  char cmd[ 6 ];
+  trap_Argv( 0, cmd, sizeof( cmd ) );
+
+  switch( G_TeamFromString( cmd ) )
+  {
+    case TEAM_ALIENS:
+      G_BaseSelfDestruct( TEAM_HUMANS );
+      break;
+
+    case TEAM_HUMANS:
+      G_BaseSelfDestruct( TEAM_ALIENS );
+      break;
+
+    default:
+      return;
+  }
+}
+
+static void Svcmd_Evacuation_f( void )
+{
+  if( level.exited )
+    return;
+  trap_SendServerCommand( -1, "print \"Evacuation ordered\n\"" );
+  level.lastWin = TEAM_NONE;
+  trap_SetConfigstring( CS_WINNER, "Evacuation" );
+  LogExit( "Evacuation." );
+}
+
+static void Svcmd_MapRotation_f( void )
+{
+  char rotationName[ MAX_QPATH ];
+
+  if( trap_Argc( ) != 2 )
+  {
+    G_Printf( "usage: maprotation <name>\n" );
+    return;
+  }
+
+  G_ClearRotationStack( );
+
+  trap_Argv( 1, rotationName, sizeof( rotationName ) );
+  if( !G_StartMapRotation( rotationName, qfalse, qtrue, qfalse, 0 ) )
+    G_Printf( "maprotation: invalid map rotation \"%s\"\n", rotationName );
+}
+
+static void Svcmd_TeamMessage_f( void )
+{
+  char   teamNum[ 2 ];
+  team_t team;
+
+  if( trap_Argc( ) < 3 )
+  {
+    G_Printf( "usage: say_team <team> <message>\n" );
+    return;
+  }
+
+  trap_Argv( 1, teamNum, sizeof( teamNum ) );
+  team = G_TeamFromString( teamNum );
+
+  if( team == NUM_TEAMS )
+  {
+    G_Printf( "say_team: invalid team \"%s\"\n", teamNum );
+    return;
+  }
+
+  G_TeamCommand( team, va( "chat -1 %d \"%s\"", SAY_TEAM, ConcatArgs( 2 ) ) );
+  G_LogPrintf( "SayTeam: -1 \"console\": %s\n", ConcatArgs( 2 ) );
+}
+
+static void Svcmd_CenterPrint_f( void )
+{
+  if( trap_Argc( ) < 2 )
+  {
+    G_Printf( "usage: cp <message>\n" );
+    return;
+  }
+
+  trap_SendServerCommand( -1, va( "cp \"%s\"", ConcatArgs( 1 ) ) );
+}
+
+static void Svcmd_EjectClient_f( void )
+{
+  char *reason, name[ MAX_STRING_CHARS ];
+
+  if( trap_Argc( ) < 2 )
+  {
+    G_Printf( "usage: eject <player|-1> <reason>\n" );
+    return;
+  }
+
+  trap_Argv( 1, name, sizeof( name ) );
+  reason = ConcatArgs( 2 );
+
+  if( atoi( name ) == -1 )
+  {
+    int i;
+    for( i = 0; i < level.maxclients; i++ )
+    {
+      if( level.clients[ i ].pers.connected == CON_DISCONNECTED )
+        continue;
+      if( level.clients[ i ].pers.localClient )
+        continue;
+      trap_DropClient( i, reason );
+    }
+  }
+  else
+  {
+    gclient_t *cl = ClientForString( name );
+    if( !cl )
+      return;
+    if( cl->pers.localClient )
+    {
+      G_Printf( "eject: cannot eject local clients\n" );
+      return;
+    }
+    trap_DropClient( cl-level.clients, reason );
+  }
+}
+
+static void Svcmd_DumpUser_f( void )
+{
+  char name[ MAX_STRING_CHARS ], userinfo[ MAX_INFO_STRING ];
+  char key[ BIG_INFO_KEY ], value[ BIG_INFO_VALUE ];
+  const char *info;
+  gclient_t *cl;
+
+  if( trap_Argc( ) != 2 )
+  {
+    G_Printf( "usage: dumpuser <player>\n" );
+    return;
+  }
+
+  trap_Argv( 1, name, sizeof( name ) );
+  cl = ClientForString( name );
+  if( !cl )
+    return;
+
+  trap_GetUserinfo( cl-level.clients, userinfo, sizeof( userinfo ) );
+  info = &userinfo[ 0 ];
+  G_Printf( "userinfo\n--------\n" );
+  //Info_Print( userinfo );
+  while( 1 )
+  {
+    Info_NextPair( &info, key, value );
+    if( !*info )
+      return;
+
+    G_Printf( "%-20s%s\n", key, value );
+  }
+}
+
+static void Svcmd_Pr_f( void )
+{
+  char targ[ 4 ];
+  int cl;
+
+  if( trap_Argc( ) < 3 )
+  {
+    G_Printf( "usage: <clientnum|-1> <message>\n" );
+    return;
+  }
+
+  trap_Argv( 1, targ, sizeof( targ ) );
+  cl = atoi( targ );
+
+  if( cl >= MAX_CLIENTS || cl < -1 )
+  {
+    G_Printf( "invalid clientnum %d\n", cl );
+    return;
+  }
+
+  trap_SendServerCommand( cl, va( "print \"%s\n\"", ConcatArgs( 2 ) ) );
+}
+
+static void Svcmd_PrintQueue_f( void )
+{
+  char team[ MAX_STRING_CHARS ];
+
+  if( trap_Argc() != 2 )
+  {
+    G_Printf( "usage: printqueue <team>\n" );
+    return;
+  }
+
+  trap_Argv( 1, team, sizeof( team ) );
+
+  switch( G_TeamFromString( team ) )
+  {
+    case TEAM_ALIENS:
+      G_PrintSpawnQueue( &level.alienSpawnQueue );
+      break;
+
+    case TEAM_HUMANS:
+      G_PrintSpawnQueue( &level.humanSpawnQueue );
+      break;
+
+    default:
+      G_Printf( "unknown team\n" );
+  }
+}
+
+// dumb wrapper for "a", "m", "chat", and "say"
+static void Svcmd_MessageWrapper( void )
+{
+  char cmd[ 5 ];
+  trap_Argv( 0, cmd, sizeof( cmd ) );
+
+  if( !Q_stricmp( cmd, "a" ) )
+    Cmd_AdminMessage_f( NULL );
+  else if( !Q_stricmp( cmd, "m" ) )
+    Cmd_PrivateMessage_f( NULL );
+  else if( !Q_stricmp( cmd, "say" ) )
+    G_Say( NULL, SAY_ALL, ConcatArgs( 1 ) );
+  else if( !Q_stricmp( cmd, "chat" ) )
+    G_Say( NULL, SAY_RAW, ConcatArgs( 1 ) );
+}
+
+static void Svcmd_ListMapsWrapper( void )
+{
+  Cmd_ListMaps_f( NULL );
+}
+
+static void Svcmd_SuddenDeath_f( void )
+{
+  char secs[ 5 ];
+  int  offset;
+  trap_Argv( 1, secs, sizeof( secs ) );
+  offset = atoi( secs );
+
+  level.suddenDeathBeginTime = level.time - level.startTime + offset * 1000;
+  trap_SendServerCommand( -1,
+    va( "cp \"Sudden Death will begin in %d second%s\"",
+      offset, offset == 1 ? "" : "s" ) );
+}
+
+static void Svcmd_G_AdvanceMapRotation_f( void )
+{
+  G_AdvanceMapRotation( 0 );
+}
+
+struct svcmd
+{
+  char     *cmd;
+  qboolean dedicated;
+  void     ( *function )( void );
+} svcmds[ ] = {
+  { "a", qtrue, Svcmd_MessageWrapper },
+  { "admitDefeat", qfalse, Svcmd_AdmitDefeat_f },
+  { "advanceMapRotation", qfalse, Svcmd_G_AdvanceMapRotation_f },
+  { "alienWin", qfalse, Svcmd_TeamWin_f },
+  { "chat", qtrue, Svcmd_MessageWrapper },
+  { "cp", qtrue, Svcmd_CenterPrint_f },
+  { "dumpuser", qfalse, Svcmd_DumpUser_f },
+  { "eject", qfalse, Svcmd_EjectClient_f },
+  { "entityList", qfalse, Svcmd_EntityList_f },
+  { "evacuation", qfalse, Svcmd_Evacuation_f },
+  { "forceTeam", qfalse, Svcmd_ForceTeam_f },
+  { "game_memory", qfalse, BG_MemoryInfo },
+  { "humanWin", qfalse, Svcmd_TeamWin_f },
+  { "layoutLoad", qfalse, Svcmd_LayoutLoad_f },
+  { "layoutSave", qfalse, Svcmd_LayoutSave_f },
+  { "listmaps", qtrue, Svcmd_ListMapsWrapper },
+  { "loadcensors", qfalse, G_LoadCensors },
+  { "m", qtrue, Svcmd_MessageWrapper },
+  { "mapRotation", qfalse, Svcmd_MapRotation_f },
+  { "pr", qfalse, Svcmd_Pr_f },
+  { "printqueue", qfalse, Svcmd_PrintQueue_f },
+  { "say", qtrue, Svcmd_MessageWrapper },
+  { "say_team", qtrue, Svcmd_TeamMessage_f },
+  { "smr", qfalse, Svcmd_SMR_f },
+  { "status", qfalse, Svcmd_Status_f },
+  { "stopMapRotation", qfalse, G_StopMapRotation },
+  { "suddendeath", qfalse, Svcmd_SuddenDeath_f }
+};
 
 /*
 =================
@@ -585,195 +604,56 @@ ConsoleCommand
 qboolean  ConsoleCommand( void )
 {
   char cmd[ MAX_TOKEN_CHARS ];
+  struct svcmd *command;
 
   trap_Argv( 0, cmd, sizeof( cmd ) );
 
-  if( Q_stricmp( cmd, "entitylist" ) == 0 )
+  command = bsearch( cmd, svcmds, ARRAY_LEN( svcmds ),
+    sizeof( struct svcmd ), cmdcmp );
+
+  if( !command )
   {
-    Svcmd_EntityList_f( );
-    return qtrue;
-  }
-
-  if( Q_stricmp( cmd, "forceteam" ) == 0 )
-  {
-    Svcmd_ForceTeam_f( );
-    return qtrue;
-  }
-
-  if( Q_stricmp( cmd, "game_memory" ) == 0 )
-  {
-    Svcmd_GameMem_f( );
-    return qtrue;
-  }
-
-  if( Q_stricmp( cmd, "addip" ) == 0 )
-  {
-    Svcmd_AddIP_f( );
-    return qtrue;
-  }
-
-  if( Q_stricmp( cmd, "removeip" ) == 0 )
-  {
-    Svcmd_RemoveIP_f( );
-    return qtrue;
-  }
-
-  if( Q_stricmp( cmd, "listip" ) == 0 )
-  {
-    trap_SendConsoleCommand( EXEC_NOW, "g_banIPs\n" );
-    return qtrue;
-  }
-
-  if( Q_stricmp( cmd, "mapRotation" ) == 0 )
-  {
-    char *rotationName = ConcatArgs( 1 );
-
-    if( !G_StartMapRotation( rotationName, qfalse ) )
-      G_Printf( "Can't find map rotation %s\n", rotationName );
-
-    return qtrue;
-  }
-
-  if( Q_stricmp( cmd, "stopMapRotation" ) == 0 )
-  {
-    G_StopMapRotation( );
-
-    return qtrue;
-  }
-
-  if( Q_stricmp( cmd, "advanceMapRotation" ) == 0 )
-  {
-    G_AdvanceMapRotation( );
-
-    return qtrue;
-  }
-
-  if( Q_stricmp( cmd, "alienWin" ) == 0 )
-  {
-    int       i;
-    gentity_t *e;
-
-    for( i = 1, e = g_entities + i; i < level.num_entities; i++, e++ )
-    {
-      if( e->s.modelindex == BA_H_SPAWN )
-        G_Damage( e, NULL, NULL, NULL, NULL, 10000, 0, MOD_SUICIDE );
-    }
-
-    return qtrue;
-  }
-
-  if( Q_stricmp( cmd, "humanWin" ) == 0 )
-  {
-    int       i;
-    gentity_t *e;
-
-    for( i = 1, e = g_entities + i; i < level.num_entities; i++, e++ )
-    {
-      if( e->s.modelindex == BA_A_SPAWN )
-        G_Damage( e, NULL, NULL, NULL, NULL, 10000, 0, MOD_SUICIDE );
-    }
-
-    return qtrue;
-  }
-
-  if( !Q_stricmp( cmd, "layoutsave" ) )
-  {
-    Svcmd_LayoutSave_f( );
-    return qtrue;
-  }
-  
-  if( !Q_stricmp( cmd, "layoutload" ) )
-  {
-    Svcmd_LayoutLoad_f( );
-    return qtrue;
-  }
-  
-  if( !Q_stricmp( cmd, "admitdefeat" ) )
-  {
-    Svcmd_AdmitDefeat_f( );
-    return qtrue;
-  }
-
-  if( !Q_stricmp( cmd, "evacuation" ) )
-  {
-    trap_SendServerCommand( -1, "print \"Evacuation ordered\n\"" );
-    level.lastWin = PTE_NONE;
-    trap_SetConfigstring( CS_WINNER, "Evacuation" );
-    LogExit( "Evacuation." );
-    G_admin_maplog_result( "d" );
-    return qtrue;
-  }
-
-  if( !Q_stricmp( cmd, "smr" ) )
-  {
-    if( trap_Argc() >= 2 )
-    {
-      char arg[ 32 ];
-      trap_Argv( 1, arg, sizeof( arg ) );
-
-      if( !Q_stricmp( arg, "ipa" ) && trap_Argc() >= 4 )
-      {
-        int rating;
-        const char *comment = NULL;
-
-        trap_Argv( 3, arg, sizeof( arg ) );
-        rating = atoi( arg );
-        if( trap_Argc() >= 5 )
-          comment = ConcatArgs( 4 );
-        trap_Argv( 2, arg, sizeof( arg ) );
-
-        G_admin_IPA_judgement( arg, rating, comment );
-
-        return qtrue;
-      }
-    }
-
-    G_Printf( "unrecognized Schachtmeister response: %s\n", ConcatArgs( 1 ) );
-    return qtrue;
-  }
-
-  // see if this is a a admin command
-  if( G_admin_cmd_check( NULL, qfalse ) )
-    return qtrue;
-
-  if( g_dedicated.integer )
-  {
-    if( Q_stricmp( cmd, "say" ) == 0 )
-    {
-      trap_SendServerCommand( -1, va( "print \"server: %s\n\"", ConcatArgs( 1 ) ) );
+    // see if this is an admin command
+    if( G_admin_cmd_check( NULL ) )
       return qtrue;
-    }
-    else if( !Q_stricmp( cmd, "chat" ) )
-    {
-      trap_SendServerCommand( -1, va( "chat \"%s\" -1 0", ConcatArgs( 1 ) ) );
-      G_Printf( "chat: %s\n", ConcatArgs( 1 ) );
-      return qtrue;
-    }
-    else if( !Q_stricmp( cmd, "cp" ) )
-    {
-      G_CP( NULL );
-      return qtrue;
-    }
-    else if( !Q_stricmp( cmd, "m" ) )
-    {
-      G_PrivateMessage( NULL );
-      return qtrue;
-    }    
-    else if( !Q_stricmp( cmd, "a" ) || !Q_stricmp( cmd, "say_admins" ))
-    {
-      G_Say( NULL, NULL, SAY_ADMINS, ConcatArgs( 1 )  );
-      return qtrue;
-    }
-    else if( !Q_stricmp( cmd, "ha" ) || !Q_stricmp( cmd, "say_hadmins" ))
-    {
-      G_Say( NULL, NULL, SAY_HADMINS, ConcatArgs( 1 )  );
-      return qtrue;
-    }
 
-    G_Printf( "unknown command: %s\n", cmd );
-    return qtrue;
+    if( g_dedicated.integer )
+      G_Printf( "unknown command: %s\n", cmd );
+
+    return qfalse;
   }
 
-  return qfalse;
+  if( command->dedicated && !g_dedicated.integer )
+    return qfalse;
+
+  command->function( );
+  return qtrue;
 }
 
+void G_RegisterCommands( void )
+{
+  int i;
+
+  for( i = 0; i < ARRAY_LEN( svcmds ); i++ )
+  {
+    if( svcmds[ i ].dedicated && !g_dedicated.integer )
+      continue;
+    trap_AddCommand( svcmds[ i ].cmd );
+  }
+
+  G_admin_register_cmds( );
+}
+
+void G_UnregisterCommands( void )
+{
+  int i;
+
+  for( i = 0; i < ARRAY_LEN( svcmds ); i++ )
+  {
+    if( svcmds[ i ].dedicated && !g_dedicated.integer )
+      continue;
+    trap_RemoveCommand( svcmds[ i ].cmd );
+  }
+
+  G_admin_unregister_cmds( );
+}

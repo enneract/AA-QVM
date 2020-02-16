@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,8 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
@@ -46,20 +47,15 @@ void G_WriteClientSessionData( gclient_t *client )
   const char  *s;
   const char  *var;
 
-  s = va( "%i %i %i %i %i %i %i %i %i %s",
-    client->sess.sessionTeam,
-    client->sess.restartTeam,
+  s = va( "%i %i %i %i %s",
     client->sess.spectatorTime,
     client->sess.spectatorState,
     client->sess.spectatorClient,
-    client->sess.wins,
-    client->sess.losses,
-    client->sess.teamLeader,
-    client->sess.invisible,
-    BG_ClientListString( &client->sess.ignoreList )
+    client->sess.restartTeam,
+    Com_ClientListString( &client->sess.ignoreList )
     );
 
-  var = va( "session%i", client - level.clients );
+  var = va( "session%i", (int)( client - level.clients ) );
 
   trap_Cvar_Set( var, s );
 }
@@ -73,40 +69,26 @@ Called on a reconnect
 */
 void G_ReadSessionData( gclient_t *client )
 {
-  char  s[ MAX_STRING_CHARS ];
+  char        s[ MAX_STRING_CHARS ];
   const char  *var;
+  int         spectatorState;
+  int         restartTeam;
+  char        ignorelist[ 17 ];
 
-  // bk001205 - format
-  int teamLeader;
-  int spectatorState;
-  int sessionTeam;
-  int restartTeam;
-  int invisible;
-
-  var = va( "session%i", client - level.clients );
+  var = va( "session%i", (int)( client - level.clients ) );
   trap_Cvar_VariableStringBuffer( var, s, sizeof(s) );
 
-  // FIXME: should be using BG_ClientListParse() for ignoreList, but
-  //        bg_lib.c's sscanf() currently lacks %s
-  sscanf( s, "%i %i %i %i %i %i %i %i %i %x%x",
-    &sessionTeam,
-    &restartTeam,
+  sscanf( s, "%i %i %i %i %16s",
     &client->sess.spectatorTime,
     &spectatorState,
     &client->sess.spectatorClient,
-    &client->sess.wins,
-    &client->sess.losses,
-    &teamLeader,
-    &invisible,
-    &client->sess.ignoreList.hi,
-    &client->sess.ignoreList.lo
+    &restartTeam,
+    ignorelist
     );
-  // bk001205 - format issues
-  client->sess.sessionTeam = (team_t)sessionTeam;
-  client->sess.restartTeam = (pTeam_t)restartTeam;
+
   client->sess.spectatorState = (spectatorState_t)spectatorState;
-  client->sess.teamLeader = (qboolean)teamLeader;
-  client->sess.invisible = (qboolean)invisible;
+  client->sess.restartTeam = (team_t)restartTeam;
+  Com_ClientListParse( &client->sess.ignoreList, ignorelist );
 }
 
 
@@ -129,18 +111,18 @@ void G_InitSessionData( gclient_t *client, char *userinfo )
   if( value[ 0 ] == 's' )
   {
     // a willing spectator, not a waiting-in-line
-    sess->sessionTeam = TEAM_SPECTATOR;
+    sess->spectatorState = SPECTATOR_FREE;
   }
   else
   {
     if( g_maxGameClients.integer > 0 &&
       level.numNonSpectatorClients >= g_maxGameClients.integer )
-      sess->sessionTeam = TEAM_SPECTATOR;
+      sess->spectatorState = SPECTATOR_FREE;
     else
-      sess->sessionTeam = TEAM_FREE;
+      sess->spectatorState = SPECTATOR_NOT;
   }
 
-  sess->restartTeam = PTE_NONE;
+  sess->restartTeam = TEAM_NONE;
   sess->spectatorState = SPECTATOR_FREE;
   sess->spectatorTime = level.time;
   sess->spectatorClient = -1;
@@ -160,7 +142,7 @@ void G_WriteSessionData( void )
 {
   int    i;
 
-  //TA: ?
+  //FIXME: What's this for?
   trap_Cvar_Set( "session", va( "%i", 0 ) );
 
   for( i = 0 ; i < level.maxclients ; i++ )

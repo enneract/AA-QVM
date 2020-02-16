@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,8 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 //
@@ -36,133 +37,28 @@ vec3_t	vec3_origin = {0,0,0};
 vec3_t	axisDefault[3] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
 
 
-vec4_t		colorBlack	= {0.000f, 0.000f, 0.000f, 1.000f};
-vec4_t		colorRed	= {1.000f, 0.000f, 0.000f, 1.000f};
-vec4_t		colorGreen	= {0.000f, 1.000f, 0.000f, 1.000f};
-vec4_t		colorBlue	= {0.000f, 0.000f, 1.000f, 1.000f};
-vec4_t		colorYellow	= {1.000f, 1.000f, 0.000f, 1.000f};
-vec4_t		colorMagenta	= {1.000f, 0.000f, 1.000f, 1.000f};
-vec4_t		colorCyan	= {0.000f, 1.000f, 1.000f, 1.000f};
-vec4_t		colorWhite	= {1.000f, 1.000f, 1.000f, 1.000f};
-vec4_t		colorGray = {0.502f, 0.502f, 0.502f, 1.000f};
-vec4_t		colorOrange = {1.000f, 0.686f, 0.000f, 1.000f};
-vec4_t		colorRoseBud = {0.996f, 0.671f, 0.604f, 1.000f};
-vec4_t		colorPaleGreen = {0.596f, 0.984f, 0.596f, 1.000f};
-vec4_t		colorPaleGolden = {0.933f, 0.910f, 0.667f, 1.000f};
-vec4_t		colorColumbiaBlue = {0.608f, 0.867f, 1.000f, 1.000f};
-vec4_t		colorPaleTurquoise = {0.686f, 0.933f, 0.933f, 1.000f};
-vec4_t		colorPaleVioletRed = {0.859f, 0.439f, 0.576f, 1.000f};
-vec4_t		colorPalacePaleWhite = {0.910f, 0.898f, 0.863f, 1.000f};
-vec4_t		colorOlive = {0.231f, 0.235f, 0.212f, 1.000f};
-vec4_t		colorTomato = {1.000f, 0.388f, 0.278f, 1.000f};
-vec4_t		colorLime = {0.749f, 1.000f, 0.000f, 1.000f};
-vec4_t		colorLemon = {1.000f, 0.969f, 0.000f, 1.000f};
-vec4_t		colorBlueBerry = {0.310f, 0.525f, 0.969f, 1.000f};
-vec4_t		colorTurquoise = {0.251f, 0.878f, 0.816f, 1.000f};
-vec4_t		colorWildWatermelon = {0.992f, 0.357f, 0.471f, 1.000f};
-vec4_t		colorSaltpan = {0.933f, 0.953f, 0.898f, 1.000f};
-vec4_t		colorGrayChateau = {0.624f, 0.639f, 0.655f, 1.000f};
-vec4_t		colorRust = {0.718f, 0.255f, 0.055f, 1.000f};
-vec4_t		colorCopperGreen = {0.431f, 0.553f, 0.443f, 1.000f};
-vec4_t		colorGold = {1.000f, 0.843f, 0.000f, 1.000f};
-vec4_t		colorSteelBlue = {0.275f, 0.510f, 0.706f, 1.000f};
-vec4_t		colorSteelGray = {0.482f, 0.565f, 0.584f, 1.000f};
-vec4_t		colorBronze = {0.804f, 0.498f, 0.196f, 1.000f};
-vec4_t		colorSilver = {0.753f, 0.753f, 0.753f, 1.000f};
-vec4_t		colorDarkGray = {0.663f, 0.663f, 0.663f, 1.000f};
-vec4_t		colorDarkOrange = {1.000f, 0.549f, 0.000f, 1.000f};
-vec4_t		colorDarkGreen = {0.000f, 0.392f, 0.000f, 1.000f};
-vec4_t		colorRedOrange = {1.000f, 0.247f, 0.204f, 1.000f};
-vec4_t		colorForestGreen = {0.133f, 0.545f, 0.133f, 1.000f};
-vec4_t		colorBrightSun = {0.926f, 0.741f, 0.173f, 1.000f};
-vec4_t		colorMediumSlateBlue = {0.482f, 0.408f, 0.933f, 1.000f};
-vec4_t		colorCeleste = {0.698f, 1.000f, 1.000f, 1.000f};
-vec4_t		colorIronstone = {0.525f, 0.314f, 0.251f, 1.000f};
-vec4_t		colorTimberwolf = {0.859f, 0.843f, 0.824f, 1.000f};
-vec4_t		colorOnyx = {0.059f, 0.059f, 0.059f, 1.000f};
-vec4_t		colorRosewood = {0.396f, 0.000f, 0.043f, 1.000f};
-vec4_t		colorKokoda = {0.482f, 0.471f, 0.353f, 1.000f};
-vec4_t		colorPorsche = {0.875f, 0.616f, 0.357f, 1.000f};
-vec4_t		colorCloudBurst = {0.208f, 0.369f, 0.310f, 1.000f};
-vec4_t		colorBlueDiane = {0.208f, 0.318f, 0.310f, 1.000f};
-vec4_t		colorRope = {0.557f, 0.349f, 0.235f, 1.000f};
-vec4_t		colorBlonde = {0.980f, 0.941f, 0.745f, 1.000f};
-vec4_t		colorSmokeyBlack = {0.063f, 0.047f, 0.031f, 1.000f};
-vec4_t		colorAmericanRose = {1.000f, 0.012f, 0.243f, 1.000f};
-vec4_t		colorNeonGreen = {0.224f, 1.000f, 0.078f, 1.000f};
-vec4_t		colorNeonYellow = {0.980f, 0.929f, 0.153f, 1.000f};
-vec4_t		colorUltramarine = {0.071f, 0.039f, 0.561f, 1.000f};
-vec4_t		colorTurquoiseBlue = {0.000f, 1.000f, 0.937f, 1.000f};
-vec4_t		colorDarkMagenta = {0.545f, 0.000f, 0.545f, 1.000f};
-vec4_t		colorMagicMint = {0.667f, 0.941f, 0.820f, 1.000f};
-vec4_t		colorLightGray = {0.827f, 0.827f, 0.827f, 1.000f};
-vec4_t		colorLightSalmon = {1.000f, 0.600f, 0.600f, 1.000f};
-vec4_t		colorLightGreen = {0.565f, 0.933f, 0.565f, 1.000f};
+vec4_t		colorBlack	= {0, 0, 0, 1};
+vec4_t		colorRed	= {1, 0, 0, 1};
+vec4_t		colorGreen	= {0, 1, 0, 1};
+vec4_t		colorBlue	= {0, 0, 1, 1};
+vec4_t		colorYellow	= {1, 1, 0, 1};
+vec4_t		colorMagenta= {1, 0, 1, 1};
+vec4_t		colorCyan	= {0, 1, 1, 1};
+vec4_t		colorWhite	= {1, 1, 1, 1};
+vec4_t		colorLtGrey	= {0.75, 0.75, 0.75, 1};
+vec4_t		colorMdGrey	= {0.5, 0.5, 0.5, 1};
+vec4_t		colorDkGrey	= {0.25, 0.25, 0.25, 1};
 
-vec4_t	g_color_table[62] =
+vec4_t	g_color_table[8] =
 	{
-	{0.250f, 0.250f, 0.250f, 1.000f},
-	{1.000f, 0.000f, 0.000f, 1.000f},
-	{0.000f, 1.000f, 0.000f, 1.000f},
-	{1.000f, 1.000f, 0.000f, 1.000f},
-	{0.000f, 0.000f, 1.000f, 1.000f},
-	{0.000f, 1.000f, 1.000f, 1.000f},
-	{1.000f, 0.000f, 1.000f, 1.000f},
-	{1.000f, 1.000f, 1.000f, 1.000f},
-	{0.502f, 0.502f, 0.502f, 1.000f},
-	{1.000f, 0.686f, 0.000f, 1.000f},
-	{0.996f, 0.671f, 0.604f, 1.000f},
-	{0.596f, 0.984f, 0.596f, 1.000f},
-	{0.933f, 0.910f, 0.667f, 1.000f},
-	{0.608f, 0.867f, 1.000f, 1.000f},
-	{0.686f, 0.933f, 0.933f, 1.000f},
-	{0.859f, 0.439f, 0.576f, 1.000f},
-	{0.910f, 0.898f, 0.863f, 1.000f},
-	{0.231f, 0.235f, 0.212f, 1.000f},
-	{1.000f, 0.388f, 0.278f, 1.000f},
-	{0.749f, 1.000f, 0.000f, 1.000f},
-	{1.000f, 0.969f, 0.000f, 1.000f},
-	{0.310f, 0.525f, 0.969f, 1.000f},
-	{0.251f, 0.878f, 0.816f, 1.000f},
-	{0.992f, 0.357f, 0.471f, 1.000f},
-	{0.933f, 0.953f, 0.898f, 1.000f},
-	{0.624f, 0.639f, 0.655f, 1.000f},
-	{0.718f, 0.255f, 0.055f, 1.000f},
-	{0.431f, 0.553f, 0.443f, 1.000f},
-	{1.000f, 0.843f, 0.000f, 1.000f},
-	{0.275f, 0.510f, 0.706f, 1.000f},
-	{0.482f, 0.565f, 0.584f, 1.000f},
-	{0.804f, 0.498f, 0.196f, 1.000f},
-	{0.753f, 0.753f, 0.753f, 1.000f},
-	{0.663f, 0.663f, 0.663f, 1.000f},
-	{1.000f, 0.549f, 0.000f, 1.000f},
-	{0.000f, 0.392f, 0.000f, 1.000f},
-	{1.000f, 0.247f, 0.204f, 1.000f},
-	{0.133f, 0.545f, 0.133f, 1.000f},
-	{0.926f, 0.741f, 0.173f, 1.000f},
-	{0.482f, 0.408f, 0.933f, 1.000f},
-	{0.698f, 1.000f, 1.000f, 1.000f},
-	{0.525f, 0.314f, 0.251f, 1.000f},
-	{0.859f, 0.843f, 0.824f, 1.000f},
-	{0.059f, 0.059f, 0.059f, 1.000f},
-	{0.396f, 0.000f, 0.043f, 1.000f},
-	{0.482f, 0.471f, 0.353f, 1.000f},
-	{0.875f, 0.616f, 0.357f, 1.000f},
-	{0.208f, 0.369f, 0.310f, 1.000f},
-	{0.208f, 0.318f, 0.310f, 1.000f},
-	{0.557f, 0.349f, 0.235f, 1.000f},
-	{0.980f, 0.941f, 0.745f, 1.000f},
-	{0.063f, 0.047f, 0.031f, 1.000f},
-	{1.000f, 0.012f, 0.243f, 1.000f},
-	{0.224f, 1.000f, 0.078f, 1.000f},
-	{0.980f, 0.929f, 0.153f, 1.000f},
-	{0.071f, 0.039f, 0.561f, 1.000f},
-	{0.000f, 1.000f, 0.937f, 1.000f},
-	{0.545f, 0.000f, 0.545f, 1.000f},
-	{0.667f, 0.941f, 0.820f, 1.000f},
-	{0.827f, 0.827f, 0.827f, 1.000f},
-	{1.000f, 0.600f, 0.600f, 1.000f},
-	{0.565f, 0.933f, 0.565f, 1.000f},
+	{0.2, 0.2, 0.2, 1.0},
+	{1.0, 0.0, 0.0, 1.0},
+	{0.0, 1.0, 0.0, 1.0},
+	{1.0, 1.0, 0.0, 1.0},
+	{0.0, 0.0, 1.0, 1.0},
+	{0.0, 1.0, 1.0, 1.0},
+	{1.0, 0.0, 1.0, 1.0},
+	{1.0, 1.0, 1.0, 1.0},
 	};
 
 
@@ -601,7 +497,7 @@ void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal )
 
 	inv_denom = 1.0f / DotProduct( normal, normal );
 #ifndef Q3_VM
-	assert( Q_fabs(inv_denom) != 0.0f ); // bk010122 - zero vectors get here
+	assert( Q_fabs(inv_denom) != 0.0f ); // zero vectors get here
 #endif
 	inv_denom = 1.0f / inv_denom;
 
@@ -655,10 +551,7 @@ void VectorRotate( vec3_t in, vec3_t matrix[3], vec3_t out )
 */
 float Q_rsqrt( float number )
 {
-	union {
-		float f;
-		int i;
-	} t;
+	floatint_t t;
 	float x2, y;
 	const float threehalfs = 1.5F;
 
@@ -669,14 +562,14 @@ float Q_rsqrt( float number )
 	y  = y * ( threehalfs - ( x2 * y * y ) );   // 1st iteration
 //	y  = y * ( threehalfs - ( x2 * y * y ) );   // 2nd iteration, this can be removed
 
-	//assert( !isnan(y) ); // bk010122 - FPE?
 	return y;
 }
 
 float Q_fabs( float f ) {
-	int tmp = * ( int * ) &f;
-	tmp &= 0x7FFFFFFF;
-	return * ( float * ) &tmp;
+	floatint_t fi;
+	fi.f = f;
+	fi.i &= 0x7FFFFFFF;
+	return fi.f;
 }
 #endif
 
@@ -804,50 +697,14 @@ void SetPlaneSignbits (cplane_t *out) {
 BoxOnPlaneSide
 
 Returns 1, 2, or 1 + 2
-
-// this is the slow, general version
-int BoxOnPlaneSide2 (vec3_t emins, vec3_t emaxs, struct cplane_s *p)
-{
-	int		i;
-	float	dist1, dist2;
-	int		sides;
-	vec3_t	corners[2];
-
-	for (i=0 ; i<3 ; i++)
-	{
-		if (p->normal[i] < 0)
-		{
-			corners[0][i] = emins[i];
-			corners[1][i] = emaxs[i];
-		}
-		else
-		{
-			corners[1][i] = emins[i];
-			corners[0][i] = emaxs[i];
-		}
-	}
-	dist1 = DotProduct (p->normal, corners[0]) - p->dist;
-	dist2 = DotProduct (p->normal, corners[1]) - p->dist;
-	sides = 0;
-	if (dist1 >= 0)
-		sides = 1;
-	if (dist2 < 0)
-		sides |= 2;
-
-	return sides;
-}
-
 ==================
 */
-
-#if !id386
-
-int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, struct cplane_s *p)
+int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *p)
 {
-	float	dist1, dist2;
-	int		sides;
+	float	dist[2];
+	int		sides, b, i;
 
-// fast axial cases
+	// fast axial cases
 	if (p->type < 3)
 	{
 		if (p->dist <= emins[p->type])
@@ -857,291 +714,27 @@ int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, struct cplane_s *p)
 		return 3;
 	}
 
-// general case
-	switch (p->signbits)
+	// general case
+	dist[0] = dist[1] = 0;
+	if (p->signbits < 8) // >= 8: default case is original code (dist[0]=dist[1]=0)
 	{
-	case 0:
-		dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
-		dist2 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
-		break;
-	case 1:
-		dist1 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
-		dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
-		break;
-	case 2:
-		dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
-		dist2 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
-		break;
-	case 3:
-		dist1 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
-		dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
-		break;
-	case 4:
-		dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
-		dist2 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
-		break;
-	case 5:
-		dist1 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
-		dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
-		break;
-	case 6:
-		dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
-		dist2 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
-		break;
-	case 7:
-		dist1 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
-		dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
-		break;
-	default:
-		dist1 = dist2 = 0;		// shut up compiler
-		break;
+		for (i=0 ; i<3 ; i++)
+		{
+			b = (p->signbits >> i) & 1;
+			dist[ b] += p->normal[i]*emaxs[i];
+			dist[!b] += p->normal[i]*emins[i];
+		}
 	}
 
 	sides = 0;
-	if (dist1 >= p->dist)
+	if (dist[0] >= p->dist)
 		sides = 1;
-	if (dist2 < p->dist)
+	if (dist[1] < p->dist)
 		sides |= 2;
 
 	return sides;
 }
-#elif __GNUC__
-// use matha.s
-#else
-#pragma warning( disable: 4035 )
 
-__declspec( naked ) int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, struct cplane_s *p)
-{
-	static int bops_initialized;
-	static int Ljmptab[8];
-
-	__asm {
-
-		push ebx
-			
-		cmp bops_initialized, 1
-		je  initialized
-		mov bops_initialized, 1
-		
-		mov Ljmptab[0*4], offset Lcase0
-		mov Ljmptab[1*4], offset Lcase1
-		mov Ljmptab[2*4], offset Lcase2
-		mov Ljmptab[3*4], offset Lcase3
-		mov Ljmptab[4*4], offset Lcase4
-		mov Ljmptab[5*4], offset Lcase5
-		mov Ljmptab[6*4], offset Lcase6
-		mov Ljmptab[7*4], offset Lcase7
-			
-initialized:
-
-		mov edx,dword ptr[4+12+esp]
-		mov ecx,dword ptr[4+4+esp]
-		xor eax,eax
-		mov ebx,dword ptr[4+8+esp]
-		mov al,byte ptr[17+edx]
-		cmp al,8
-		jge Lerror
-		fld dword ptr[0+edx]
-		fld st(0)
-		jmp dword ptr[Ljmptab+eax*4]
-Lcase0:
-		fmul dword ptr[ebx]
-		fld dword ptr[0+4+edx]
-		fxch st(2)
-		fmul dword ptr[ecx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[4+ebx]
-		fld dword ptr[0+8+edx]
-		fxch st(2)
-		fmul dword ptr[4+ecx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[8+ebx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul dword ptr[8+ecx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase1:
-		fmul dword ptr[ecx]
-		fld dword ptr[0+4+edx]
-		fxch st(2)
-		fmul dword ptr[ebx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[4+ebx]
-		fld dword ptr[0+8+edx]
-		fxch st(2)
-		fmul dword ptr[4+ecx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[8+ebx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul dword ptr[8+ecx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase2:
-		fmul dword ptr[ebx]
-		fld dword ptr[0+4+edx]
-		fxch st(2)
-		fmul dword ptr[ecx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[4+ecx]
-		fld dword ptr[0+8+edx]
-		fxch st(2)
-		fmul dword ptr[4+ebx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[8+ebx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul dword ptr[8+ecx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase3:
-		fmul dword ptr[ecx]
-		fld dword ptr[0+4+edx]
-		fxch st(2)
-		fmul dword ptr[ebx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[4+ecx]
-		fld dword ptr[0+8+edx]
-		fxch st(2)
-		fmul dword ptr[4+ebx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[8+ebx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul dword ptr[8+ecx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase4:
-		fmul dword ptr[ebx]
-		fld dword ptr[0+4+edx]
-		fxch st(2)
-		fmul dword ptr[ecx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[4+ebx]
-		fld dword ptr[0+8+edx]
-		fxch st(2)
-		fmul dword ptr[4+ecx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[8+ecx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul dword ptr[8+ebx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase5:
-		fmul dword ptr[ecx]
-		fld dword ptr[0+4+edx]
-		fxch st(2)
-		fmul dword ptr[ebx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[4+ebx]
-		fld dword ptr[0+8+edx]
-		fxch st(2)
-		fmul dword ptr[4+ecx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[8+ecx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul dword ptr[8+ebx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase6:
-		fmul dword ptr[ebx]
-		fld dword ptr[0+4+edx]
-		fxch st(2)
-		fmul dword ptr[ecx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[4+ecx]
-		fld dword ptr[0+8+edx]
-		fxch st(2)
-		fmul dword ptr[4+ebx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[8+ecx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul dword ptr[8+ebx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-		jmp LSetSides
-Lcase7:
-		fmul dword ptr[ecx]
-		fld dword ptr[0+4+edx]
-		fxch st(2)
-		fmul dword ptr[ebx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[4+ecx]
-		fld dword ptr[0+8+edx]
-		fxch st(2)
-		fmul dword ptr[4+ebx]
-		fxch st(2)
-		fld st(0)
-		fmul dword ptr[8+ecx]
-		fxch st(5)
-		faddp st(3),st(0)
-		fmul dword ptr[8+ebx]
-		fxch st(1)
-		faddp st(3),st(0)
-		fxch st(3)
-		faddp st(2),st(0)
-LSetSides:
-		faddp st(2),st(0)
-		fcomp dword ptr[12+edx]
-		xor ecx,ecx
-		fnstsw ax
-		fcomp dword ptr[12+edx]
-		and ah,1
-		xor ah,1
-		add cl,ah
-		fnstsw ax
-		and ah,1
-		add ah,ah
-		add cl,ah
-		pop ebx
-		mov eax,ecx
-		ret
-Lerror:
-		int 3
-	}
-}
-#pragma warning( default: 4035 )
-
-#endif
 
 /*
 =================
@@ -1191,16 +784,64 @@ void AddPointToBounds( const vec3_t v, vec3_t mins, vec3_t maxs ) {
 	}
 }
 
+qboolean BoundsIntersect(const vec3_t mins, const vec3_t maxs,
+		const vec3_t mins2, const vec3_t maxs2)
+{
+	if ( maxs[0] < mins2[0] ||
+		maxs[1] < mins2[1] ||
+		maxs[2] < mins2[2] ||
+		mins[0] > maxs2[0] ||
+		mins[1] > maxs2[1] ||
+		mins[2] > maxs2[2])
+	{
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+qboolean BoundsIntersectSphere(const vec3_t mins, const vec3_t maxs,
+		const vec3_t origin, vec_t radius)
+{
+	if ( origin[0] - radius > maxs[0] ||
+		origin[0] + radius < mins[0] ||
+		origin[1] - radius > maxs[1] ||
+		origin[1] + radius < mins[1] ||
+		origin[2] - radius > maxs[2] ||
+		origin[2] + radius < mins[2])
+	{
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+qboolean BoundsIntersectPoint(const vec3_t mins, const vec3_t maxs,
+		const vec3_t origin)
+{
+	if ( origin[0] > maxs[0] ||
+		origin[0] < mins[0] ||
+		origin[1] > maxs[1] ||
+		origin[1] < mins[1] ||
+		origin[2] > maxs[2] ||
+		origin[2] < mins[2])
+	{
+		return qfalse;
+	}
+
+	return qtrue;
+}
 
 vec_t VectorNormalize( vec3_t v ) {
-	// NOTE: TTimo - Apple G4 altivec source uses double?
 	float	length, ilength;
 
 	length = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
-	length = sqrt (length);
 
 	if ( length ) {
-		ilength = 1/length;
+		/* writing it this way allows gcc to recognize that rsqrt can be used */
+		ilength = 1/(float)sqrt (length);
+		/* sqrt(length) = length * (1 / sqrt(length)) */
+		length *= ilength;
 		v[0] *= ilength;
 		v[1] *= ilength;
 		v[2] *= ilength;
@@ -1213,21 +854,17 @@ vec_t VectorNormalize2( const vec3_t v, vec3_t out) {
 	float	length, ilength;
 
 	length = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
-	length = sqrt (length);
 
 	if (length)
 	{
-#ifndef Q3_VM // bk0101022 - FPE related
-//	  assert( ((Q_fabs(v[0])!=0.0f) || (Q_fabs(v[1])!=0.0f) || (Q_fabs(v[2])!=0.0f)) );
-#endif
-		ilength = 1/length;
+		/* writing it this way allows gcc to recognize that rsqrt can be used */
+		ilength = 1/(float)sqrt (length);
+		/* sqrt(length) = length * (1 / sqrt(length)) */
+		length *= ilength;
 		out[0] = v[0]*ilength;
 		out[1] = v[1]*ilength;
 		out[2] = v[2]*ilength;
 	} else {
-#ifndef Q3_VM // bk0101022 - FPE related
-//	  assert( ((Q_fabs(v[0])==0.0f) && (Q_fabs(v[1])==0.0f) && (Q_fabs(v[2])==0.0f)) );
-#endif
 		VectorClear( out );
 	}
 		
@@ -1653,15 +1290,40 @@ Don't pass doubles to this
 */
 int Q_isnan( float x )
 {
-	union
-	{
-		float f;
-		unsigned int i;
-	} t;
+	floatint_t fi;
 
-	t.f = x;
-	t.i &= 0x7FFFFFFF;
-	t.i = 0x7F800000 - t.i;
+	fi.f = x;
+	fi.ui &= 0x7FFFFFFF;
+	fi.ui = 0x7F800000 - fi.ui;
 
-	return (int)( (unsigned int)t.i >> 31 );
+	return (int)( (unsigned int)fi.ui >> 31 );
 }
+//------------------------------------------------------------------------
+
+#ifndef Q3_VM
+/*
+=====================
+Q_acos
+
+the msvc acos doesn't always return a value between -PI and PI:
+
+int i;
+i = 1065353246;
+acos(*(float*) &i) == -1.#IND0
+
+=====================
+*/
+float Q_acos(float c) {
+	float angle;
+
+	angle = acos(c);
+
+	if (angle > M_PI) {
+		return (float)M_PI;
+	}
+	if (angle < -M_PI) {
+		return (float)M_PI;
+	}
+	return angle;
+}
+#endif

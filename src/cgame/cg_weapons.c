@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,13 +17,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
 // cg_weapons.c -- events and effects dealing with weapons
-
 
 #include "cg_local.h"
 
@@ -38,26 +38,32 @@ void CG_RegisterUpgrade( int upgradeNum )
   upgradeInfo_t   *upgradeInfo;
   char            *icon;
 
+  if( upgradeNum <= UP_NONE || upgradeNum >= UP_NUM_UPGRADES )
+  {
+    CG_Error( "CG_RegisterUpgrade: out of range: %d", upgradeNum );
+    return;
+  }
+
   upgradeInfo = &cg_upgrades[ upgradeNum ];
 
-  if( upgradeNum == 0 )
-    return;
-
   if( upgradeInfo->registered )
+  {
+    CG_Printf( "CG_RegisterUpgrade: already registered: (%d) %s\n", upgradeNum,
+      BG_Upgrade( upgradeNum )->name );
     return;
+  }
 
-  memset( upgradeInfo, 0, sizeof( *upgradeInfo ) );
   upgradeInfo->registered = qtrue;
 
-  if( !BG_FindNameForUpgrade( upgradeNum ) )
+  if( !BG_Upgrade( upgradeNum )->name[ 0 ] )
     CG_Error( "Couldn't find upgrade %i", upgradeNum );
 
-  upgradeInfo->humanName = BG_FindHumanNameForUpgrade( upgradeNum );
+  upgradeInfo->humanName = BG_Upgrade( upgradeNum )->humanName;
 
   //la la la la la, i'm not listening!
   if( upgradeNum == UP_GRENADE )
     upgradeInfo->upgradeIcon = cg_weapons[ WP_GRENADE ].weaponIcon;
-  else if( ( icon = BG_FindIconForUpgrade( upgradeNum ) ) )
+  else if( ( icon = BG_Upgrade( upgradeNum )->icon ) )
     upgradeInfo->upgradeIcon = trap_R_RegisterShader( icon );
 }
 
@@ -72,10 +78,109 @@ void CG_InitUpgrades( void )
 {
   int   i;
 
-  memset( cg_upgrades, 0, sizeof( cg_upgrades ) );
+  Com_Memset( cg_upgrades, 0, sizeof( cg_upgrades ) );
 
   for( i = UP_NONE + 1; i < UP_NUM_UPGRADES; i++ )
     CG_RegisterUpgrade( i );
+}
+
+
+/*
+======================
+CG_ParseWeaponAnimationFile
+
+Read a configuration file containing animation counts and rates
+models/weapons/rifle/animation.cfg, etc
+======================
+*/
+static qboolean CG_ParseWeaponAnimationFile( const char *filename, weaponInfo_t *weapon )
+{
+  char          *text_p;
+  int           len;
+  int           i;
+  char          *token;
+  float         fps;
+  char          text[ 20000 ];
+  fileHandle_t  f;
+  animation_t   *animations;
+
+  animations = weapon->animations;
+
+  // load the file
+  len = trap_FS_FOpenFile( filename, &f, FS_READ );
+  if( len < 0 )
+    return qfalse;
+
+  if( len == 0 || len >= sizeof( text ) - 1 )
+  {
+    trap_FS_FCloseFile( f );
+    CG_Printf( "File %s is %s\n", filename, len == 0 ? "empty" : "too long" );
+    return qfalse;
+  }
+
+  trap_FS_Read( text, len, f );
+  text[ len ] = 0;
+  trap_FS_FCloseFile( f );
+
+  // parse the text
+  text_p = text;
+
+  // read information for each frame
+  for( i = WANIM_NONE + 1; i < MAX_WEAPON_ANIMATIONS; i++ )
+  {
+
+    token = COM_Parse( &text_p );
+    if( !*token )
+      break;
+
+    if( !Q_stricmp( token, "noDrift" ) )
+    {
+      weapon->noDrift = qtrue;
+      continue;
+    }
+
+    animations[ i ].firstFrame = atoi( token );
+
+    token = COM_Parse( &text_p );
+    if( !*token )
+      break;
+
+    animations[ i ].numFrames = atoi( token );
+    animations[ i ].reversed = qfalse;
+    animations[ i ].flipflop = qfalse;
+
+    // if numFrames is negative the animation is reversed
+    if( animations[ i ].numFrames < 0 )
+    {
+      animations[ i ].numFrames = -animations[ i ].numFrames;
+      animations[ i ].reversed = qtrue;
+    }
+
+    token = COM_Parse( &text_p );
+    if ( !*token )
+      break;
+
+    animations[i].loopFrames = atoi( token );
+
+    token = COM_Parse( &text_p );
+    if( !*token )
+      break;
+
+    fps = atof( token );
+    if( fps == 0 )
+      fps = 1;
+
+    animations[ i ].frameLerp = 1000 / fps;
+    animations[ i ].initialLerp = 1000 / fps;
+  }
+
+  if( i != MAX_WEAPON_ANIMATIONS )
+  {
+    CG_Printf( "Error parsing animation file: %s\n", filename );
+    return qfalse;
+  }
+
+  return qtrue;
 }
 
 
@@ -138,6 +243,16 @@ static qboolean CG_ParseWeaponModeSection( weaponInfoMode_t *wim, char **text_p 
 
       if( !wim->missileSprite )
         CG_Printf( S_COLOR_RED "ERROR: missile sprite not found %s\n", token );
+
+      continue;
+    }
+    else if( !Q_stricmp( token, "missileSpriteCharge" ) )
+    {
+      token = COM_Parse( text_p );
+      if( !token )
+        break;
+
+      wim->missileSpriteCharge = atof( token );
 
       continue;
     }
@@ -429,12 +544,13 @@ static qboolean CG_ParseWeaponFile( const char *filename, weaponInfo_t *wi )
 
   // load the file
   len = trap_FS_FOpenFile( filename, &f, FS_READ );
-  if( len <= 0 )
+  if( len < 0 )
     return qfalse;
 
-  if( len >= sizeof( text ) - 1 )
+  if( len == 0 || len >= sizeof( text ) - 1 )
   {
-    CG_Printf( "File %s too long\n", filename );
+    trap_FS_FCloseFile( f );
+    CG_Printf( "File %s is %s\n", filename, len == 0 ? "empty" : "too long" );
     return qfalse;
   }
 
@@ -517,8 +633,33 @@ static qboolean CG_ParseWeaponFile( const char *filename, weaponInfo_t *wi )
       strcat( path, "_hand.md3" );
       wi->handsModel = trap_R_RegisterModel( path );
 
-      if( !wi->handsModel )
-        wi->handsModel = trap_R_RegisterModel( "models/weapons2/shotgun/shotgun_hand.md3" );
+      continue;
+    }
+    else if( !Q_stricmp( token, "weaponModel3rdPerson" ) )
+    {
+      char path[ MAX_QPATH ];
+
+      token = COM_Parse( &text_p );
+      if( !token )
+        break;
+
+      wi->weaponModel3rdPerson = trap_R_RegisterModel( token );
+
+      if( !wi->weaponModel3rdPerson )
+      {
+        CG_Printf( S_COLOR_RED "ERROR: 3rd person weapon "
+            "model not found %s\n", token );
+      }
+
+      strcpy( path, token );
+      COM_StripExtension( path, path, MAX_QPATH );
+      strcat( path, "_flash.md3" );
+      wi->flashModel3rdPerson = trap_R_RegisterModel( path );
+
+      strcpy( path, token );
+      COM_StripExtension( path, path, MAX_QPATH );
+      strcat( path, "_barrel.md3" );
+      wi->barrelModel3rdPerson = trap_R_RegisterModel( path );
 
       continue;
     }
@@ -596,35 +737,42 @@ void CG_RegisterWeapon( int weaponNum )
   vec3_t        mins, maxs;
   int           i;
 
+  if( weaponNum <= WP_NONE || weaponNum >= WP_NUM_WEAPONS )
+  {
+    CG_Error( "CG_RegisterWeapon: out of range: %d", weaponNum );
+    return;
+  }
+
   weaponInfo = &cg_weapons[ weaponNum ];
 
-  if( weaponNum == 0 )
-    return;
-
   if( weaponInfo->registered )
+  {
+    CG_Printf( "CG_RegisterWeapon: already registered: (%d) %s\n", weaponNum,
+      BG_Weapon( weaponNum )->name );
     return;
+  }
 
-  memset( weaponInfo, 0, sizeof( *weaponInfo ) );
   weaponInfo->registered = qtrue;
 
-  if( !BG_FindNameForWeapon( weaponNum ) )
+  if( !BG_Weapon( weaponNum )->name[ 0 ] )
     CG_Error( "Couldn't find weapon %i", weaponNum );
 
-  Com_sprintf( path, MAX_QPATH, "models/weapons/%s/weapon.cfg", BG_FindNameForWeapon( weaponNum ) );
+  Com_sprintf( path, MAX_QPATH, "models/weapons/%s/weapon.cfg", BG_Weapon( weaponNum )->name );
 
-  weaponInfo->humanName = BG_FindHumanNameForWeapon( weaponNum );
+  weaponInfo->humanName = BG_Weapon( weaponNum )->humanName;
 
   if( !CG_ParseWeaponFile( path, weaponInfo ) )
+    Com_Printf( S_COLOR_RED "ERROR: failed to parse %s\n", path );
+
+  Com_sprintf( path, MAX_QPATH, "models/weapons/%s/animation.cfg", BG_Weapon( weaponNum )->name );
+
+  if( !CG_ParseWeaponAnimationFile( path, weaponInfo ) )
     Com_Printf( S_COLOR_RED "ERROR: failed to parse %s\n", path );
 
   // calc midpoint for rotation
   trap_R_ModelBounds( weaponInfo->weaponModel, mins, maxs );
   for( i = 0 ; i < 3 ; i++ )
     weaponInfo->weaponMidpoint[ i ] = mins[ i ] + 0.5 * ( maxs[ i ] - mins[ i ] );
-
-  //FIXME:
-  for( i = WPM_NONE + 1; i < WPM_NUM_WEAPONMODES; i++ )
-    weaponInfo->wim[ i ].loopFireSound = qfalse;
 }
 
 /*
@@ -638,7 +786,7 @@ void CG_InitWeapons( void )
 {
   int   i;
 
-  memset( cg_weapons, 0, sizeof( cg_weapons ) );
+  Com_Memset( cg_weapons, 0, sizeof( cg_weapons ) );
 
   for( i = WP_NONE + 1; i < WP_NUM_WEAPONS; i++ )
     CG_RegisterWeapon( i );
@@ -654,6 +802,53 @@ VIEW WEAPON
 
 ========================================================================================
 */
+
+/*
+===============
+CG_SetWeaponLerpFrameAnimation
+
+may include ANIM_TOGGLEBIT
+===============
+*/
+static void CG_SetWeaponLerpFrameAnimation( weapon_t weapon, lerpFrame_t *lf, int newAnimation )
+{
+  animation_t *anim;
+
+  lf->animationNumber = newAnimation;
+  newAnimation &= ~ANIM_TOGGLEBIT;
+
+  if( newAnimation < 0 || newAnimation >= MAX_WEAPON_ANIMATIONS )
+    CG_Error( "Bad animation number: %i", newAnimation );
+
+  anim = &cg_weapons[ weapon ].animations[ newAnimation ];
+
+  lf->animation = anim;
+  lf->animationTime = lf->frameTime + anim->initialLerp;
+
+  if( cg_debugAnim.integer )
+    CG_Printf( "Anim: %i\n", newAnimation );
+}
+
+/*
+===============
+CG_WeaponAnimation
+===============
+*/
+static void CG_WeaponAnimation( centity_t *cent, int *old, int *now, float *backLerp )
+{
+  lerpFrame_t   *lf = &cent->pe.weapon;
+  entityState_t *es = &cent->currentState;
+
+  // see if the animation sequence is switching
+  if( es->weaponAnim != lf->animationNumber || !lf->animation )
+    CG_SetWeaponLerpFrameAnimation( es->weapon, lf, es->weaponAnim );
+
+  CG_RunLerpFrame( lf, 1.0f );
+
+  *old      = lf->oldFrame;
+  *now      = lf->frame;
+  *backLerp = lf->backlerp;
+}
 
 /*
 =================
@@ -690,10 +885,13 @@ CG_CalculateWeaponPosition
 */
 static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles )
 {
-  float scale;
-  int   delta;
-  float fracsin;
-  float bob;
+  float         scale;
+  int           delta;
+  float         fracsin;
+  float         bob;
+  weaponInfo_t  *weapon;
+
+  weapon = &cg_weapons[ cg.predictedPlayerState.weapon ];
 
   VectorCopy( cg.refdef.vieworg, origin );
   VectorCopy( cg.refdefViewAngles, angles );
@@ -706,7 +904,7 @@ static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles )
 
   // gun angles from bobbing
   // bob amount is class dependant
-  bob = BG_FindBobForClass( cg.predictedPlayerState.stats[ STAT_PCLASS ] );
+  bob = BG_Class( cg.predictedPlayerState.stats[ STAT_CLASS ] )->bob;
 
   if( bob != 0 )
   {
@@ -716,7 +914,7 @@ static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles )
   }
 
   // drop the weapon when landing
-  if( !BG_ClassHasAbility( cg.predictedPlayerState.stats[ STAT_PCLASS ], SCA_NOWEAPONDRIFT ) )
+  if( !weapon->noDrift )
   {
     delta = cg.time - cg.landTime;
     if( delta < LAND_DEFLECT_TIME )
@@ -795,6 +993,13 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
   weaponNum = cent->currentState.weapon;
   weaponMode = cent->currentState.generic1;
 
+  if( weaponNum <= WP_NONE || weaponNum >= WP_NUM_WEAPONS )
+  {
+    Com_Printf( S_COLOR_YELLOW "WARNING: CG_AddPlayerWeapon: weapon "
+                "number %i is out of bounds", weaponNum );
+    return;
+  }
+
   if( weaponMode <= WPM_NONE || weaponMode >= WPM_NUM_WEAPONMODES )
     weaponMode = WPM_PRIMARY;
 
@@ -805,16 +1010,23 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
   else
     firing = qfalse;
 
-  CG_RegisterWeapon( weaponNum );
   weapon = &cg_weapons[ weaponNum ];
+  if( !weapon->registered )
+  {
+    Com_Printf( S_COLOR_YELLOW "WARNING: CG_AddPlayerWeapon: weapon %d (%s) "
+        "is not registered\n", weaponNum, BG_Weapon( weaponNum )->name );
+    return;
+  }
 
   // add the weapon
-  memset( &gun, 0, sizeof( gun ) );
+  Com_Memset( &gun, 0, sizeof( gun ) );
+  Com_Memset( &barrel, 0, sizeof( barrel ) );
+  Com_Memset( &flash, 0, sizeof( flash ) );
+
   VectorCopy( parent->lightingOrigin, gun.lightingOrigin );
   gun.shadowPlane = parent->shadowPlane;
   gun.renderfx = parent->renderfx;
 
-  // set custom shading for railgun refire rate
   if( ps )
   {
     gun.shaderRGBA[ 0 ] = 255;
@@ -842,7 +1054,15 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
     }
   }
 
-  gun.hModel = weapon->weaponModel;
+  if( !ps )
+  {
+    gun.hModel = weapon->weaponModel3rdPerson;
+
+    if( !gun.hModel )
+      gun.hModel = weapon->weaponModel;
+  }
+  else
+    gun.hModel = weapon->weaponModel;
 
   noGunModel = ( ( !ps || cg.renderingThirdPerson ) && weapon->disableIn3rdPerson ) || !gun.hModel;
 
@@ -858,27 +1078,46 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
       trap_S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound );
   }
 
+  // Lucifer cannon charge warning beep
+  if( weaponNum == WP_LUCIFER_CANNON &&
+      ( cent->currentState.eFlags & EF_WARN_CHARGE ) &&
+      cg.snap->ps.stats[ STAT_TEAM ] != TEAM_ALIENS )
+  {
+    trap_S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin,
+                            vec3_origin, ps ? cgs.media.lCannonWarningSound :
+                                              cgs.media.lCannonWarningSound2 );
+  }
+
   if( !noGunModel )
   {
     CG_PositionEntityOnTag( &gun, parent, parent->hModel, "tag_weapon" );
+    CG_WeaponAnimation( cent, &gun.oldframe, &gun.frame, &gun.backlerp );
 
     trap_R_AddRefEntityToScene( &gun );
 
-    // add the spinning barrel
-    if( weapon->barrelModel )
+    if( !ps )
     {
-      memset( &barrel, 0, sizeof( barrel ) );
+      barrel.hModel = weapon->barrelModel3rdPerson;
+
+      if( !barrel.hModel )
+        barrel.hModel = weapon->barrelModel;
+    }
+    else
+      barrel.hModel = weapon->barrelModel;
+
+    // add the spinning barrel
+    if( barrel.hModel )
+    {
       VectorCopy( parent->lightingOrigin, barrel.lightingOrigin );
       barrel.shadowPlane = parent->shadowPlane;
       barrel.renderfx = parent->renderfx;
 
-      barrel.hModel = weapon->barrelModel;
       angles[ YAW ] = 0;
       angles[ PITCH ] = 0;
       angles[ ROLL ] = CG_MachinegunSpinAngle( cent, firing );
       AnglesToAxis( angles, barrel.axis );
 
-      CG_PositionRotatedEntityOnTag( &barrel, &gun, weapon->weaponModel, "tag_barrel" );
+      CG_PositionRotatedEntityOnTag( &barrel, &gun, gun.hModel, "tag_barrel" );
 
       trap_R_AddRefEntityToScene( &barrel );
     }
@@ -892,7 +1131,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
       if( noGunModel )
         CG_SetAttachmentTag( &cent->muzzlePS->attachment, *parent, parent->hModel, "tag_weapon" );
       else
-        CG_SetAttachmentTag( &cent->muzzlePS->attachment, gun, weapon->weaponModel, "tag_flash" );
+        CG_SetAttachmentTag( &cent->muzzlePS->attachment, gun, gun.hModel, "tag_flash" );
     }
 
     //if the PS is infinite disable it when not firing
@@ -908,12 +1147,20 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
       return;
   }
 
-  memset( &flash, 0, sizeof( flash ) );
   VectorCopy( parent->lightingOrigin, flash.lightingOrigin );
   flash.shadowPlane = parent->shadowPlane;
   flash.renderfx = parent->renderfx;
 
-  flash.hModel = weapon->flashModel;
+  if( !ps )
+  {
+    flash.hModel = weapon->flashModel3rdPerson;
+
+    if( !flash.hModel )
+      flash.hModel = weapon->flashModel;
+  }
+  else
+    flash.hModel = weapon->flashModel;
+
   if( flash.hModel )
   {
     angles[ YAW ] = 0;
@@ -924,7 +1171,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
     if( noGunModel )
       CG_PositionRotatedEntityOnTag( &flash, parent, parent->hModel, "tag_weapon" );
     else
-      CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash" );
+      CG_PositionRotatedEntityOnTag( &flash, &gun, gun.hModel, "tag_flash" );
 
     trap_R_AddRefEntityToScene( &flash );
   }
@@ -941,7 +1188,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
         if( noGunModel )
           CG_SetAttachmentTag( &cent->muzzlePS->attachment, *parent, parent->hModel, "tag_weapon" );
         else
-          CG_SetAttachmentTag( &cent->muzzlePS->attachment, gun, weapon->weaponModel, "tag_flash" );
+          CG_SetAttachmentTag( &cent->muzzlePS->attachment, gun, gun.hModel, "tag_flash" );
 
         CG_SetAttachmentCent( &cent->muzzlePS->attachment, cent );
         CG_AttachToTag( &cent->muzzlePS->attachment );
@@ -970,6 +1217,9 @@ CG_AddViewWeapon
 Add the weapon, and flash for the player's view
 ==============
 */
+
+#define WEAPON_CLICK_REPEAT 500
+
 void CG_AddViewWeapon( playerState_t *ps )
 {
   refEntity_t   hand;
@@ -981,20 +1231,23 @@ void CG_AddViewWeapon( playerState_t *ps )
   weapon_t      weapon = ps->weapon;
   weaponMode_t  weaponMode = ps->generic1;
 
+  // no weapon carried - can't draw it
+  if( weapon == WP_NONE )
+    return;
+
   if( weaponMode <= WPM_NONE || weaponMode >= WPM_NUM_WEAPONMODES )
     weaponMode = WPM_PRIMARY;
 
-  CG_RegisterWeapon( weapon );
   wi = &cg_weapons[ weapon ];
+  if( !wi->registered )
+  {
+    Com_Printf( S_COLOR_YELLOW "WARNING: CG_AddViewWeapon: weapon %d (%s) "
+        "is not registered\n", weapon, BG_Weapon( weapon )->name );
+    return;
+  }
   cent = &cg.predictedPlayerEntity; // &cg_entities[cg.snap->ps.clientNum];
 
-  if( ( ps->persistant[PERS_TEAM] == TEAM_SPECTATOR ) ||
-      ( ps->stats[ STAT_STATE ] & SS_INFESTING ) ||
-      ( ps->stats[ STAT_STATE ] & SS_HOVELING ) )
-    return;
-
-  // no weapon carried - can't draw it
-  if( weapon == WP_NONE )
+  if( ps->persistant[PERS_SPECSTATE] != SPECTATOR_NOT )
     return;
 
   if( ps->pm_type == PM_INTERMISSION )
@@ -1003,12 +1256,6 @@ void CG_AddViewWeapon( playerState_t *ps )
   // draw a prospective buildable infront of the player
   if( ( ps->stats[ STAT_BUILDABLE ] & ~SB_VALID_TOGGLEBIT ) > BA_NONE )
     CG_GhostBuildable( ps->stats[ STAT_BUILDABLE ] & ~SB_VALID_TOGGLEBIT );
-
-  if( weapon == WP_LUCIFER_CANNON && ps->stats[ STAT_MISC ] > 0 )
-  {
-    if( ps->stats[ STAT_MISC ] > ( LCANNON_TOTAL_CHARGE - ( LCANNON_TOTAL_CHARGE / 3 ) ) )
-      trap_S_AddLoopingSound( ps->clientNum, ps->origin, vec3_origin, cgs.media.lCannonWarningSound );
-  }
 
   // no gun if in third person view
   if( cg.renderingThirdPerson )
@@ -1052,7 +1299,7 @@ void CG_AddViewWeapon( playerState_t *ps )
   else
     fovOffset = 0;
 
-  memset( &hand, 0, sizeof( hand ) );
+  Com_Memset( &hand, 0, sizeof( hand ) );
 
   // set up gun position
   CG_CalculateWeaponPosition( hand.origin, angles );
@@ -1061,12 +1308,16 @@ void CG_AddViewWeapon( playerState_t *ps )
   VectorMA( hand.origin, cg_gun_y.value, cg.refdef.viewaxis[ 1 ], hand.origin );
   VectorMA( hand.origin, ( cg_gun_z.value + fovOffset ), cg.refdef.viewaxis[ 2 ], hand.origin );
 
+  // Lucifer Cannon vibration effect
   if( weapon == WP_LUCIFER_CANNON && ps->stats[ STAT_MISC ] > 0 )
   {
-    float fraction = (float)ps->stats[ STAT_MISC ] / (float)LCANNON_TOTAL_CHARGE;
+    float fraction;
 
-    VectorMA( hand.origin, random( ) * fraction, cg.refdef.viewaxis[ 0 ], hand.origin );
-    VectorMA( hand.origin, random( ) * fraction, cg.refdef.viewaxis[ 1 ], hand.origin );
+    fraction = (float)ps->stats[ STAT_MISC ] / LCANNON_CHARGE_TIME_MAX;
+    VectorMA( hand.origin, random( ) * fraction, cg.refdef.viewaxis[ 0 ],
+              hand.origin );
+    VectorMA( hand.origin, random( ) * fraction, cg.refdef.viewaxis[ 1 ],
+              hand.origin );
   }
 
   AnglesToAxis( angles, hand.axis );
@@ -1109,19 +1360,7 @@ CG_WeaponSelectable
 */
 static qboolean CG_WeaponSelectable( weapon_t weapon )
 {
-  //int ammo, clips;
-  //
-  //ammo = cg.snap->ps.ammo;
-  //clips = cg.snap->ps.clips
-  //
-  // this is a pain in the ass
-  //if( !ammo && !clips && !BG_FindInfinteAmmoForWeapon( i ) )
-  //  return qfalse;
-
-  if( !BG_InventoryContainsWeapon( weapon, cg.snap->ps.stats ) )
-    return qfalse;
-
-  return qtrue;
+  return BG_InventoryContainsWeapon( weapon, cg.snap->ps.stats );
 }
 
 
@@ -1135,7 +1374,7 @@ static qboolean CG_UpgradeSelectable( upgrade_t upgrade )
   if( !BG_InventoryContainsUpgrade( upgrade, cg.snap->ps.stats ) )
     return qfalse;
 
-  return BG_FindUsableForUpgrade( upgrade );
+  return BG_Upgrade( upgrade )->usable;
 }
 
 
@@ -1149,22 +1388,19 @@ CG_DrawItemSelect
 void CG_DrawItemSelect( rectDef_t *rect, vec4_t color )
 {
   int           i;
-  int           x = rect->x;
-  int           y = rect->y;
-  int           width = rect->w;
-  int           height = rect->h;
-  int           iconsize;
+  float         x = rect->x;
+  float         y = rect->y;
+  float         width = rect->w;
+  float         height = rect->h;
+  float         iconWidth;
+  float         iconHeight;
   int           items[ 64 ];
+  int           colinfo[ 64 ];
   int           numItems = 0, selectedItem = 0;
   int           length;
-  int           selectWindow;
   qboolean      vertical;
-  centity_t     *cent;
   playerState_t *ps;
-  
-  int		colinfo[ 64 ];
 
-  cent = &cg_entities[ cg.snap->ps.clientNum ];
   ps = &cg.snap->ps;
 
   // don't display if dead
@@ -1174,109 +1410,121 @@ void CG_DrawItemSelect( rectDef_t *rect, vec4_t color )
   if( !( cg.snap->ps.pm_flags & PMF_FOLLOW ) )
   {
     // first make sure that whatever it selected is actually selectable
-    if( cg.weaponSelect <= 32 && !CG_WeaponSelectable( cg.weaponSelect ) )
-      CG_NextWeapon_f( );
-    else if( cg.weaponSelect > 32 && !CG_UpgradeSelectable( cg.weaponSelect - 32 ) )
-      CG_NextWeapon_f( );
+    if( cg.weaponSelect < 32 )
+    {
+      if( !CG_WeaponSelectable( cg.weaponSelect ) )
+        CG_NextWeapon_f( );
+    }
+    else
+    {
+      if( !CG_UpgradeSelectable( cg.weaponSelect - 32 ) )
+        CG_NextWeapon_f( );
+    }
   }
 
   // showing weapon select clears pickup item display, but not the blend blob
   cg.itemPickupTime = 0;
 
-  if( height > width )
-  {
-    vertical = qtrue;
-    iconsize = width;
-    length = height / width;
-  }
-  else
-  {
-    vertical = qfalse;
-    iconsize = height;
-    length = width / height;
-  }
-
-  selectWindow = length / 2;
-
+  // put all weapons in the items list
   for( i = WP_NONE + 1; i < WP_NUM_WEAPONS; i++ )
   {
     if( !BG_InventoryContainsWeapon( i, cg.snap->ps.stats ) )
       continue;
-      
-    {
-      int ammo, clips;
-  
-      ammo = cg.snap->ps.ammo;
-      clips = cg.snap->ps.clips;
-  
-      if( !ammo && !clips && !BG_FindInfinteAmmoForWeapon( i ) )
-        colinfo[ numItems ] = 1;
-      else
-        colinfo[ numItems ] = 0;
-    	
-    }
+
+    if( !ps->ammo && !ps->clips && !BG_Weapon( i )->infiniteAmmo )
+      colinfo[ numItems ] = 1;
+    else
+      colinfo[ numItems ] = 0;
 
     if( i == cg.weaponSelect )
       selectedItem = numItems;
 
-    CG_RegisterWeapon( i );
+    if( !cg_weapons[ i ].registered )
+    {
+      Com_Printf( S_COLOR_YELLOW "WARNING: CG_DrawItemSelect: weapon %d (%s) "
+  	"is not registered\n", i, BG_Weapon( i )->name );
+      continue;
+    }
     items[ numItems ] = i;
     numItems++;
   }
 
+  // put all upgrades in the weapons list
   for( i = UP_NONE + 1; i < UP_NUM_UPGRADES; i++ )
   {
     if( !BG_InventoryContainsUpgrade( i, cg.snap->ps.stats ) )
       continue;
     colinfo[ numItems ] = 0;
-    if( !BG_FindUsableForUpgrade ( i ) )
+    if( !BG_Upgrade( i )->usable )
       colinfo[ numItems ] = 2;
-    
 
     if( i == cg.weaponSelect - 32 )
       selectedItem = numItems;
 
-    CG_RegisterUpgrade( i );
+    if( !cg_upgrades[ i ].registered )
+    {
+      Com_Printf( S_COLOR_YELLOW "WARNING: CG_DrawItemSelect: upgrade %d (%s) "
+  	"is not registered\n", i, BG_Upgrade( i )->name );
+      continue;
+    }
     items[ numItems ] = i + 32;
     numItems++;
   }
 
+  // compute the length of the display window and determine orientation
+  vertical = height > width;
+  if( vertical )
+  {
+    iconWidth = width * cgDC.aspectScale;
+    iconHeight = width;
+    length = height / ( width * cgDC.aspectScale );
+  }
+  else
+  {
+    iconWidth = height * cgDC.aspectScale;
+    iconHeight = height;
+    length = width / ( height * cgDC.aspectScale );
+  }
+
+  // render icon ring
   for( i = 0; i < length; i++ )
   {
-    int displacement = i - selectWindow;
-    int item = displacement + selectedItem;
+    int item = i - length / 2 + selectedItem;
 
-    if( ( item >= 0 ) && ( item < numItems ) )
+    if( item < 0 )
+      item += length;
+    else if( item >= length )
+      item -= length;
+    if( item >= 0 && item < numItems )
     {
       switch( colinfo[ item ] )
       {
-        case 0:
-          color = colorCyan;
-          break;
-        case 1:
-          color = colorRed;
-          break;
-        case 2:
-          color = colorGray;
-          break;
+       case 0:
+         color = colorCyan;
+         break;
+       case 1:
+         color = colorRed;
+         break;
+       case 2:
+         color = colorMdGrey;
+         break;
       }
       color[3] = 0.5;
-
       trap_R_SetColor( color );
 
-      if( items[ item ] <= 32 )
-        CG_DrawPic( x, y, iconsize, iconsize, cg_weapons[ items[ item ] ].weaponIcon );
-      else if( items[ item ] > 32 )
-        CG_DrawPic( x, y, iconsize, iconsize, cg_upgrades[ items[ item ] - 32 ].upgradeIcon );
-
-      trap_R_SetColor( NULL );
+      if( items[ item ] < 32 )
+        CG_DrawPic( x, y, iconWidth, iconHeight,
+                    cg_weapons[ items[ item ] ].weaponIcon );
+      else
+        CG_DrawPic( x, y, iconWidth, iconHeight,
+                    cg_upgrades[ items[ item ] - 32 ].upgradeIcon );
     }
-
     if( vertical )
-      y += iconsize;
+      y += iconHeight;
     else
-      x += iconsize;
+      x += iconWidth;
   }
+  trap_R_SetColor( NULL );
 }
 
 
@@ -1298,29 +1546,29 @@ void CG_DrawItemSelectText( rectDef_t *rect, float scale, int textStyle )
   trap_R_SetColor( color );
 
   // draw the selected name
-  if( cg.weaponSelect <= 32 )
+  if( cg.weaponSelect < 32 )
   {
     if( cg_weapons[ cg.weaponSelect ].registered &&
         BG_InventoryContainsWeapon( cg.weaponSelect, cg.snap->ps.stats ) )
     {
       if( ( name = cg_weapons[ cg.weaponSelect ].humanName ) )
       {
-        w = CG_Text_Width( name, scale, 0 );
+        w = UI_Text_Width( name, scale );
         x = rect->x + rect->w / 2;
-        CG_Text_Paint( x - w / 2, rect->y + rect->h, scale, color, name, 0, 0, textStyle );
+        UI_Text_Paint( x - w / 2, rect->y + rect->h, scale, color, name, 0, 0, textStyle );
       }
     }
   }
-  else if( cg.weaponSelect > 32 )
+  else
   {
     if( cg_upgrades[ cg.weaponSelect - 32 ].registered &&
         BG_InventoryContainsUpgrade( cg.weaponSelect - 32, cg.snap->ps.stats ) )
     {
       if( ( name = cg_upgrades[ cg.weaponSelect - 32 ].humanName ) )
       {
-        w = CG_Text_Width( name, scale, 0 );
+        w = UI_Text_Width( name, scale );
         x = rect->x + rect->w / 2;
-        CG_Text_Paint( x - w / 2, rect->y + rect->h, scale, color, name, 0, 0, textStyle );
+        UI_Text_Paint( x - w / 2, rect->y + rect->h, scale, color, name, 0, 0, textStyle );
       }
     }
   }
@@ -1357,12 +1605,12 @@ void CG_NextWeapon_f( void )
     if( cg.weaponSelect == 64 )
       cg.weaponSelect = 0;
 
-    if( cg.weaponSelect <= 32 )
+    if( cg.weaponSelect < 32 )
     {
       if( CG_WeaponSelectable( cg.weaponSelect ) )
         break;
     }
-    else if( cg.weaponSelect > 32 )
+    else
     {
       if( CG_UpgradeSelectable( cg.weaponSelect - 32 ) )
         break;
@@ -1401,12 +1649,12 @@ void CG_PrevWeapon_f( void )
     if( cg.weaponSelect == -1 )
       cg.weaponSelect = 63;
 
-    if( cg.weaponSelect <= 32 )
+    if( cg.weaponSelect < 32 )
     {
       if( CG_WeaponSelectable( cg.weaponSelect ) )
         break;
     }
-    else if( cg.weaponSelect > 32 )
+    else
     {
       if( CG_UpgradeSelectable( cg.weaponSelect - 32 ) )
         break;
@@ -1521,7 +1769,7 @@ Caused by an EV_MISSILE_MISS event, or directly by local bullet tracing
 =================
 */
 void CG_MissileHitWall( weapon_t weaponNum, weaponMode_t weaponMode, int clientNum,
-                        vec3_t origin, vec3_t dir, impactSound_t soundType )
+                        vec3_t origin, vec3_t dir, impactSound_t soundType, int charge )
 {
   qhandle_t           mark = 0;
   qhandle_t           ps = 0;
@@ -1579,6 +1827,7 @@ void CG_MissileHitWall( weapon_t weaponNum, weaponMode_t weaponMode, int clientN
       CG_SetAttachmentPoint( &partSystem->attachment, origin );
       CG_SetParticleSystemNormal( partSystem, dir );
       CG_AttachToPoint( &partSystem->attachment );
+      partSystem->charge = charge;
     }
   }
 
@@ -1592,11 +1841,11 @@ void CG_MissileHitWall( weapon_t weaponNum, weaponMode_t weaponMode, int clientN
 
 /*
 =================
-CG_MissileHitPlayer
+CG_MissileHitEntity
 =================
 */
-void CG_MissileHitPlayer( weapon_t weaponNum, weaponMode_t weaponMode,
-    vec3_t origin, vec3_t dir, int entityNum )
+void CG_MissileHitEntity( weapon_t weaponNum, weaponMode_t weaponMode,
+    vec3_t origin, vec3_t dir, int entityNum, int charge )
 {
   vec3_t        normal;
   weaponInfo_t  *weapon = &cg_weapons[ weaponNum ];
@@ -1610,7 +1859,25 @@ void CG_MissileHitPlayer( weapon_t weaponNum, weaponMode_t weaponMode,
     weaponMode = WPM_PRIMARY;
 
   if( weapon->wim[ weaponMode ].alwaysImpact )
-    CG_MissileHitWall( weaponNum, weaponMode, 0, origin, dir, IMPACTSOUND_FLESH );
+  {
+    int sound;
+
+    if( cg_entities[ entityNum ].currentState.eType == ET_PLAYER )
+    {
+      // Players
+      sound = IMPACTSOUND_FLESH;
+    }
+    else if( cg_entities[ entityNum ].currentState.eType == ET_BUILDABLE &&
+             BG_Buildable( cg_entities[ entityNum ].currentState.modelindex )->team == TEAM_ALIENS )
+    {
+      // Alien buildables
+      sound = IMPACTSOUND_FLESH;
+    }
+    else
+      sound = IMPACTSOUND_DEFAULT;
+          
+    CG_MissileHitWall( weaponNum, weaponMode, 0, origin, dir, sound, charge );
+  }
 }
 
 
@@ -1772,7 +2039,7 @@ void CG_Bullet( vec3_t end, int sourceEntityNum, vec3_t normal, qboolean flesh, 
   if( flesh )
     CG_Bleed( end, normal, fleshEntityNum );
   else
-    CG_MissileHitWall( WP_MACHINEGUN, WPM_PRIMARY, 0, end, normal, IMPACTSOUND_DEFAULT );
+    CG_MissileHitWall( WP_MACHINEGUN, WPM_PRIMARY, 0, end, normal, IMPACTSOUND_DEFAULT, 0 );
 }
 
 /*
@@ -1818,12 +2085,13 @@ static void CG_ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, int othe
 
     if( !( tr.surfaceFlags & SURF_NOIMPACT ) )
     {
-      if( cg_entities[ tr.entityNum ].currentState.eType == ET_PLAYER )
-        CG_MissileHitPlayer( WP_SHOTGUN, WPM_PRIMARY, tr.endpos, tr.plane.normal, tr.entityNum );
+      if( cg_entities[ tr.entityNum ].currentState.eType == ET_PLAYER ||
+          cg_entities[ tr.entityNum ].currentState.eType == ET_BUILDABLE )
+        CG_MissileHitEntity( WP_SHOTGUN, WPM_PRIMARY, tr.endpos, tr.plane.normal, tr.entityNum, 0 );
       else if( tr.surfaceFlags & SURF_METALSTEPS )
-        CG_MissileHitWall( WP_SHOTGUN, WPM_PRIMARY, 0, tr.endpos, tr.plane.normal, IMPACTSOUND_METAL );
+        CG_MissileHitWall( WP_SHOTGUN, WPM_PRIMARY, 0, tr.endpos, tr.plane.normal, IMPACTSOUND_METAL, 0 );
       else
-        CG_MissileHitWall( WP_SHOTGUN, WPM_PRIMARY, 0, tr.endpos, tr.plane.normal, IMPACTSOUND_DEFAULT );
+        CG_MissileHitWall( WP_SHOTGUN, WPM_PRIMARY, 0, tr.endpos, tr.plane.normal, IMPACTSOUND_DEFAULT, 0 );
     }
   }
 }
@@ -1845,3 +2113,54 @@ void CG_ShotgunFire( entityState_t *es )
   CG_ShotgunPattern( es->pos.trBase, es->origin2, es->eventParm, es->otherEntityNum );
 }
 
+/*
+=================
+CG_Bleed
+
+This is the spurt of blood when a character gets hit
+=================
+*/
+void CG_Bleed( vec3_t origin, vec3_t normal, int entityNum )
+{
+  team_t            team;
+  qhandle_t         bleedPS;
+  particleSystem_t  *ps;
+
+  if( !cg_blood.integer )
+    return;
+
+  if( cg_entities[ entityNum ].currentState.eType == ET_PLAYER )
+  {
+    team = cgs.clientinfo[ entityNum ].team;
+    if( team == TEAM_ALIENS )
+      bleedPS = cgs.media.alienBleedPS;
+    else if( team == TEAM_HUMANS )
+      bleedPS = cgs.media.humanBleedPS;
+    else
+      return;
+  }
+  else if( cg_entities[ entityNum ].currentState.eType == ET_BUILDABLE )
+  {
+    //ew
+    team = BG_Buildable( cg_entities[ entityNum ].currentState.modelindex )->team;
+    if( team == TEAM_ALIENS )
+      bleedPS = cgs.media.alienBuildableBleedPS;
+    else if( team == TEAM_HUMANS )
+      bleedPS = cgs.media.humanBuildableBleedPS;
+    else
+      return;
+  }
+  else
+    return;
+
+  ps = CG_SpawnNewParticleSystem( bleedPS );
+
+  if( CG_IsParticleSystemValid( &ps ) )
+  {
+    CG_SetAttachmentPoint( &ps->attachment, origin );
+    CG_SetAttachmentCent( &ps->attachment, &cg_entities[ entityNum ] );
+    CG_AttachToPoint( &ps->attachment );
+
+    CG_SetParticleSystemNormal( ps, normal );
+  }
+}

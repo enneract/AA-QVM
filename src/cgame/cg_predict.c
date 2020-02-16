@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,8 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
@@ -25,7 +26,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // interpolating between snapshots from the server or locally predicting
 // ahead the client's movement.
 // It also handles local physics interaction, like fragments bouncing off walls
-
 
 #include "cg_local.h"
 
@@ -138,7 +138,7 @@ static void CG_ClipMoveToEntities ( const vec3_t start, const vec3_t mins,
       bmaxs[ 2 ] = zu;
 
       if( i == cg_numSolidEntities )
-        BG_FindBBoxForClass( ( ent->misc >> 8 ) & 0xFF, bmins, bmaxs, NULL, NULL, NULL );
+        BG_ClassBoundingBox( ( ent->misc >> 8 ) & 0xFF, bmins, bmaxs, NULL, NULL, NULL );
 
       cmodel = trap_CM_TempBoxModel( bmins, bmaxs );
       VectorCopy( vec3_origin, angles );
@@ -273,7 +273,7 @@ int   CG_PointContents( const vec3_t point, int passEntityNum )
     if( !cmodel )
       continue;
 
-    contents |= trap_CM_TransformedPointContents( point, cmodel, ent->origin, ent->angles );
+    contents |= trap_CM_TransformedPointContents( point, cmodel, cent->lerpOrigin, cent->lerpAngles );
   }
 
   return contents;
@@ -476,13 +476,13 @@ static int CG_IsUnacceptableError( playerState_t *ps, playerState_t *pps )
 
   if( fabs( AngleDelta( ps->viewangles[ 0 ], pps->viewangles[ 0 ] ) ) > 1.0f ||
     fabs( AngleDelta( ps->viewangles[ 1 ], pps->viewangles[ 1 ] ) ) > 1.0f ||
-    fabs( AngleDelta( ps->viewangles[ 2 ], pps->viewangles[ 2 ] ) ) > 1.0f ) 
+    fabs( AngleDelta( ps->viewangles[ 2 ], pps->viewangles[ 2 ] ) ) > 1.0f )
   {
     return 12;
   }
 
   if( pps->viewheight != ps->viewheight )
-  	return 13;
+    return 13;
 
   if( pps->damageEvent != ps->damageEvent ||
     pps->damageYaw != ps->damageYaw ||
@@ -502,13 +502,6 @@ static int CG_IsUnacceptableError( playerState_t *ps, playerState_t *pps )
   {
     if( pps->persistant[ i ] != ps->persistant[ i ] )
       return 16;
-  }
-
-  for( i = 0; i < MAX_WEAPONS; i++ )
-  {
-    // GH FIXME
-    if( pps->ammo != ps->ammo || pps->clips != ps->clips )
-      return 18;
   }
 
   if( pps->generic1 != ps->generic1 ||
@@ -551,7 +544,6 @@ void CG_PredictPlayerState( void )
 {
   int     cmdNum, current, i;
   playerState_t oldPlayerState;
-  qboolean  moved;
   usercmd_t oldestCmd;
   usercmd_t latestCmd;
   int stateIndex = 0, predictCmd = 0;
@@ -590,12 +582,12 @@ void CG_PredictPlayerState( void )
   cg_pmove.debugLevel = cg_debugMove.integer;
 
   if( cg_pmove.ps->pm_type == PM_DEAD )
-    cg_pmove.tracemask = MASK_PLAYERSOLID & ~CONTENTS_BODY;
+    cg_pmove.tracemask = MASK_DEADSOLID;
   else
     cg_pmove.tracemask = MASK_PLAYERSOLID;
 
-  if( cg.snap->ps.persistant[ PERS_TEAM ] == TEAM_SPECTATOR )
-    cg_pmove.tracemask &= ~CONTENTS_BODY; // spectators can fly through bodies
+  if( cg.snap->ps.persistant[ PERS_SPECSTATE ] != SPECTATOR_NOT )
+    cg_pmove.tracemask = MASK_DEADSOLID; // spectators can fly through bodies
 
   cg_pmove.noFootsteps = 0;
 
@@ -638,9 +630,15 @@ void CG_PredictPlayerState( void )
   }
 
   if( pmove_msec.integer < 8 )
+  {
     trap_Cvar_Set( "pmove_msec", "8" );
+    trap_Cvar_Update(&pmove_msec);
+  }
   else if( pmove_msec.integer > 33 )
+  {
     trap_Cvar_Set( "pmove_msec", "33" );
+    trap_Cvar_Update(&pmove_msec);
+  }
 
   cg_pmove.pmove_fixed = pmove_fixed.integer;// | cg_pmove_fixed.integer;
   cg_pmove.pmove_msec = pmove_msec.integer;
@@ -700,22 +698,22 @@ void CG_PredictPlayerState( void )
         // make sure the state differences are acceptable
         errorcode = CG_IsUnacceptableError( &cg.predictedPlayerState,
           &cg.savedPmoveStates[ i ] );
-  
+
         if( errorcode )
         {
           if( cg_showmiss.integer )
             CG_Printf("errorcode %d at %d\n", errorcode, cg.time);
           break;
         }
-  
+
         // this one is almost exact, so we'll copy it in as the starting point
         *cg_pmove.ps = cg.savedPmoveStates[ i ];
         // advance the head
         cg.stateHead = ( i + 1 ) % NUM_SAVED_STATES;
-  
+
         // set the next command to predict
         predictCmd = cg.lastPredictedCommand + 1;
-  
+
         // a saved state matched, so flag it
         error = qfalse;
         break;
@@ -736,9 +734,6 @@ void CG_PredictPlayerState( void )
     cg.lastServerTime = cg.physicsTime;
     stateIndex = cg.stateHead;
   }
-
-  // run cmds
-  moved = qfalse;
 
   for( cmdNum = current - CMD_BACKUP + 1; cmdNum <= current; cmdNum++ )
   {
@@ -856,8 +851,6 @@ void CG_PredictPlayerState( void )
       *cg_pmove.ps = cg.savedPmoveStates[ stateIndex ];
       stateIndex = ( stateIndex + 1 ) % NUM_SAVED_STATES;
     }
-
-    moved = qtrue;
 
     // add push trigger movement effects
     CG_TouchTriggerPrediction( );

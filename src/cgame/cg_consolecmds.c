@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,33 +17,15 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
 // cg_consolecmds.c -- text commands typed in at the local console, or
 // executed by a key binding
 
-
 #include "cg_local.h"
-
-
-
-void CG_TargetCommand_f( void )
-{
-  int   targetNum;
-  char  test[ 4 ];
-
-  targetNum = CG_CrosshairPlayer( );
-  if( !targetNum )
-    return;
-
-  trap_Argv( 1, test, 4 );
-  trap_SendConsoleCommand( va( "gc %i %i", targetNum, atoi( test ) ) );
-}
-
-
 
 /*
 =================
@@ -53,7 +36,7 @@ Keybinding command
 */
 static void CG_SizeUp_f( void )
 {
-  trap_Cvar_Set( "cg_viewsize", va( "%i", (int)( cg_viewsize.integer + 10 ) ) );
+  trap_Cvar_Set( "cg_viewsize", va( "%i", MIN( cg_viewsize.integer + 10, 100 ) ) );
 }
 
 
@@ -66,7 +49,7 @@ Keybinding command
 */
 static void CG_SizeDown_f( void )
 {
-  trap_Cvar_Set( "cg_viewsize", va( "%i", (int)( cg_viewsize.integer - 10 ) ) );
+  trap_Cvar_Set( "cg_viewsize", va( "%i", MAX( cg_viewsize.integer - 10, 30 ) ) );
 }
 
 
@@ -91,7 +74,6 @@ qboolean CG_RequestScores( void )
     // the scores are more than two seconds out of data,
     // so request new ones
     cg.scoresRequestTime = cg.time;
-    //TA: added \n SendClientCommand doesn't call flush( )?
     trap_SendClientCommand( "score\n" );
 
     return qtrue;
@@ -127,26 +109,12 @@ static void CG_ScoresDown_f( void )
   {
     Menu_SetFeederSelection( menuScoreboard, FEEDER_ALIENTEAM_LIST, 0, NULL );
     Menu_SetFeederSelection( menuScoreboard, FEEDER_HUMANTEAM_LIST, 0, NULL );
-  }
-
-  if( CG_RequestScores( ) )
-  {
-    // leave the current scores up if they were already
-    // displayed, but if this is the first hit, clear them out
-    if( !cg.showScores )
-    {
-      if( cg_debugRandom.integer )
-        CG_Printf( "CG_ScoresDown_f: scores out of date\n" );
-
-      cg.showScores = qtrue;
-      cg.numScores = 0;
-    }
+    cg.showScores = qtrue;
   }
   else
   {
-    // show the cached contents even if they just pressed if it
-    // is within two seconds
-    cg.showScores = qtrue;
+    cg.showScores = qfalse;
+    cg.numScores = 0;
   }
 }
 
@@ -159,69 +127,110 @@ static void CG_ScoresUp_f( void )
   }
 }
 
-static void CG_TellTarget_f( void )
+void CG_ClientList_f( void )
 {
-  int   clientNum;
-  char  command[ 128 ];
-  char  message[ 128 ];
+  clientInfo_t *ci;
+  int i;
+  int count = 0;
 
-  clientNum = CG_CrosshairPlayer( );
-  if( clientNum == -1 )
-    return;
+  for( i = 0; i < MAX_CLIENTS; i++ ) 
+  {
+    ci = &cgs.clientinfo[ i ];
+    if( !ci->infoValid ) 
+      continue;
 
-  trap_Args( message, 128 );
-  Com_sprintf( command, 128, "tell %i %s", clientNum, message );
-  trap_SendClientCommand( command );
+    switch( ci->team ) 
+    {
+      case TEAM_ALIENS:
+        Com_Printf( "%2d " S_COLOR_RED "A   " S_COLOR_WHITE "%s\n", i,
+          ci->name );
+        break;
+
+      case TEAM_HUMANS:
+        Com_Printf( "%2d " S_COLOR_CYAN "H   " S_COLOR_WHITE "%s\n", i,
+          ci->name );
+        break;
+
+      default:
+      case TEAM_NONE:
+      case NUM_TEAMS:
+        Com_Printf( "%2d S   %s\n", i, ci->name );
+        break;
+    }
+
+    count++;
+  }
+
+  Com_Printf( "Listed %2d clients\n", count );
 }
 
-static void CG_TellAttacker_f( void )
+static void CG_VoiceMenu_f( void )
 {
-  int   clientNum;
-  char  command[ 128 ];
-  char  message[ 128 ];
+  char cmd[sizeof("voicemenu3")];
 
-  clientNum = CG_LastAttacker( );
-  if( clientNum == -1 )
-    return;
+  trap_Argv(0, cmd, sizeof(cmd));
 
-  trap_Args( message, 128 );
-  Com_sprintf( command, 128, "tell %i %s", clientNum, message );
-  trap_SendClientCommand( command );
+  switch (cmd[9]) {
+    default:
+    case '\0':
+      trap_Cvar_Set("ui_voicemenu", "1");
+      break;
+    case '2':
+      trap_Cvar_Set("ui_voicemenu", "2");
+      break;
+    case '3':
+      trap_Cvar_Set("ui_voicemenu", "3");
+      break;
+  };
+
+  trap_SendConsoleCommand("menu tremulous_voicecmd\n");
 }
 
-typedef struct
+static void CG_UIMenu_f( void )
 {
-  char  *cmd;
-  void  (*function)( void );
-} consoleCommand_t;
+  trap_SendConsoleCommand( va( "menu \"%s\"\n", CG_Argv( 1 ) ) );
+}
+
+static void CG_KillMessage_f( void )
+{
+  char msg1[ 33 * 3 + 1]; 
+  char msg2[ 33 * 3 + 1 ];
+  trap_Argv( 1, msg1, sizeof(msg1) );
+  trap_Argv( 2, msg2, sizeof(msg2) );
+  CG_AddToKillMsg(msg1, msg2, WP_GRENADE);
+}
 
 static consoleCommand_t commands[ ] =
 {
-  { "testgun", CG_TestGun_f },
-  { "testmodel", CG_TestModel_f },
-  { "nextframe", CG_TestModelNextFrame_f },
-  { "prevframe", CG_TestModelPrevFrame_f },
-  { "nextskin", CG_TestModelNextSkin_f },
-  { "prevskin", CG_TestModelPrevSkin_f },
-  { "viewpos", CG_Viewpos_f },
   { "+scores", CG_ScoresDown_f },
   { "-scores", CG_ScoresUp_f },
-  { "scoresUp", CG_scrollScoresUp_f },
-  { "scoresDown", CG_scrollScoresDown_f },
-  { "sizeup", CG_SizeUp_f },
-  { "sizedown", CG_SizeDown_f },
-  { "weapnext", CG_NextWeapon_f },
-  { "weapprev", CG_PrevWeapon_f },
-  { "weapon", CG_Weapon_f },
-  { "tell_target", CG_TellTarget_f },
-  { "tell_attacker", CG_TellAttacker_f },
-  { "tcmd", CG_TargetCommand_f },
-  { "testPS", CG_TestPS_f },
+  { "cgame_memory", BG_MemoryInfo },
+  { "clientlist", CG_ClientList_f },
   { "destroyTestPS", CG_DestroyTestPS_f },
-  { "testTS", CG_TestTS_f },
   { "destroyTestTS", CG_DestroyTestTS_f },
+  { "nextframe", CG_TestModelNextFrame_f },
+  { "nextskin", CG_TestModelNextSkin_f },
+  { "prevframe", CG_TestModelPrevFrame_f },
+  { "prevskin", CG_TestModelPrevSkin_f },
+  { "scoresDown", CG_scrollScoresDown_f },
+  { "scoresUp", CG_scrollScoresUp_f },
+  { "sizedown", CG_SizeDown_f },
+  { "sizeup", CG_SizeUp_f },
+  { "testgun", CG_TestGun_f },
+  { "testmodel", CG_TestModel_f },
+  { "testPS", CG_TestPS_f },
+  { "testTS", CG_TestTS_f },
+  { "ui_menu", CG_UIMenu_f },
+  { "viewpos", CG_Viewpos_f },
+  { "voicemenu", CG_VoiceMenu_f },
+  { "voicemenu2", CG_VoiceMenu_f },
+  { "voicemenu3", CG_VoiceMenu_f },
+  { "weapnext", CG_NextWeapon_f },
+  { "weapon", CG_Weapon_f },
+  { "weapprev", CG_PrevWeapon_f },
+  { "zcp", CG_CenterPrint_f },
+  { "zkill", CG_KillMessage_f }
 };
-
 
 /*
 =================
@@ -233,33 +242,81 @@ Cmd_Argc() / Cmd_Argv()
 */
 qboolean CG_ConsoleCommand( void )
 {
-  const char  *cmd;
-  const char  *arg1;
-  int         i;
+  consoleCommand_t *cmd;
 
-  cmd = CG_Argv( 0 );
+  cmd = bsearch( CG_Argv( 0 ), commands,
+    ARRAY_LEN( commands ), sizeof( commands[ 0 ] ),
+    cmdcmp );
 
-  //TA: ugly hacky special case
-  if( !Q_stricmp( cmd, "ui_menu" ) )
-  {
-    arg1 = CG_Argv( 1 );
-    trap_SendConsoleCommand( va( "menu %s\n", arg1 ) );
-    return qtrue;
-  }
+  if( !cmd )
+    return qfalse;
 
-  for( i = 0; i < sizeof( commands ) / sizeof( commands[ 0 ] ); i++ )
-  {
-    if( !Q_stricmp( cmd, commands[ i ].cmd ) )
-    {
-      commands[ i ].function( );
-      return qtrue;
-    }
-  }
-
-  return qfalse;
+  cmd->function( );
+  return qtrue;
 }
 
+#ifndef MODULE_INTERFACE_11
+/*
+==================
+CG_CompleteCallVote_f
+==================
+*/
+void CG_CompleteCallVote_f( int argNum ) {
+  switch( argNum ) {
+    case 2:
+      trap_Field_CompleteList(
+    "["
+    "\"allowbuild\","
+    "\"cancel\","
+    "\"denybuild\","
+    "\"draw\","
+    "\"extend\","
+    "\"kick\","
+    "\"map\","
+    "\"map_restart\","
+    "\"mute\","
+    "\"nextmap\","
+    "\"poll\","
+    "\"sudden_death\","
+    "\"unmute\" ]" );
+      break;
+  }
+}
 
+static consoleCommandCompletions_t commandCompletions[ ] =
+{
+  { "callvote", CG_CompleteCallVote_f }
+};
+
+/*
+=================
+CG_Console_CompleteArgument
+
+Try to complete the client command line argument given in
+argNum. Returns true if a completion function is found in CGAME,
+otherwise client tries another completion method.
+
+The string has been tokenized and can be retrieved with
+Cmd_Argc() / Cmd_Argv()
+=================
+*/
+qboolean CG_Console_CompleteArgument( int argNum )
+{
+  consoleCommandCompletions_t *cmd;
+
+  // Skip command prefix character
+  cmd = bsearch( CG_Argv( 0 ) + 1, commandCompletions,
+    ARRAY_LEN( commandCompletions ), sizeof( commandCompletions[ 0 ] ),
+    cmdcmp );
+
+  if( !cmd )
+    return qfalse;
+
+  cmd->function( argNum );
+  return qtrue;
+}
+#endif
+  
 /*
 =================
 CG_InitConsoleCommands
@@ -272,7 +329,7 @@ void CG_InitConsoleCommands( void )
 {
   int   i;
 
-  for( i = 0 ; i < sizeof( commands ) / sizeof( commands[ 0 ] ) ; i++ )
+  for( i = 0; i < ARRAY_LEN( commands ); i++ )
     trap_AddCommand( commands[ i ].cmd );
 
   //
@@ -280,31 +337,28 @@ void CG_InitConsoleCommands( void )
   // forwarded to the server after they are not recognized locally
   //
   trap_AddCommand( "kill" );
+  trap_AddCommand( "ui_messagemode" );
+  trap_AddCommand( "ui_messagemode2" );
+  trap_AddCommand( "ui_messagemode3" );
+  trap_AddCommand( "ui_messagemode4" );
   trap_AddCommand( "say" );
   trap_AddCommand( "say_team" );
-  trap_AddCommand( "tell" );
   trap_AddCommand( "vsay" );
   trap_AddCommand( "vsay_team" );
-  trap_AddCommand( "vtell" );
-  trap_AddCommand( "vtaunt" );
-  trap_AddCommand( "vosay" );
-  trap_AddCommand( "vosay_team" );
-  trap_AddCommand( "votell" );
+  trap_AddCommand( "vsay_local" );
+  trap_AddCommand( "m" );
+  trap_AddCommand( "mt" );
   trap_AddCommand( "give" );
   trap_AddCommand( "god" );
   trap_AddCommand( "notarget" );
   trap_AddCommand( "noclip" );
   trap_AddCommand( "team" );
   trap_AddCommand( "follow" );
-  trap_AddCommand( "levelshot" );
-  trap_AddCommand( "addbot" );
   trap_AddCommand( "setviewpos" );
   trap_AddCommand( "callvote" );
   trap_AddCommand( "vote" );
   trap_AddCommand( "callteamvote" );
   trap_AddCommand( "teamvote" );
-  trap_AddCommand( "stats" );
-  trap_AddCommand( "teamtask" );
   trap_AddCommand( "class" );
   trap_AddCommand( "build" );
   trap_AddCommand( "buy" );
@@ -315,11 +369,6 @@ void CG_InitConsoleCommands( void )
   trap_AddCommand( "itemtoggle" );
   trap_AddCommand( "destroy" );
   trap_AddCommand( "deconstruct" );
-  trap_AddCommand( "menu" );
-  trap_AddCommand( "ui_menu" );
-  trap_AddCommand( "mapRotation" );
-  trap_AddCommand( "stopMapRotation" );
-  trap_AddCommand( "advanceMapRotation" );
-  trap_AddCommand( "alienWin" );
-  trap_AddCommand( "humanWin" );
+  trap_AddCommand( "ignore" );
+  trap_AddCommand( "unignore" );
 }

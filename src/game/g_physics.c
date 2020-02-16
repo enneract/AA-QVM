@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,8 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
@@ -45,8 +46,8 @@ static void G_Bounce( gentity_t *ent, trace_t *trace )
 
   if( ent->s.eType == ET_BUILDABLE )
   {
-    minNormal = BG_FindMinNormalForBuildable( ent->s.modelindex );
-    invert = BG_FindInvertNormalForBuildable( ent->s.modelindex );
+    minNormal = BG_Buildable( ent->s.modelindex )->minNormal;
+    invert = BG_Buildable( ent->s.modelindex )->invertNormal;
   }
   else
     minNormal = 0.707f;
@@ -61,7 +62,6 @@ static void G_Bounce( gentity_t *ent, trace_t *trace )
 
   if( VectorLength( ent->s.pos.trDelta ) < 10 )
   {
-    VectorMA( trace->endpos, 0.5f, trace->plane.normal, trace->endpos ); // make sure it is off ground
     G_SetOrigin( ent, trace->endpos );
     ent->s.groundEntityNum = trace->entityNum;
     VectorCopy( trace->plane.normal, ent->s.origin2 );
@@ -69,8 +69,8 @@ static void G_Bounce( gentity_t *ent, trace_t *trace )
     return;
   }
 
+  VectorMA( ent->r.currentOrigin, 0.15, trace->plane.normal, ent->r.currentOrigin );
   VectorCopy( ent->r.currentOrigin, ent->s.pos.trBase );
-  VectorAdd( ent->r.currentOrigin, trace->plane.normal, ent->r.currentOrigin);
   ent->s.pos.trTime = level.time;
 }
 
@@ -87,16 +87,15 @@ void G_Physics( gentity_t *ent, int msec )
   vec3_t    origin;
   trace_t   tr;
   int     contents;
-  int     mask;
 
-  // if groundentity has been set to -1, it may have been pushed off an edge
-  if( ent->s.groundEntityNum == -1 )
+  // if groundentity has been set to ENTITYNUM_NONE, ent may have been pushed off an edge
+  if( ent->s.groundEntityNum == ENTITYNUM_NONE )
   {
     if( ent->s.eType == ET_BUILDABLE )
     {
-      if( ent->s.pos.trType != BG_FindTrajectoryForBuildable( ent->s.modelindex ) )
+      if( ent->s.pos.trType != BG_Buildable( ent->s.modelindex )->traj )
       {
-        ent->s.pos.trType = BG_FindTrajectoryForBuildable( ent->s.modelindex );
+        ent->s.pos.trType = BG_Buildable( ent->s.modelindex )->traj;
         ent->s.pos.trTime = level.time;
       }
     }
@@ -106,12 +105,6 @@ void G_Physics( gentity_t *ent, int msec )
       ent->s.pos.trTime = level.time;
     }
   }
-
-  // trace a line from the previous position to the current position
-  if( ent->clipmask )
-    mask = ent->clipmask;
-  else
-    mask = MASK_PLAYERSOLID & ~CONTENTS_BODY;//MASK_SOLID;
 
   if( ent->s.pos.trType == TR_STATIONARY )
   {
@@ -125,10 +118,10 @@ void G_Physics( gentity_t *ent, int msec )
 
       VectorMA( origin, -2.0f, ent->s.origin2, origin );
 
-      trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, mask );
+      trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, ent->clipmask );
 
       if( tr.fraction == 1.0f )
-        ent->s.groundEntityNum = -1;
+        ent->s.groundEntityNum = ENTITYNUM_NONE;
 
       ent->nextPhysicsTime = level.time + PHYSICS_TIME;
     }
@@ -136,10 +129,12 @@ void G_Physics( gentity_t *ent, int msec )
     return;
   }
 
+  // trace a line from the previous position to the current position
+
   // get current position
   BG_EvaluateTrajectory( &ent->s.pos, level.time, origin );
 
-  trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, mask );
+  trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, ent->s.number, ent->clipmask );
 
   VectorCopy( tr.endpos, ent->r.currentOrigin );
 
@@ -158,10 +153,11 @@ void G_Physics( gentity_t *ent, int msec )
   contents = trap_PointContents( ent->r.currentOrigin, -1 );
   if( contents & CONTENTS_NODROP )
   {
+    if( ent->s.eType == ET_BUILDABLE )
+      G_RemoveRangeMarkerFrom( ent );
     G_FreeEntity( ent );
     return;
   }
 
   G_Bounce( ent, &tr );
 }
-

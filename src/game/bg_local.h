@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,8 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
@@ -30,8 +31,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define TIMER_LAND        130
 #define TIMER_GESTURE     (34*66+50)
 #define TIMER_ATTACK      500 //nonsegmented models
-
-#define OVERCLIP    1.001f
 
 #define FALLING_THRESHOLD -900.0f //what vertical speed to start falling sound at
 
@@ -65,20 +64,19 @@ extern  pml_t         pml;
 extern  float pm_stopspeed;
 extern  float pm_duckScale;
 extern  float pm_swimScale;
-extern  float pm_wadeScale;
 
 extern  float pm_accelerate;
-extern  float pm_airaccelerate;
 extern  float pm_wateraccelerate;
 extern  float pm_flyaccelerate;
 
 extern  float pm_friction;
 extern  float pm_waterfriction;
 extern  float pm_flightfriction;
+extern  float pm_spectatorfriction;
 
 extern  int   c_pmove;
 
-void PM_ClipVelocity( vec3_t in, vec3_t normal, vec3_t out, float overbounce );
+void PM_ClipVelocity( vec3_t in, vec3_t normal, vec3_t out );
 void PM_AddTouchEnt( int entityNum );
 void PM_AddEvent( int newEvent );
 

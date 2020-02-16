@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,13 +17,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
 // cg_drawtools.c -- helper functions called by cg_draw, cg_scoreboard, cg_info, etc
-
 
 #include "cg_local.h"
 
@@ -126,10 +126,14 @@ Coords are virtual 640x480
 */
 void CG_DrawSides( float x, float y, float w, float h, float size )
 {
+  float sizeY;
+
   CG_AdjustFrom640( &x, &y, &w, &h );
+  sizeY = size * cgs.screenYScale;
   size *= cgs.screenXScale;
-  trap_R_DrawStretchPic( x, y, size, h, 0, 0, 0, 0, cgs.media.whiteShader );
-  trap_R_DrawStretchPic( x + w - size, y, size, h, 0, 0, 0, 0, cgs.media.whiteShader );
+
+  trap_R_DrawStretchPic( x, y + sizeY, size, h - ( sizeY * 2.0f ), 0, 0, 0, 0, cgs.media.whiteShader );
+  trap_R_DrawStretchPic( x + w - size, y + sizeY, size, h - ( sizeY * 2.0f ), 0, 0, 0, 0, cgs.media.whiteShader );
 }
 
 void CG_DrawTopBottom( float x, float y, float w, float h, float size )
@@ -172,7 +176,34 @@ void CG_DrawPic( float x, float y, float width, float height, qhandle_t hShader 
   trap_R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
 }
 
+/*
+================
+CG_SetClipRegion
+=================
+*/
+void CG_SetClipRegion( float x, float y, float w, float h )
+{
+  vec4_t clip;
 
+  CG_AdjustFrom640( &x, &y, &w, &h );
+
+  clip[ 0 ] = x;
+  clip[ 1 ] = y;
+  clip[ 2 ] = x + w;
+  clip[ 3 ] = y + h;
+
+  trap_R_SetClipRegion( clip );
+}
+
+/*
+================
+CG_ClearClipRegion
+=================
+*/
+void CG_ClearClipRegion( void )
+{
+  trap_R_SetClipRegion( NULL );
+}
 
 /*
 ================
@@ -321,30 +352,30 @@ CG_WorldToScreen
 */
 qboolean CG_WorldToScreen( vec3_t point, float *x, float *y )
 {
-	vec3_t  trans;
-	float   xc, yc;
-	float   px, py;
-	float   z;
+  vec3_t  trans;
+  float   xc, yc;
+  float   px, py;
+  float   z;
 
-	px = tan( cg.refdef.fov_x * M_PI / 360.0 );
-	py = tan( cg.refdef.fov_y * M_PI / 360.0 );
+  px = tan( cg.refdef.fov_x * M_PI / 360.0f );
+  py = tan( cg.refdef.fov_y * M_PI / 360.0f );
 
-	VectorSubtract( point, cg.refdef.vieworg, trans );
+  VectorSubtract( point, cg.refdef.vieworg, trans );
 
-	xc = 640.0f / 2.0f;
-	yc = 480.0f / 2.0f;
+  xc = ( 640.0f * cg_viewsize.integer ) / 200.0f;
+  yc = ( 480.0f * cg_viewsize.integer ) / 200.0f;
 
-	z = DotProduct( trans, cg.refdef.viewaxis[ 0 ] );
-	if( z <= 0.001f )
-		return qfalse;
+  z = DotProduct( trans, cg.refdef.viewaxis[ 0 ] );
+  if( z <= 0.001f )
+    return qfalse;
 
   if( x )
-	  *x = xc - DotProduct( trans, cg.refdef.viewaxis[ 1 ] ) * xc / ( z * px );
+    *x = 320.0f - DotProduct( trans, cg.refdef.viewaxis[ 1 ] ) * xc / ( z * px );
 
   if( y )
-	  *y = yc - DotProduct( trans, cg.refdef.viewaxis[ 2 ] ) * yc / ( z * py );
+    *y = 240.0f - DotProduct( trans, cg.refdef.viewaxis[ 2 ] ) * yc / ( z * py );
 
-	return qtrue;
+  return qtrue;
 }
 
 /*
@@ -359,6 +390,7 @@ char *CG_KeyBinding( const char *bind )
   int i;
 
   key[ 0 ] = '\0';
+
   // NOTE: change K_LAST_KEY to MAX_KEYS for full key support (eventually)
   for( i = 0; i < K_LAST_KEY; i++ )
   {
@@ -367,12 +399,41 @@ char *CG_KeyBinding( const char *bind )
     {
       trap_Key_KeynumToStringBuf( i, key, sizeof( key ) );
       break;
-    } 
+    }
   }
+
   if( !key[ 0 ] )
   {
     Q_strncpyz( key, "\\", sizeof( key ) );
     Q_strcat( key, sizeof( key ), bind );
   }
+
   return key;
+}
+
+/*
+=================
+CG_GetColorCharForHealth
+=================
+*/
+char CG_GetColorCharForHealth( int clientnum )
+{
+  char health_char = '2';
+  int  healthPercent;
+  int  maxHealth;
+  int  curWeaponClass = cgs.clientinfo[ clientnum ].curWeaponClass;
+
+  if( cgs.clientinfo[ clientnum ].team == TEAM_ALIENS )
+    maxHealth = BG_Class( curWeaponClass )->health;
+  else
+    maxHealth = BG_Class( PCL_HUMAN )->health;
+
+  healthPercent = (int) ( 100.0f * (float) cgs.clientinfo[ clientnum ].health /
+                        (float) maxHealth );
+
+  if( healthPercent < 33 )
+    health_char = '1';
+  else if( healthPercent < 67 )
+    health_char = '3';
+  return health_char;
 }

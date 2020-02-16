@@ -1,12 +1,13 @@
 /*
 ===========================================================================
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -15,15 +16,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
-
 #include "cg_local.h"
 
-static entityPos_t   entityPositions;
+static entityPos_t entityPositions;
 
 #define HUMAN_SCANNER_UPDATE_PERIOD 700
 
@@ -39,7 +39,7 @@ void CG_UpdateEntityPositions( void )
   centity_t *cent = NULL;
   int       i;
 
-  if( cg.predictedPlayerState.stats[ STAT_PTEAM ] == PTE_HUMANS )
+  if( cg.predictedPlayerState.stats[ STAT_TEAM ] == TEAM_HUMANS )
   {
     if( entityPositions.lastUpdateTime + HUMAN_SCANNER_UPDATE_PERIOD > cg.time )
       return;
@@ -58,10 +58,11 @@ void CG_UpdateEntityPositions( void )
   {
     cent = &cg_entities[ cg.snap->entities[ i ].number ];
 
-    if( cent->currentState.eType == ET_BUILDABLE )
+    if( cent->currentState.eType == ET_BUILDABLE &&
+     !( cent->currentState.eFlags & EF_DEAD ) )
     {
-      //TA: add to list of item positions (for creep)
-      if( cent->currentState.modelindex2 == BIT_ALIENS )
+      // add to list of item positions (for creep)
+      if( cent->currentState.modelindex2 == TEAM_ALIENS )
       {
         VectorCopy( cent->lerpOrigin, entityPositions.alienBuildablePos[
             entityPositions.numAlienBuildables ] );
@@ -71,7 +72,7 @@ void CG_UpdateEntityPositions( void )
         if( entityPositions.numAlienBuildables < MAX_GENTITIES )
           entityPositions.numAlienBuildables++;
       }
-      else if( cent->currentState.modelindex2 == BIT_HUMANS )
+      else if( cent->currentState.modelindex2 == TEAM_HUMANS )
       {
         VectorCopy( cent->lerpOrigin, entityPositions.humanBuildablePos[
             entityPositions.numHumanBuildables ] );
@@ -84,7 +85,7 @@ void CG_UpdateEntityPositions( void )
     {
       int team = cent->currentState.misc & 0x00FF;
 
-      if( team == PTE_ALIENS )
+      if( team == TEAM_ALIENS )
       {
         VectorCopy( cent->lerpOrigin, entityPositions.alienClientPos[
             entityPositions.numAlienClients ] );
@@ -92,7 +93,7 @@ void CG_UpdateEntityPositions( void )
         if( entityPositions.numAlienClients < MAX_CLIENTS )
           entityPositions.numAlienClients++;
       }
-      else if( team == PTE_HUMANS )
+      else if( team == TEAM_HUMANS )
       {
         VectorCopy( cent->lerpOrigin, entityPositions.humanClientPos[
             entityPositions.numHumanClients ] );
@@ -104,8 +105,8 @@ void CG_UpdateEntityPositions( void )
   }
 }
 
-#define STALKWIDTH  2.0f
-#define BLIPX       16.0f
+#define STALKWIDTH  (2.0f * cgDC.aspectScale)
+#define BLIPX       (16.0f * cgDC.aspectScale)
 #define BLIPY       8.0f
 #define FAR_ALPHA   0.8f
 #define NEAR_ALPHA  1.2f
@@ -162,7 +163,7 @@ static void CG_DrawBlips( rectDef_t *rect, vec3_t origin, vec4_t colour )
   trap_R_SetColor( NULL );
 }
 
-#define BLIPX2  24.0f
+#define BLIPX2  (24.0f * cgDC.aspectScale)
 #define BLIPY2  24.0f
 
 /*
@@ -183,15 +184,7 @@ static void CG_DrawDir( rectDef_t *rect, vec3_t origin, vec4_t colour )
   float   angle;
   playerState_t *ps = &cg.snap->ps;
 
-  if( ps->stats[ STAT_STATE ] & SS_WALLCLIMBING )
-  {
-    if( ps->stats[ STAT_STATE ] & SS_WALLCLIMBINGCEILING )
-      VectorSet( normal, 0.0f, 0.0f, -1.0f );
-    else
-      VectorCopy( ps->grapplePoint, normal );
-  }
-  else
-    VectorSet( normal, 0.0f, 0.0f, 1.0f );
+  BG_GetClientNormal( ps, normal );
 
   AngleVectors( entityPositions.vangles, view, NULL, NULL );
 
@@ -362,4 +355,126 @@ void CG_Scanner( rectDef_t *rect, qhandle_t shader, vec4_t color )
     if( VectorLength( relOrigin ) < HELMET_RANGE && ( relOrigin[ 2 ] > 0 ) )
       CG_DrawBlips( rect, relOrigin, aIabove );
   }
+}
+
+void THZ_DrawScanner( rectDef_t *rect )
+{
+    vec4_t colorB = { 0.0f, 0.0f, 0.0f, 0.5f };
+    vec4_t color  = { 1.0f, 1.0f, 1.0f, 0.2f };
+
+    vec4_t aliencolor = { 1.0f, 0.0f, 0.0f, 0.8f };
+    vec4_t humancolor = { 0.0f, 0.0f, 1.0f, 0.8f };
+    vec4_t buildcolor = { 0.0f, 1.0f, 1.0f, 0.8f };
+    vec4_t buildcolor2 = { 1.0f, 1.0f, 0.0f, 0.8f };
+
+    vec3_t drawOrigin = { 0.0f, 0.0f, 0.0f };
+    vec3_t origin     = { 0.0f, 0.0f, 0.0f };
+    vec3_t relOrigin  = { 0.0f, 0.0f, 0.0f };
+
+    static vec3_t up  = { 0.0f, 0.0f, 1.0f };
+
+    int i;
+
+    if( !thz_radar.integer )
+        return;
+
+    //CG_FillRect( rect->x, rect->y, rect->w, rect->h, colorB );
+
+    // Draw cross
+    CG_FillRect( rect->x + (rect->w/2),
+                 rect->y, 
+                 1,
+                 rect->h,
+                 color );
+    CG_FillRect( rect->x,
+                 rect->y+(rect->h/2),
+                 rect->w,
+                 1,
+                 color );
+
+    // update the player positions
+    CG_UpdateEntityPositions( );
+
+    // blips
+    VectorCopy( entityPositions.origin, origin );
+
+     // human buildables
+    for( i = 0; i < entityPositions.numHumanBuildables; i++ )
+    {
+        VectorClear( relOrigin );
+        VectorSubtract( entityPositions.humanBuildablePos[ i ], origin, relOrigin );
+
+        if( VectorLength( relOrigin ) < thz_radarrange.integer )
+        {
+        RotatePointAroundVector( drawOrigin, up, relOrigin, -entityPositions.vangles[ 1 ] - 90 );
+
+        drawOrigin[ 0 ] /= ((float)(1.25f * (float)thz_radarrange.integer) / (float)rect->w);
+        drawOrigin[ 1 ] /= ((float)(1.25f * (float)thz_radarrange.integer) / (float)rect->h);
+        drawOrigin[ 2 ] /= ((float)(1.25f * (float)thz_radarrange.integer) / (float)rect->w);
+
+        CG_FillRect( rect->x + (rect->w / 2) + -drawOrigin[0] - 5,
+                     rect->y + (rect->h / 2) + drawOrigin[1] - 5,
+                     10, 10, buildcolor );
+        }
+    }
+
+    // humans
+    for( i = 0; i < entityPositions.numHumanClients; i++ )
+    {
+        VectorClear( relOrigin );
+        VectorSubtract( entityPositions.humanClientPos[ i ], origin, relOrigin );
+
+        if( VectorLength( relOrigin ) < thz_radarrange.integer )
+        {
+        RotatePointAroundVector( drawOrigin, up, relOrigin, -entityPositions.vangles[ 1 ] - 90 );
+
+        drawOrigin[ 0 ] /= ((float)(1.25f * (float)thz_radarrange.integer) / (float)rect->w);
+        drawOrigin[ 1 ] /= ((float)(1.25f * (float)thz_radarrange.integer) / (float)rect->h);
+        drawOrigin[ 2 ] /= ((float)(1.25f * (float)thz_radarrange.integer) / (float)rect->w);
+
+        CG_FillRect( rect->x + (rect->w / 2) + -drawOrigin[0] -3,
+                     rect->y + (rect->h / 2) + drawOrigin[1] -3,
+                     6, 6, humancolor );
+        }
+    }
+
+    // alien structures
+    for( i = 0; i < entityPositions.numAlienBuildables; i++ )
+    {
+        VectorClear( relOrigin );
+        VectorSubtract( entityPositions.alienBuildablePos[ i ], origin, relOrigin );
+
+        if( VectorLength( relOrigin ) < thz_radarrange.integer )
+        {
+        RotatePointAroundVector( drawOrigin, up, relOrigin, -entityPositions.vangles[ 1 ] - 90 );
+
+        drawOrigin[ 0 ] /= ((float)(1.25f * (float)thz_radarrange.integer) / (float)rect->w);
+        drawOrigin[ 1 ] /= ((float)(1.25f * (float)thz_radarrange.integer) / (float)rect->h);
+        drawOrigin[ 2 ] /= ((float)(1.25f * (float)thz_radarrange.integer) / (float)rect->w);
+
+        CG_FillRect( rect->x + (rect->w / 2) + -drawOrigin[0] - 5,
+                     rect->y + (rect->h / 2) + drawOrigin[1] - 5,
+                     10, 10, buildcolor2 );
+        }
+    }
+
+    // aliens
+    for( i = 0; i < entityPositions.numAlienClients; i++ )
+    {
+        VectorClear( relOrigin );
+        VectorSubtract( entityPositions.alienClientPos[ i ], origin, relOrigin );
+
+        if( VectorLength( relOrigin ) < thz_radarrange.integer )
+        {
+        RotatePointAroundVector( drawOrigin, up, relOrigin, -entityPositions.vangles[ 1 ] - 90 );
+
+        drawOrigin[ 0 ] /= ((float)(1.25f * (float)thz_radarrange.integer) / (float)rect->w);
+        drawOrigin[ 1 ] /= ((float)(1.25f * (float)thz_radarrange.integer) / (float)rect->h);
+        drawOrigin[ 2 ] /= ((float)(1.25f * (float)thz_radarrange.integer) / (float)rect->w);
+
+        CG_FillRect( rect->x + (rect->w / 2) + -drawOrigin[0] -3,
+                     rect->y + (rect->h / 2) + drawOrigin[1] -3,
+                     6, 6, aliencolor );
+        }
+    }
 }

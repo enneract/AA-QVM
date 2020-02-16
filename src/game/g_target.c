@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,8 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
@@ -31,6 +32,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 void Think_Target_Delay( gentity_t *ent )
 {
+  if( ent->activator && !ent->activator->inuse )
+    ent->activator = NULL;
   G_UseTargets( ent, ent->activator );
 }
 
@@ -86,18 +89,19 @@ If "private", only the activator gets the message.  If no checks, all clients ge
 */
 void Use_Target_Print( gentity_t *ent, gentity_t *other, gentity_t *activator )
 {
-  if( activator && activator->client && ( ent->spawnflags & 4 ) )
+  if( ent->spawnflags & 4 )
   {
-    trap_SendServerCommand( activator-g_entities, va( "cp \"%s\"", ent->message ) );
+    if( activator && activator->client )
+      trap_SendServerCommand( activator-g_entities, va( "cp \"%s\"", ent->message ) );
     return;
   }
 
   if( ent->spawnflags & 3 )
   {
     if( ent->spawnflags & 1 )
-      G_TeamCommand( PTE_HUMANS, va( "cp \"%s\"", ent->message ) );
+      G_TeamCommand( TEAM_HUMANS, va( "cp \"%s\"", ent->message ) );
     if( ent->spawnflags & 2 )
-      G_TeamCommand( PTE_ALIENS, va( "cp \"%s\"", ent->message ) );
+      G_TeamCommand( TEAM_ALIENS, va( "cp \"%s\"", ent->message ) );
 
     return;
   }
@@ -156,9 +160,9 @@ void SP_target_speaker( gentity_t *ent )
   G_SpawnFloat( "random", "0", &ent->random );
 
   if( !G_SpawnString( "noise", "NOSOUND", &s ) )
-    G_Error( "target_speaker without a noise key at %s", vtos( ent->s.origin ) );
+    G_Error( "target_speaker without a noise key at %s", vtos( ent->r.currentOrigin ) );
 
-  // force all client reletive sounds to be "activator" speakers that
+  // force all client relative sounds to be "activator" speakers that
   // play on the entity that activates it
   if( s[ 0 ] == '*' )
     ent->spawnflags |= 8;
@@ -186,8 +190,6 @@ void SP_target_speaker( gentity_t *ent )
   if( ent->spawnflags & 4 )
     ent->r.svFlags |= SVF_BROADCAST;
 
-  VectorCopy( ent->s.origin, ent->s.pos.trBase );
-
   // must link the entity so we get areas and clusters so
   // the server can determine who to send updates to
   trap_LinkEntity( ent );
@@ -210,7 +212,7 @@ void target_teleporter_use( gentity_t *self, gentity_t *other, gentity_t *activa
     return;
   }
 
-  TeleportPlayer( activator, dest->s.origin, dest->s.angles );
+  TeleportPlayer( activator, dest->r.currentOrigin, dest->r.currentAngles, self->speed );
 }
 
 /*QUAKED target_teleporter (1 0 0) (-8 -8 -8) (8 8 8)
@@ -219,7 +221,9 @@ The activator will be teleported away.
 void SP_target_teleporter( gentity_t *self )
 {
   if( !self->targetname )
-    G_Printf( "untargeted %s at %s\n", self->classname, vtos( self->s.origin ) );
+    G_Printf( "untargeted %s at %s\n", self->classname, vtos( self->r.currentOrigin ) );
+
+  G_SpawnFloat( "speed", "400", &self->speed );
 
   self->use = target_teleporter_use;
 }
@@ -235,11 +239,11 @@ if RANDOM is checked, only one of the targets will be fired, not all of them
 void target_relay_use( gentity_t *self, gentity_t *other, gentity_t *activator )
 {
   if( ( self->spawnflags & 1 ) && activator && activator->client &&
-      activator->client->ps.stats[ STAT_PTEAM ] != PTE_HUMANS )
+      activator->client->ps.stats[ STAT_TEAM ] != TEAM_HUMANS )
     return;
 
   if( ( self->spawnflags & 2 ) && activator && activator->client &&
-      activator->client->ps.stats[ STAT_PTEAM ] != PTE_ALIENS )
+      activator->client->ps.stats[ STAT_TEAM ] != TEAM_ALIENS )
     return;
 
   if( self->spawnflags & 4 )
@@ -285,36 +289,7 @@ Used as a positional target for in-game calculation, like jumppad targets.
 */
 void SP_target_position( gentity_t *self )
 {
-  G_SetOrigin( self, self->s.origin );
-}
-
-static void target_location_linkup( gentity_t *ent )
-{
-  int i;
-  int n;
-
-  if( level.locationLinked )
-    return;
-
-  level.locationLinked = qtrue;
-
-  level.locationHead = NULL;
-
-  trap_SetConfigstring( CS_LOCATIONS, "unknown" );
-
-  for( i = 0, ent = g_entities, n = 1; i < level.num_entities; i++, ent++)
-  {
-    if( ent->classname && !Q_stricmp( ent->classname, "target_location" ) )
-    {
-      // lets overload some variables!
-      ent->health = n; // use for location marking
-      trap_SetConfigstring( CS_LOCATIONS + n, ent->message );
-      n++;
-      ent->nextTrain = level.locationHead;
-      level.locationHead = ent;
-    }
-  }
-  // All linked together now
+  G_SetOrigin( self, self->r.currentOrigin );
 }
 
 /*QUAKED target_location (0 0.5 0) (-8 -8 -8) (8 8 8)
@@ -327,10 +302,36 @@ in site, closest in distance
 */
 void SP_target_location( gentity_t *self )
 {
-  self->think = target_location_linkup;
-  self->nextthink = level.time + 200;  // Let them all spawn first
+  static int n = 0;
+  const char *message;
+  self->s.eType = ET_LOCATION;
+  self->r.svFlags = SVF_BROADCAST;
+  trap_LinkEntity( self ); // make the server send them to the clients
+  if( n == MAX_LOCATIONS )
+  {
+    G_Printf( S_COLOR_YELLOW "too many target_locations\n" );
+    return;
+  }
+  if( self->count )
+  {
+    if( self->count < 0 )
+      self->count = 0;
 
-  G_SetOrigin( self, self->s.origin );
+    if( self->count > 7 )
+      self->count = 7;
+
+    message = va( "%c%c%s" S_COLOR_WHITE, Q_COLOR_ESCAPE, self->count + '0',
+      (const char*)self->message);
+  }
+  else
+    message = self->message;
+  trap_SetConfigstring( CS_LOCATIONS + n, message );
+  self->nextTrain = level.locationHead;
+  self->s.generic1 = n; // use for location marking
+  level.locationHead = self;
+  n++;
+
+  G_SetOrigin( self, self->r.currentOrigin );
 }
 
 
@@ -391,7 +392,7 @@ void SP_target_rumble( gentity_t *self )
   if( !self->targetname )
   {
     G_Printf( S_COLOR_YELLOW "WARNING: untargeted %s at %s\n", self->classname,
-                                                               vtos( self->s.origin ) );
+                                                               vtos( self->r.currentOrigin ) );
   }
 
   if( !self->count )
@@ -411,7 +412,8 @@ target_alien_win_use
 */
 void target_alien_win_use( gentity_t *self, gentity_t *other, gentity_t *activator )
 {
-  level.uncondAlienWin = qtrue;
+  if( !level.uncondHumanWin )
+    level.uncondAlienWin = qtrue;
 }
 
 /*
@@ -431,7 +433,8 @@ target_human_win_use
 */
 void target_human_win_use( gentity_t *self, gentity_t *other, gentity_t *activator )
 {
-  level.uncondHumanWin = qtrue;
+  if( !level.uncondAlienWin )
+    level.uncondHumanWin = qtrue;
 }
 
 /*
@@ -468,7 +471,7 @@ void SP_target_hurt( gentity_t *self )
   if( !self->targetname )
   {
     G_Printf( S_COLOR_YELLOW "WARNING: untargeted %s at %s\n", self->classname,
-                                                               vtos( self->s.origin ) );
+                                                               vtos( self->r.currentOrigin ) );
   }
 
   if( !self->damage )

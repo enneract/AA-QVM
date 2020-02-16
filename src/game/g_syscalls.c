@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,8 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
@@ -36,12 +37,12 @@ Q_EXPORT void dllEntry( intptr_t (QDECL *syscallptr)( intptr_t arg,... ) )
 
 int PASSFLOAT( float x )
 {
-  float floatTemp;
-  floatTemp = x;
-  return *(int *)&floatTemp;
+  floatint_t fi;
+  fi.f = x;
+  return fi.i;
 }
 
-void  trap_Printf( const char *fmt )
+void  trap_Print( const char *fmt )
 {
   syscall( G_PRINT, fmt );
 }
@@ -49,6 +50,8 @@ void  trap_Printf( const char *fmt )
 void  trap_Error( const char *fmt )
 {
   syscall( G_ERROR, fmt );
+  // shut up GCC warning about returning functions, because we know better
+  exit(1);
 }
 
 int   trap_Milliseconds( void )
@@ -65,7 +68,7 @@ void  trap_Argv( int n, char *buffer, int bufferLength )
   syscall( G_ARGV, n, buffer, bufferLength );
 }
 
-int   trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode )
+int   trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, enum FS_Mode mode )
 {
   return syscall( G_FS_FOPEN_FILE, qpath, f, mode );
 }
@@ -145,6 +148,11 @@ void trap_SetConfigstring( int num, const char *string )
 void trap_GetConfigstring( int num, char *buffer, int bufferSize )
 {
   syscall( G_GET_CONFIGSTRING, num, buffer, bufferSize );
+}
+
+void trap_SetConfigstringRestrictions( int num, const clientList_t *clientList )
+{
+  syscall( G_SET_CONFIGSTRING_RESTRICTIONS, num, clientList );
 }
 
 void trap_GetUserinfo( int num, char *buffer, int bufferSize )
@@ -248,13 +256,6 @@ int trap_RealTime( qtime_t *qtime )
 void trap_SnapVector( float *v )
 {
   syscall( G_SNAPVECTOR, v );
-  return;
-}
-
-void trap_SendGameStat( const char *data )
-{
-  syscall( G_SEND_GAMESTAT, data );
-  return;
 }
 
 int trap_Parse_AddGlobalDefine( char *define )
@@ -282,3 +283,17 @@ int trap_Parse_SourceFileAndLine( int handle, char *filename, int *line )
   return syscall( G_PARSE_SOURCE_FILE_AND_LINE, handle, filename, line );
 }
 
+void trap_AddCommand( const char *cmdName )
+{
+  syscall( G_ADDCOMMAND, cmdName );
+}
+
+void trap_RemoveCommand( const char *cmdName )
+{
+  syscall( G_REMOVECOMMAND, cmdName );
+}
+
+int trap_FS_GetFilteredFiles( const char *path, const char *extension, const char *filter, char *listbuf, int bufsize )
+{
+  return syscall( G_FS_GETFILTEREDFILES, path, extension, filter, listbuf, bufsize );
+}

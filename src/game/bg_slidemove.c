@@ -1,13 +1,14 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
-Copyright (C) 2000-2006 Tim Angus
+Copyright (C) 2000-2013 Darklegion Development
+Copyright (C) 2015-2019 GrangerHub
 
 This file is part of Tremulous.
 
 Tremulous is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
 Tremulous is distributed in the hope that it will be
@@ -16,14 +17,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Tremulous; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Tremulous; if not, see <https://www.gnu.org/licenses/>
+
 ===========================================================================
 */
 
 // bg_slidemove.c -- part of bg_pmove functionality
 
-#include "../qcommon/q_shared.h"
+#include "qcommon/q_shared.h"
 #include "bg_public.h"
 #include "bg_local.h"
 
@@ -74,8 +75,7 @@ qboolean  PM_SlideMove( qboolean gravity )
     if( pml.groundPlane )
     {
       // slide along the ground plane
-      PM_ClipVelocity( pm->ps->velocity, pml.groundTrace.plane.normal,
-        pm->ps->velocity, OVERCLIP );
+      PM_ClipVelocity( pm->ps->velocity, pml.groundTrace.plane.normal, pm->ps->velocity );
     }
   }
 
@@ -166,10 +166,10 @@ qboolean  PM_SlideMove( qboolean gravity )
         pml.impactSpeed = -into;
 
       // slide along the plane
-      PM_ClipVelocity( pm->ps->velocity, planes[ i ], clipVelocity, OVERCLIP );
+      PM_ClipVelocity( pm->ps->velocity, planes[ i ], clipVelocity );
 
       // slide along the plane
-      PM_ClipVelocity( endVelocity, planes[ i ], endClipVelocity, OVERCLIP );
+      PM_ClipVelocity( endVelocity, planes[ i ], endClipVelocity );
 
       // see if there is a second plane that the new move enters
       for( j = 0; j < numplanes; j++ )
@@ -181,8 +181,8 @@ qboolean  PM_SlideMove( qboolean gravity )
           continue;   // move doesn't interact with the plane
 
         // try clipping the move to the plane
-        PM_ClipVelocity( clipVelocity, planes[ j ], clipVelocity, OVERCLIP );
-        PM_ClipVelocity( endClipVelocity, planes[ j ], endClipVelocity, OVERCLIP );
+        PM_ClipVelocity( clipVelocity, planes[ j ], clipVelocity );
+        PM_ClipVelocity( endClipVelocity, planes[ j ], endClipVelocity );
 
         // see if it goes back into the first clip plane
         if( DotProduct( clipVelocity, planes[ i ] ) >= 0 )
@@ -290,7 +290,6 @@ PM_StepSlideMove
 qboolean PM_StepSlideMove( qboolean gravity, qboolean predictive )
 {
   vec3_t    start_o, start_v;
-  vec3_t    down_o, down_v;
   trace_t   trace;
   vec3_t    normal;
   vec3_t    step_v, step_vNormal;
@@ -298,15 +297,7 @@ qboolean PM_StepSlideMove( qboolean gravity, qboolean predictive )
   float     stepSize;
   qboolean  stepped = qfalse;
 
-  if( pm->ps->stats[ STAT_STATE ] & SS_WALLCLIMBING )
-  {
-    if( pm->ps->stats[ STAT_STATE ] & SS_WALLCLIMBINGCEILING )
-      VectorSet( normal, 0.0f, 0.0f, -1.0f );
-    else
-      VectorCopy( pm->ps->grapplePoint, normal );
-  }
-  else
-    VectorSet( normal, 0.0f, 0.0f, 1.0f );
+  BG_GetClientNormal( pm->ps, normal );
 
   VectorCopy( pm->ps->origin, start_o );
   VectorCopy( pm->ps->velocity, start_v );
@@ -338,9 +329,6 @@ qboolean PM_StepSlideMove( qboolean gravity, qboolean predictive )
     {
       return stepped;
     }
-
-    VectorCopy( pm->ps->origin, down_o );
-    VectorCopy( pm->ps->velocity, down_v );
 
     VectorCopy( start_o, up );
     VectorMA( up, STEPSIZE, normal, up );
@@ -381,7 +369,7 @@ qboolean PM_StepSlideMove( qboolean gravity, qboolean predictive )
       VectorCopy( trace.endpos, pm->ps->origin );
 
     if( trace.fraction < 1.0f )
-      PM_ClipVelocity( pm->ps->velocity, trace.plane.normal, pm->ps->velocity, OVERCLIP );
+      PM_ClipVelocity( pm->ps->velocity, trace.plane.normal, pm->ps->velocity );
   }
 
   if( !predictive && stepped )
