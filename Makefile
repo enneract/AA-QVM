@@ -19,28 +19,28 @@ ifeq ($(COMPILE_PLATFORM),linux)
 endif
 
 ifndef BUILD_STANDALONE
-  BUILD_STANDALONE =
+  BUILD_STANDALONE =0
 endif
 ifndef BUILD_CLIENT
-  BUILD_CLIENT     =
+  BUILD_CLIENT     =0
 endif
 ifndef BUILD_SERVER
-  BUILD_SERVER     =
+  BUILD_SERVER     =1
 endif
 ifndef BUILD_GRANGER
-  BUILD_GRANGER    =
+  BUILD_GRANGER    =0
 endif
 ifndef BUILD_GAME_SO
-  BUILD_GAME_SO    =
+  BUILD_GAME_SO    =0
 endif
 ifndef BUILD_GAME_QVM
-  BUILD_GAME_QVM   =
+  BUILD_GAME_QVM   =0
 endif
 ifndef BUILD_GAME_QVM_11
-  BUILD_GAME_QVM_11 =
+  BUILD_GAME_QVM_11 =0
 endif
 ifndef BUILD_RENDERER_OPENGL2
-  BUILD_RENDERER_OPENGL2=
+  BUILD_RENDERER_OPENGL2=0
 endif
 
 #############################################################################
