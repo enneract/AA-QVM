@@ -404,6 +404,8 @@ bool Parse_FreeSourceHandle(int handle);
 bool Parse_ReadTokenHandle(int handle, pc_token_t *pc_token);
 bool Parse_SourceFileAndLine(int handle, char *filename, int *line);
 
+char	*Sys_BinaryPath(void);
+
 // flags for sv_allowDownload and cl_allowDownload
 #define DLF_ENABLE 1
 #define DLF_NO_REDIRECT 2

@@ -1318,6 +1318,11 @@ Return the searchpath in "startSearch".
 =================
 */
 
+static directory_t fs_directory_overpath_game;
+static searchpath_t fs_searchpath_overpath_game;
+static directory_t fs_directory_overpath_basegame;
+static searchpath_t fs_searchpath_overpath_basegame;
+
 int FS_FindVM(void **startSearch, char *found, int foundlen, const char *name, int enableDll)
 {
     searchpath_t *search, *lastSearch;
@@ -1334,17 +1339,36 @@ int FS_FindVM(void **startSearch, char *found, int foundlen, const char *name, i
 
     lastSearch = static_cast<searchpath_t *>(*startSearch);
     if (*startSearch == nullptr)
-        search = fs_searchpaths;
+	{
+		const char *overpath = Cvar_VariableString( "fs_overpath" );
+		if(overpath[0])
+		{
+			// set up some special searchpath elements
+			Q_strncpyz( fs_directory_overpath_game.path, overpath, sizeof( fs_directory_overpath_game.path ) );
+			Q_strncpyz( fs_directory_overpath_game.gamedir, fs_gamedir, sizeof( fs_directory_overpath_game.gamedir ) );
+			fs_searchpath_overpath_game.next = &fs_searchpath_overpath_basegame;
+			fs_searchpath_overpath_game.pack = NULL;
+			fs_searchpath_overpath_game.dir = &fs_directory_overpath_game;
+			Q_strncpyz( fs_directory_overpath_basegame.path, overpath, sizeof( fs_directory_overpath_basegame.path ) );
+			Q_strncpyz( fs_directory_overpath_basegame.gamedir, fs_basegame->string, sizeof( fs_directory_overpath_basegame.gamedir ) );
+			fs_searchpath_overpath_basegame.next = fs_searchpaths;
+			fs_searchpath_overpath_basegame.pack = NULL;
+			fs_searchpath_overpath_basegame.dir = &fs_directory_overpath_basegame;
+			search = &fs_searchpath_overpath_game;
+		}
+		else
+			search = fs_searchpaths;
+	}
     else
         search = lastSearch->next;
 
     while (search)
     {
-        if (search->dir && (!fs_numServerPaks || !strcmp(name, "game")))
+        if (search->dir && (!fs_numServerPaks || !strcmp(name, "game") || (search == &fs_searchpath_overpath_game || search == &fs_searchpath_overpath_basegame)))
         {
             dir = search->dir;
 
-            if (enableDll)
+            if (enableDll && (search == &fs_searchpath_overpath_game || search == &fs_searchpath_overpath_basegame))
             {
                 netpath = FS_BuildOSPath(dir->path, dir->gamedir, dllName);
 
@@ -3336,6 +3360,7 @@ static void FS_Startup(const char *gameName)
     fs_packFiles = 0;
 
     fs_debug = Cvar_Get("fs_debug", "0", 0);
+    Cvar_Get ("fs_overpath", Sys_BinaryPath(), CVAR_INIT|CVAR_PROTECTED );
     fs_basepath = Cvar_Get("fs_basepath", Sys_DefaultInstallPath(), CVAR_INIT | CVAR_PROTECTED);
     fs_basegame = Cvar_Get("fs_basegame", BASEGAME, CVAR_INIT);
 
@@ -3793,6 +3818,7 @@ void FS_InitFilesystem(void)
     // we have to specially handle this, because normal command
     // line variable sets don't happen until after the filesystem
     // has already been initialized
+    Com_StartupVariable("fs_overpath");
     Com_StartupVariable("fs_basepath");
     Com_StartupVariable("fs_homepath");
     Com_StartupVariable("fs_game");
