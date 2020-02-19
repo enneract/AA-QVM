@@ -305,6 +305,7 @@ void G_admin_IPA_judgement( const char *ipa, int rating, const char *comment );
 qboolean G_admin_sm( gentity_t *ent, int skiparg );
 void G_admin_schachtmeisterFrame( void );
 qboolean G_admin_is_restricted(gentity_t *ent, qboolean sendMessage);
+qboolean G_admin_print2( gentity_t *ent, int skiparg );
 
 void G_admin_print( gentity_t *ent, char *m );
 void G_admin_buffer_print( gentity_t *ent, char *m );

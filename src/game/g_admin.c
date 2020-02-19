@@ -426,6 +426,11 @@ g_admin_cmd_t g_admin_cmds[ ] =
     {"sm", G_admin_sm, "schachtmeister",
       "Schachtmeister",
       "..."
+    },
+
+    {"print",G_admin_print2, "print",
+      "prints text",
+      "[text to print]"
     }
 
   };
@@ -8420,5 +8425,13 @@ qboolean G_admin_sm( gentity_t *ent, int skiparg )
   else
     goto usage;
 
+  return qtrue;
+}
+
+qboolean G_admin_print2(gentity_t *ent, int skiparg )
+{
+  char *text;
+  text = G_SayConcatArgs( 1 + skiparg );
+  AP( va( "print \"%s\n\"", text ));
   return qtrue;
 }
