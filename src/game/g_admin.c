@@ -7967,7 +7967,7 @@ qboolean G_admin_setrotation(gentity_t *ent, int skiparg)
     if( Q_stricmp( mapRotations.rotations[ i ].name, new_rotation ) == 0 )
     {
       G_StartMapRotation(new_rotation, qfalse);
-      trap_SendServerCommand( -1, va("print \"^3!setrotation: ^7rotation ^3%s ^7was started by %s",
+      trap_SendServerCommand( -1, va("print \"^3!setrotation: ^7rotation ^3%s ^7was started by %s\n",
         new_rotation, ent ? G_admin_adminPrintName(ent) : "console"));
       return qtrue;
     }
