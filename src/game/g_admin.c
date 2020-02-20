@@ -449,6 +449,12 @@ g_admin_ban_t *g_admin_bans[ MAX_ADMIN_BANS ];
 g_admin_command_t *g_admin_commands[ MAX_ADMIN_COMMANDS ];
 g_admin_namelog_t *g_admin_namelog[ MAX_ADMIN_NAMELOGS ];
 
+static int admin_adminlog_index = 0;
+g_admin_adminlog_t *g_admin_adminlog[ MAX_ADMIN_ADMINLOGS ];
+
+static int admin_tklog_index = 0;
+g_admin_tklog_t *g_admin_tklog[ MAX_ADMIN_TKLOGS ];
+
 int G_admin_parse_time( const char *time );
 
 // match a certain flag within these flags
@@ -482,12 +488,6 @@ static qboolean admin_permission( char *flags, const char *flag, qboolean *perm 
 
   return qfalse;
 }
-
-static int admin_adminlog_index = 0;
-g_admin_adminlog_t *g_admin_adminlog[ MAX_ADMIN_ADMINLOGS ];
-
-static int admin_tklog_index = 0;
-g_admin_tklog_t *g_admin_tklog[ MAX_ADMIN_TKLOGS ];
 
 // This function should only be used directly when the client is connecting and thus has no GUID.
 // Else, use G_admin_permission() 
@@ -620,18 +620,13 @@ static qboolean admin_higher_guid( char *admin_guid, char *victim_guid )
 {
   int i;
   int alevel = 0;
-  int alevel2 = 0;
+  qboolean perm = qfalse;
 
   for( i = 0; i < MAX_ADMIN_ADMINS && g_admin_admins[ i ]; i++ )
   {
     if( !Q_stricmp( admin_guid, g_admin_admins[ i ]->guid ) )
     {
       alevel = g_admin_admins[ i ]->level;
-
-      // Novelty Levels should be equivelant to level 1
-      if( alevel > 9 )
-        alevel = 1;
-
       break;
     }
   }
@@ -639,17 +634,9 @@ static qboolean admin_higher_guid( char *admin_guid, char *victim_guid )
   {
     if( !Q_stricmp( victim_guid, g_admin_admins[ i ]->guid ) )
     {
-      alevel2 = g_admin_admins[ i ]->level;
-
-      // Novelty Levels should be equivelant to level 1
-      if( alevel2 > 9 )
-        alevel2 = 1;
-
-      if( alevel < alevel2 )
+      if( alevel < g_admin_admins[ i ]->level )
         return qfalse;
-
-      if( strstr( g_admin_admins[ i ]->flags, va( "%s", ADMF_IMMUTABLE ) ) )
-        return qfalse;
+      return ( !admin_permission( g_admin_admins[ i ]->flags, ADMF_IMMUTABLE, &perm ) || !perm );
     }
   }
   return qtrue;
