@@ -243,6 +243,7 @@ vmCvar_t  g_schachtmeisterClearThreshold;
 vmCvar_t  g_schachtmeisterAutobahnThreshold;
 vmCvar_t  g_schachtmeisterAutobahnMessage;
 vmCvar_t  g_adminAutobahnNotify;
+vmCvar_t  g_maxGhosts;
 
 static cvarTable_t   gameCvarTable[ ] =
 {
@@ -464,7 +465,8 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_schachtmeisterClearThreshold, "g_schachtmeisterClearThreshold", "-10", CVAR_ARCHIVE, 0, qfalse },
   { &g_schachtmeisterAutobahnThreshold, "g_schachtmeisterAutobahnThreshold", "-30", CVAR_ARCHIVE, 0, qfalse },
   { &g_schachtmeisterAutobahnMessage, "g_schachtmeisterAutobahnMessage", "Your host is blacklisted.", CVAR_ARCHIVE, 0, qfalse },
-  { &g_adminAutobahnNotify, "g_adminAutobahnNotify", "1", CVAR_ARCHIVE, 0, qfalse }
+  { &g_adminAutobahnNotify, "g_adminAutobahnNotify", "1", CVAR_ARCHIVE, 0, qfalse },
+  { &g_maxGhosts, "g_maxGhosts", "0", CVAR_ARCHIVE, 0, qfalse }
 };
 
 static int gameCvarTableSize = sizeof( gameCvarTable ) / sizeof( gameCvarTable[ 0 ] );

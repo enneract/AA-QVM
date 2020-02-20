@@ -1428,7 +1428,7 @@ to the server machine, but qfalse on map changes and tournement
 restarts.
 ============
 */
-char *ClientConnect( int clientNum, qboolean firstTime )
+const char *ClientConnect( int clientNum, qboolean firstTime )
 {
   char      *value;
   gclient_t *client;
@@ -1441,6 +1441,9 @@ char *ClientConnect( int clientNum, qboolean firstTime )
 
   ent = &g_entities[ clientNum ];
 
+  if (ent->client && ent->client->pers.connected != CON_DISCONNECTED)
+    ClientDisconnect(clientNum);
+
   trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
   value = Info_ValueForKey( userinfo, "cl_guid" );
@@ -1452,13 +1455,14 @@ char *ClientConnect( int clientNum, qboolean firstTime )
     return va( "%s", reason );
   }
 
+
   // IP filtering
   // https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=500
   // recommanding PB based IP / GUID banning, the builtin system is pretty limited
   // check to see if they are on the banned IP list
   value = Info_ValueForKey( userinfo, "ip" );
   i = 0;
-  while( *value && i < sizeof( ip ) - 2 )
+  while( *value && i < sizeof( ip ) - 1 )
   {
     if( *value != '.' && ( *value < '0' || *value > '9' ) )
       break;
@@ -1472,8 +1476,33 @@ char *ClientConnect( int clientNum, qboolean firstTime )
   if( strlen( ip ) < 7 && strcmp( Info_ValueForKey( userinfo, "ip" ), "localhost" ) )
   {
     G_AdminsPrintf( "Connect from client with invalid IP: '%s' NAME: '%s^7'\n",
-                    ip, Info_ValueForKey( userinfo, "name" ) );
+      ip, Info_ValueForKey( userinfo, "name" ) );
     return "Invalid client data";
+  }
+
+  // limit max clients per IP
+  if( g_maxGhosts.integer > 1 )
+  {
+    gclient_t *other;
+    int count = 0;
+
+    for( i = 0 ; i < level.maxclients; i++ )
+    {
+      other = &level.clients[ i ];
+      if( other &&
+        ( other->pers.connected == CON_CONNECTED || other->pers.connected == CON_CONNECTING ) &&
+          strcmp( ip, other->pers.ip ) == 0 )
+      {
+        count++;
+      }
+    }
+
+    if( count + 1 > g_maxGhosts.integer )
+    {
+    G_AdminsPrintf( "Connect from client exceeds %d maximum connections per IP: '%s' NAME: '%s^7'\n",
+      g_maxGhosts.integer, ip, Info_ValueForKey( userinfo, "name" ) );
+      return "Maximum simultaneous clients exceeded";
+    }
   }
 
   // check for a password
@@ -1518,7 +1547,7 @@ char *ClientConnect( int clientNum, qboolean firstTime )
   memset( client, 0, sizeof(*client) );
 
   // add guid to session so we don't have to keep parsing userinfo everywhere
-  if( !guid[ 0 ] )
+  if( !guid[0] )
   {
     Q_strncpyz( client->pers.guid, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
       sizeof( client->pers.guid ) );
@@ -1527,22 +1556,8 @@ char *ClientConnect( int clientNum, qboolean firstTime )
   {
     Q_strncpyz( client->pers.guid, guid, sizeof( client->pers.guid ) );
   }
-
   Q_strncpyz( client->pers.ip, ip, sizeof( client->pers.ip ) );
   client->pers.adminLevel = G_admin_level( ent );
-
-  // do autoghost now so that there won't be any name conflicts later on
-  if ( g_autoGhost.integer && client->pers.guid[ 0 ] != 'X' )
-  {
-    for ( i = 0; i < MAX_CLIENTS; i++ )
-    {
-      if ( i != ent - g_entities && g_entities[i].client && g_entities[i].client->pers.connected != CON_DISCONNECTED && !Q_stricmp( g_entities[i].client->pers.guid, client->pers.guid ) )
-      {
-        trap_SendServerCommand( i, "disconnect \"You may not be connected to this server multiple times\"" );
-        trap_DropClient( i, "disconnected" );
-      }
-    }
-  }
 
   client->pers.connected = CON_CONNECTING;
 
@@ -1600,34 +1615,15 @@ char *ClientConnect( int clientNum, qboolean firstTime )
     G_admin_namelog_update( client, qfalse );
   }
 
+  if (smj)
+    G_AdminsPrintf( "%s^7 (#%d) has rating %d\n", client->pers.netname, clientNum, smj->rating );
+
   // if this is after !restart keepteams or !restart switchteams, apply said selection
   if ( client->sess.restartTeam != PTE_NONE ) {
     G_ChangeTeam( ent, client->sess.restartTeam );
     client->sess.restartTeam = PTE_NONE;
   }
 
-	if( !( G_admin_permission( ent, ADMF_NOAUTOBAHN ) ||
-	      G_admin_permission( ent, ADMF_IMMUNITY ) ) )
-  {
-    extern g_admin_namelog_t *g_admin_namelog[ 128 ];
-    for( i = 0; i < MAX_ADMIN_NAMELOGS && g_admin_namelog[ i ]; i++ )
-    {
-      if( !Q_stricmp( ip, g_admin_namelog[ i ]->ip ) || !Q_stricmp( guid, g_admin_namelog[ i ]->guid ) )
-      {
-        schachtmeisterJudgement_t *j = &g_admin_namelog[i]->smj;
-        if( j->ratingTime )
-        {
-          if( j->rating >= g_schachtmeisterClearThreshold.integer )
-            break;
-          else if( j->rating <= g_schachtmeisterAutobahnThreshold.integer )
-            return g_schachtmeisterAutobahnMessage.string;
-          G_AdminsPrintf( "%s^7 (#%d) has rating %d\n", ent->client->pers.netname, ent - g_entities, j->rating );
-        }
-        break;
-      }
-    }
-  }
-  
   return NULL;
 }
 

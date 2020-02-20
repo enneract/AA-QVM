@@ -1149,7 +1149,7 @@ qboolean G_Flood_Limited( gentity_t *ent );
 //
 // g_client.c
 //
-char *ClientConnect( int clientNum, qboolean firstTime );
+const char *ClientConnect( int clientNum, qboolean firstTime );
 void ClientUserinfoChanged( int clientNum, qboolean forceName );
 void ClientDisconnect( int clientNum );
 void ClientBegin( int clientNum );
@@ -1494,6 +1494,7 @@ extern  vmCvar_t  g_schachtmeisterClearThreshold;
 extern  vmCvar_t  g_schachtmeisterAutobahnThreshold;
 extern  vmCvar_t  g_schachtmeisterAutobahnMessage;
 extern  vmCvar_t  g_adminAutobahnNotify;
+extern  vmCvar_t  g_maxGhosts;
 
 void      trap_Printf( const char *fmt );
 void      trap_Error( const char *fmt );
