@@ -280,6 +280,7 @@ typedef enum
 #define EF_TELEPORT_BIT     0x00000002    // toggled every time the origin abruptly changes
 #define EF_PLAYER_EVENT     0x00000004
 #define EF_BOUNCE           0x00000008    // for missiles
+#define EF_ZOOM             0x00000008
 #define EF_BOUNCE_HALF      0x00000010    // for missiles
 #define EF_NO_BOUNCE_SOUND  0x00000020    // for missiles
 #define EF_WALLCLIMB        0x00000040    // TA: wall walking

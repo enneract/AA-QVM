@@ -587,6 +587,16 @@ void ClientTimerActions( gentity_t *ent, int msec )
   client->time1000 += msec;
   client->time10000 += msec;
 
+  // zoom detection
+  if( BG_InventoryContainsWeapon( WP_MASS_DRIVER, ent->client->ps.stats )
+      || BG_InventoryContainsWeapon( WP_LAS_GUN, ent->client->ps.stats ) )
+  {
+    if( ( ucmd->buttons & BUTTON_ATTACK2 ) && !( ent->client->ps.eFlags & EF_ZOOM ) )
+      client->ps.eFlags |= EF_ZOOM;      
+    else if( !( ucmd->buttons & BUTTON_ATTACK2 ) && ( ent->client->ps.eFlags & EF_ZOOM ) )
+      client->ps.eFlags &= ~EF_ZOOM;
+  }
+
   if( aForward == 0 && aRight == 0 )
     stopped = qtrue;
   else if( aForward <= 64 && aRight <= 64 )
