@@ -491,7 +491,7 @@ static qboolean admin_permission( char *flags, const char *flag, qboolean *perm 
 
 // This function should only be used directly when the client is connecting and thus has no GUID.
 // Else, use G_admin_permission() 
-qboolean G_admin_permission_guid( char *guid, const char* flag )
+qboolean G_admin_permission_guid( const char *guid, const char *flag )
 {
   int i;
   int l = 0;
@@ -514,8 +514,7 @@ qboolean G_admin_permission_guid( char *guid, const char* flag )
   for( i = 0; i < MAX_ADMIN_LEVELS && g_admin_levels[ i ]; i++ )
   {
     if( g_admin_levels[ i ]->level == l )
-      return admin_permission( g_admin_levels[ i ]->flags, flag, &perm ) &&
-        perm;
+      return admin_permission( g_admin_levels[ i ]->flags, flag, &perm ) && perm;
   }
   return qfalse;
 }
