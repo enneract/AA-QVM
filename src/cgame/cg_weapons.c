@@ -859,7 +859,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
   }
 
   //Zoom in / out sound
-  if( ( weaponNum == WP_LAS_GUN || weaponNum == WP_MASS_DRIVER ) &&
+  if( ( weaponNum == WP_MASS_DRIVER ) &&
        ( cent->currentState.eFlags & EF_ZOOM ) && !cent->zoomed )
   {
         trap_S_StartSound( cent->lerpOrigin, cent->currentState.number, 
@@ -873,7 +873,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
               cg.time + cg.time - cg.zoomTime - ZOOM_TIME );
         }
   }
-  else if ( ( weaponNum == WP_LAS_GUN || weaponNum == WP_MASS_DRIVER ) &&
+  else if ( ( weaponNum == WP_MASS_DRIVER ) &&
        !( cent->currentState.eFlags & EF_ZOOM ) && cent->zoomed )
   {
         trap_S_StartSound( cent->lerpOrigin, cent->currentState.number, 
