@@ -308,6 +308,7 @@ void G_admin_schachtmeisterFrame( void );
 qboolean G_admin_is_restricted(gentity_t *ent, qboolean sendMessage);
 qboolean G_admin_print2( gentity_t *ent, int skiparg );
 qboolean G_admin_switch( gentity_t *ent, int skiparg );
+qboolean G_admin_drug( gentity_t *ent, int skiparg );
 
 void G_admin_print( gentity_t *ent, char *m );
 void G_admin_buffer_print( gentity_t *ent, char *m );
