@@ -719,7 +719,7 @@ void teslaFire( gentity_t *ent )
   if( traceEnt->takedamage )
   {
     G_Damage( traceEnt, ent, ent, forward, tr.endpos,
-      TESLAGEN_DMG, 0, MOD_TESLAGEN );
+      TESLAGEN_DMG, DAMAGE_KNOCKBACK, MOD_TESLAGEN );
   }
 
   // snap the endpos to integers to save net bandwidth, but nudged towards the line
