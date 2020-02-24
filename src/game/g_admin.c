@@ -441,6 +441,11 @@ g_admin_cmd_t g_admin_cmds[ ] =
     {"drug", G_admin_drug, "drug",
       "induce a gas like effect on a player",
       "[^3name|slot#^7]"
+    },
+
+    {"god", G_admin_god, "god",
+      "makes a player invincible",
+      "[^3name|slot#^7]"
     }
 
   };
@@ -8547,5 +8552,60 @@ qboolean G_admin_drug( gentity_t *ent, int skiparg )
   ( ent ) ? G_admin_adminPrintName( ent ) : "console" ) );
 
   return qtrue;
+
+}
+
+qboolean G_admin_god( gentity_t *ent, int skiparg )
+{
+	int pids[ MAX_CLIENTS ];
+	char name[ MAX_NAME_LENGTH ], err[ MAX_STRING_CHARS ];
+	int minargc;
+	gentity_t *vic;
+
+	minargc = 2 + skiparg;
+
+	if( G_SayArgc() < minargc )
+	{
+		ADMP( "^3!god: ^7usage: !god [name|slot#]\n" );
+		return qfalse;
+	}
+
+	G_SayArgv( 1 + skiparg, name, sizeof( name ) );
+
+	if( G_ClientNumbersFromString( name, pids ) != 1 )
+	{
+		G_MatchOnePlayer( pids, err, sizeof( err ) );
+		ADMP( va( "^3!god: ^7%s\n", err ) );
+		return qfalse;
+	}
+
+	vic = &g_entities[ pids[ 0 ] ];
+
+	if( !ent )
+	{
+		ADMP( "^3!god: ^7sorry, but console cannot do this" );
+		return qfalse;
+	}
+
+	if( !admin_higher( ent, &g_entities[ pids[ 0 ] ] ) )
+	{
+		ADMP( "^3!god: ^7sorry, but that player has a higher admin"
+			" level than you\n" );
+		return qfalse;
+	}
+
+	vic->flags ^= FL_GODMODE;
+
+	if( vic->client->pers.godMode )
+		vic->client->pers.godMode = 0;
+	else
+		vic->client->pers.godMode = 1;
+
+	AP( va( "print \"^3!god: ^7godmode for %s ^7for %s ^7by %s^7\n\"",
+	( vic->client->pers.godMode ) ? "enabled" : "disabled",
+	vic->client->pers.netname,
+	( ent ) ? G_admin_adminPrintName( ent ) : "console" ) );
+
+	return qtrue;
 
 }

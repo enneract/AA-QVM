@@ -453,6 +453,7 @@ typedef struct
   qboolean            useUnlagged;
   statsCounters_t     statscounters;
   int                 bubbleTime;
+  int                 godMode;
 } clientPersistant_t;
 
 #define MAX_UNLAGGED_MARKERS 10
