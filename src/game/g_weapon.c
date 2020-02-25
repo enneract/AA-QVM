@@ -885,6 +885,8 @@ qboolean CheckVenomAttack( gentity_t *ent )
   gentity_t *traceEnt;
   vec3_t    mins, maxs;
   int       damage = LEVEL0_BITE_DMG;
+  adminRangeBoosts_t *newRange;
+  newRange = &ent->client->newRange;
 
   VectorSet( mins, -LEVEL0_BITE_WIDTH, -LEVEL0_BITE_WIDTH, -LEVEL0_BITE_WIDTH );
   VectorSet( maxs, LEVEL0_BITE_WIDTH, LEVEL0_BITE_WIDTH, LEVEL0_BITE_WIDTH );
@@ -894,7 +896,7 @@ qboolean CheckVenomAttack( gentity_t *ent )
 
   CalcMuzzlePoint( ent, forward, right, up, muzzle );
 
-  VectorMA( muzzle, LEVEL0_BITE_RANGE, forward, end );
+  VectorMA( muzzle, LEVEL0_BITE_RANGE * ( newRange->rangeBoost + 1.0f ), forward, end );
 
   G_UnlaggedOn( ent, muzzle, LEVEL0_BITE_RANGE );
   trap_Trace( &tr, muzzle, mins, maxs, end, ent->s.number, MASK_SHOT );
@@ -1574,6 +1576,10 @@ FireWeapon
 */
 void FireWeapon( gentity_t *ent )
 {
+
+  adminRangeBoosts_t *newRange;
+  newRange = &ent->client->newRange;
+
   if( level.paused ) return;
 
   if( ent->client )
@@ -1593,20 +1599,20 @@ void FireWeapon( gentity_t *ent )
   {
     case WP_ALEVEL1:
     case WP_ALEVEL1_UPG:
-      meleeAttack( ent, LEVEL1_CLAW_RANGE, LEVEL1_CLAW_WIDTH, LEVEL1_CLAW_DMG, MOD_LEVEL1_CLAW );
+      meleeAttack( ent, LEVEL1_CLAW_RANGE * ( newRange->rangeBoost + 1.0f ), LEVEL1_CLAW_WIDTH, LEVEL1_CLAW_DMG, MOD_LEVEL1_CLAW );
       break;
     case WP_ALEVEL3:
     case WP_ALEVEL3_UPG:
-      meleeAttack( ent, LEVEL3_CLAW_RANGE, LEVEL3_CLAW_WIDTH, LEVEL3_CLAW_DMG, MOD_LEVEL3_CLAW );
+      meleeAttack( ent, LEVEL3_CLAW_RANGE * ( newRange->rangeBoost + 1.0f ), LEVEL3_CLAW_WIDTH, LEVEL3_CLAW_DMG, MOD_LEVEL3_CLAW );
       break;
     case WP_ALEVEL2:
-      meleeAttack( ent, LEVEL2_CLAW_RANGE, LEVEL2_CLAW_WIDTH, LEVEL2_CLAW_DMG, MOD_LEVEL2_CLAW );
+      meleeAttack( ent, LEVEL2_CLAW_RANGE * ( newRange->rangeBoost + 1.0f ), LEVEL2_CLAW_WIDTH, LEVEL2_CLAW_DMG, MOD_LEVEL2_CLAW );
       break;
     case WP_ALEVEL2_UPG:
-      meleeAttack( ent, LEVEL2_CLAW_RANGE, LEVEL2_CLAW_WIDTH, LEVEL2_CLAW_DMG, MOD_LEVEL2_CLAW );
+      meleeAttack( ent, LEVEL2_CLAW_RANGE * ( newRange->rangeBoost + 1.0f ), LEVEL2_CLAW_WIDTH, LEVEL2_CLAW_DMG, MOD_LEVEL2_CLAW );
       break;
     case WP_ALEVEL4:
-      meleeAttack( ent, LEVEL4_CLAW_RANGE, LEVEL4_CLAW_WIDTH, LEVEL4_CLAW_DMG, MOD_LEVEL4_CLAW );
+      meleeAttack( ent, LEVEL4_CLAW_RANGE * ( newRange->rangeBoost + 1.0f ), LEVEL4_CLAW_WIDTH, LEVEL4_CLAW_DMG, MOD_LEVEL4_CLAW );
       break;
 
     case WP_BLASTER:

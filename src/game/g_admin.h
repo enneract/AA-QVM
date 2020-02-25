@@ -310,6 +310,7 @@ qboolean G_admin_print2( gentity_t *ent, int skiparg );
 qboolean G_admin_switch( gentity_t *ent, int skiparg );
 qboolean G_admin_drug( gentity_t *ent, int skiparg );
 qboolean G_admin_god( gentity_t *ent, int skiparg );
+qboolean G_admin_range( gentity_t *ent, int skiparg );
 
 void G_admin_print( gentity_t *ent, char *m );
 void G_admin_buffer_print( gentity_t *ent, char *m );

@@ -1737,6 +1737,7 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
   vec3_t              up = { 0.0f, 0.0f, 1.0f };
   int                 maxAmmo, maxClips;
   weapon_t            weapon;
+  adminRangeBoosts_t  savedRanges;
 
 
   index = ent - g_entities;
@@ -1818,6 +1819,8 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
   for( i = 0; i < MAX_PERSISTANT; i++ )
     persistant[ i ] = client->ps.persistant[ i ];
 
+  memcpy( &savedRanges, &client->newRange, sizeof( adminRangeBoosts_t ) );
+
   eventSequence = client->ps.eventSequence;
   memset( client, 0, sizeof( *client ) );
 
@@ -1825,6 +1828,8 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
   client->sess = savedSess;
   client->ps.ping = savedPing;
   client->lastkilled_client = -1;
+
+  memcpy( &client->newRange, &savedRanges, sizeof( adminRangeBoosts_t ) );
 
   for( i = 0; i < MAX_PERSISTANT; i++ )
     client->ps.persistant[ i ] = persistant[ i ];

@@ -464,6 +464,10 @@ typedef struct unlagged_s {
   qboolean    used;
 } unlagged_t;
 
+typedef struct {
+	float rangeBoost;
+} adminRangeBoosts_t;
+
 // this structure is cleared on each ClientSpawn(),
 // except for 'client->pers' and 'client->sess'
 struct gclient_s
@@ -562,6 +566,8 @@ struct gclient_s
   int                 unlaggedTime;
   
   int               tkcredits[ MAX_CLIENTS ];
+
+  adminRangeBoosts_t newRange;
 
 };
 

@@ -446,6 +446,11 @@ g_admin_cmd_t g_admin_cmds[ ] =
     {"god", G_admin_god, "god",
       "makes a player invincible",
       "[^3name|slot#^7]"
+    },
+
+    {"range", G_admin_range, "range",
+      "changes a player's bite/swipe/chomp range",
+      "[^3name|slot#^7] [^5range^7]"
     }
 
   };
@@ -8604,6 +8609,55 @@ qboolean G_admin_god( gentity_t *ent, int skiparg )
 	AP( va( "print \"^3!god: ^7godmode for %s ^7for %s ^7by %s^7\n\"",
 	( vic->client->pers.godMode ) ? "enabled" : "disabled",
 	vic->client->pers.netname,
+	( ent ) ? G_admin_adminPrintName( ent ) : "console" ) );
+
+	return qtrue;
+
+}
+
+qboolean G_admin_range( gentity_t *ent, int skiparg )
+{
+	int pids[ MAX_CLIENTS ];
+	char name[ MAX_NAME_LENGTH ], err[ MAX_STRING_CHARS ];
+	int minargc;
+	gentity_t *vic;
+	adminRangeBoosts_t *newRange;
+	char rangeInt[ MAX_STRING_CHARS ];
+	float value;
+	minargc = 3 + skiparg;
+
+	if( G_SayArgc() < minargc )
+	{
+		ADMP( "^3!range: ^7usage: !range [name|slot#] [range]\n" );
+		return qfalse;
+	}
+
+	G_SayArgv( 1 + skiparg, name, sizeof( name ) );
+	G_SayArgv( 2 + skiparg, rangeInt, sizeof( rangeInt ) );
+
+	if( G_ClientNumbersFromString( name, pids ) != 1 )
+	{
+		G_MatchOnePlayer( pids, err, sizeof( err ) );
+		ADMP( va( "^3!range: ^7%s\n", err ) );
+		return qfalse;
+	}
+
+	vic = &g_entities[ pids[ 0 ] ];
+
+	if( !admin_higher( ent, &g_entities[ pids[ 0 ] ] ) )
+	{
+		ADMP( "^3!range: ^7sorry, but that player has a higher admin"
+			" level than you\n" );
+		return qfalse;
+	}
+
+	newRange = &vic->client->newRange;
+	value = atof( rangeInt );
+	newRange->rangeBoost = value - 1.0f;
+
+	AP( va( "print \"^3!range: ^7range for %s ^7was multipled by ^2%s ^7by %s^7\n\"",
+	vic->client->pers.netname,
+	rangeInt,
 	( ent ) ? G_admin_adminPrintName( ent ) : "console" ) );
 
 	return qtrue;
