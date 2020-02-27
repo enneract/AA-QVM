@@ -852,9 +852,11 @@ void Cmd_Team_f( gentity_t *ent )
       G_TriggerMenu( ent - g_entities, MN_A_TEAMFULL );
       return;
     }
-    
 
-    team = PTE_ALIENS;
+    if( G_admin_permission( ent, ADMF_NO_ALIENS ) )
+      team = PTE_HUMANS;
+    else
+      team = PTE_ALIENS;
   }
   else if( !Q_stricmpn( s, "human", 5 ) )
   {
@@ -883,7 +885,10 @@ void Cmd_Team_f( gentity_t *ent )
       return;
     }
 
-    team = PTE_HUMANS;
+    if( G_admin_permission( ent, ADMF_NO_HUMANS ) )
+      team = PTE_ALIENS;
+    else
+      team = PTE_HUMANS;
   }
   else if( !Q_stricmp( s, "auto" ) )
   {
@@ -900,6 +905,16 @@ void Cmd_Team_f( gentity_t *ent )
       team = PTE_HUMANS;
     else if( team == PTE_HUMANS && level.humanTeamLocked )
       team = PTE_ALIENS;
+
+    if( G_admin_permission( ent, ADMF_NO_ALIENS ) )
+      team = PTE_HUMANS;
+    else
+      team = PTE_ALIENS;
+
+    if( G_admin_permission( ent, ADMF_NO_HUMANS ) )
+      team = PTE_ALIENS;
+    else
+      team = PTE_HUMANS;
   }
   else
   {
