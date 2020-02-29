@@ -451,6 +451,11 @@ g_admin_cmd_t g_admin_cmds[ ] =
     {"range", G_admin_range, "range",
       "changes a player's bite/swipe/chomp range",
       "[^3name|slot#^7] [^5range^7]"
+    },
+
+    {"practise", G_admin_practise, "practise",
+      "enables practise mode",
+      "[^3on|off^7]"
     }
 
   };
@@ -8658,6 +8663,58 @@ qboolean G_admin_range( gentity_t *ent, int skiparg )
 	AP( va( "print \"^3!range: ^7range for %s ^7was multipled by ^2%s ^7by %s^7\n\"",
 	vic->client->pers.netname,
 	rangeInt,
+	( ent ) ? G_admin_adminPrintName( ent ) : "console" ) );
+
+	return qtrue;
+
+}
+
+qboolean G_admin_practise( gentity_t *ent, int skiparg )
+{
+	int minargc;
+	char arg[ MAX_STRING_CHARS ];
+	minargc = 2 + skiparg;
+
+	if( G_SayArgc() < minargc )
+	{
+		ADMP( "^3!practise: ^7usage: !practise [on|off]\n" );
+		return qfalse;
+	}
+
+	G_SayArgv( 1 + skiparg, arg, sizeof( arg ) );
+
+	if( !Q_stricmp( arg, "on" ) )
+	{
+		if( g_practise.integer )
+		{
+			ADMP( "^3!practise: ^7practise mode is already on\n" );
+			return qfalse;
+		}
+		trap_Cvar_Set( "g_practise", "1" );
+		trap_Cvar_Set( "g_alienStage", "2" );
+		trap_Cvar_Set( "g_humanStage", "2" );
+		strcpy( arg, "^2enabled^7" );
+	}
+	else if( !Q_stricmp( arg, "off" ) )
+	{
+		if( !g_practise.integer )
+		{
+			ADMP( "^3!practise: ^7practise mode is already off\n" );
+			return qfalse;
+		}
+		trap_Cvar_Set( "g_practise", "0" );
+		strcpy( arg, "^1disabled^7" );
+	}
+	else
+	{
+		ADMP( "^3!practise: ^7usage: !practise [on|off]\n" );
+		return qfalse;
+	}
+
+	ent->flags ^= FL_NOTARGET;
+
+	AP( va( "print \"^3!practise: ^7practise mode was %s by %s\n\"",
+	arg,
 	( ent ) ? G_admin_adminPrintName( ent ) : "console" ) );
 
 	return qtrue;

@@ -2757,14 +2757,17 @@ void Cmd_Class_f( gentity_t *ent )
 
     if( ent->client->pers.teamSelection == PTE_ALIENS )
     {
-      if( newClass != PCL_ALIEN_BUILDER0 &&
-          newClass != PCL_ALIEN_BUILDER0_UPG &&
-          newClass != PCL_ALIEN_LEVEL0 )
+      if( !g_practise.integer )
       {
-        trap_SendServerCommand( ent-g_entities,
-          va( "print \"You cannot spawn with class %s\n\"", s ) );
-        return;
-      } 
+        if( newClass != PCL_ALIEN_BUILDER0 &&
+            newClass != PCL_ALIEN_BUILDER0_UPG &&
+            newClass != PCL_ALIEN_LEVEL0 )
+        {
+          trap_SendServerCommand( ent-g_entities,
+            va( "print \"You cannot spawn with class %s\n\"", s ) );
+          return;
+        }
+      }
       
       if( !BG_ClassIsAllowed( newClass ) )
       {
@@ -2781,7 +2784,8 @@ void Cmd_Class_f( gentity_t *ent )
         return;
       }
       
-      if( ent->client->pers.denyBuild && ( newClass==PCL_ALIEN_BUILDER0 || newClass==PCL_ALIEN_BUILDER0_UPG ) )
+      if( ent->client->pers.denyBuild && ( newClass==PCL_ALIEN_BUILDER0 || newClass==PCL_ALIEN_BUILDER0_UPG )
+        || g_practise.integer && ( newClass==PCL_ALIEN_BUILDER0 || newClass==PCL_ALIEN_BUILDER0_UPG ) )
       {
         trap_SendServerCommand( ent-g_entities, "print \"Your building rights have been revoked\n\"" );
         return;
@@ -2805,12 +2809,22 @@ void Cmd_Class_f( gentity_t *ent )
       else if( !Q_stricmp( s, BG_FindNameForWeapon( WP_HBUILD ) ) &&
                BG_WeaponIsAllowed( WP_HBUILD ) )
       {
+        if( g_practise.integer )
+        {
+          trap_SendServerCommand( ent-g_entities, "print \"Your building rights have been revoked\n\"" );
+          return;
+        }
         ent->client->pers.humanItemSelection = WP_HBUILD;
       }
       else if( !Q_stricmp( s, BG_FindNameForWeapon( WP_HBUILD2 ) ) &&
                BG_WeaponIsAllowed( WP_HBUILD2 ) &&
                BG_FindStagesForWeapon( WP_HBUILD2, g_humanStage.integer ) )
       {
+        if( g_practise.integer )
+        {
+          trap_SendServerCommand( ent-g_entities, "print \"Your building rights have been revoked\n\"" );
+          return;
+        }
         ent->client->pers.humanItemSelection = WP_HBUILD2;
       }
       else

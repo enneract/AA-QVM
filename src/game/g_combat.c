@@ -1336,6 +1336,9 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
     
     if(targ->s.eType == ET_BUILDABLE && g_cheats.integer && g_devmapNoStructDmg.integer)
       return;
+
+    if( targ->s.eType == ET_BUILDABLE && g_practise.integer )
+      return;
   }
 
   // add to the attacker's hit counter

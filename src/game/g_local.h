@@ -1503,6 +1503,7 @@ extern  vmCvar_t  g_schachtmeisterAutobahnMessage;
 extern  vmCvar_t  g_adminAutobahnNotify;
 extern  vmCvar_t  g_maxGhosts;
 extern  vmCvar_t  g_specNoclip;
+extern  vmCvar_t  g_practise;
 
 void      trap_Printf( const char *fmt );
 void      trap_Error( const char *fmt );

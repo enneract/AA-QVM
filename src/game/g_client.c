@@ -1863,7 +1863,9 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
   ent->watertype = 0;
   ent->flags = 0;
   if( ent->client->pers.godMode )
-    ent->flags = FL_GODMODE;
+    ent->flags += FL_GODMODE;
+  if( g_practise.integer )
+   ent->flags += FL_NOTARGET;
 
   //TA: calculate each client's acceleration
   ent->evaluateAcceleration = qtrue;

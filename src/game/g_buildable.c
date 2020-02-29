@@ -1986,9 +1986,6 @@ void HMedistat_Think( gentity_t *self )
       {
         player = &g_entities[ entityList[ i ] ];
 
-    if( player->flags & FL_NOTARGET )
-      continue; // notarget cancels even beneficial effects?
-
         if( player->client && player->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
         {
           if( player->health < player->client->ps.stats[ STAT_MAX_HEALTH ] &&
@@ -3523,7 +3520,6 @@ static gentity_t *G_Build( gentity_t *builder, buildable_t buildable, vec3_t ori
   built->splashMethodOfDeath = BG_FindMODForBuildable( buildable );
 
   built->nextthink = BG_FindNextThinkForBuildable( buildable );
-
   built->takedamage = qtrue;
   built->spawned = qfalse;
   built->buildTime = built->s.time = level.time;

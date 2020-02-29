@@ -245,6 +245,7 @@ vmCvar_t  g_schachtmeisterAutobahnMessage;
 vmCvar_t  g_adminAutobahnNotify;
 vmCvar_t  g_maxGhosts;
 vmCvar_t  g_specNoclip;
+vmCvar_t  g_practise;
 
 static cvarTable_t   gameCvarTable[ ] =
 {
@@ -468,7 +469,8 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_schachtmeisterAutobahnMessage, "g_schachtmeisterAutobahnMessage", "Your host is blacklisted.", CVAR_ARCHIVE, 0, qfalse },
   { &g_adminAutobahnNotify, "g_adminAutobahnNotify", "1", CVAR_ARCHIVE, 0, qfalse },
   { &g_maxGhosts, "g_maxGhosts", "0", CVAR_ARCHIVE, 0, qfalse },
-  { &g_specNoclip, "g_specNoclip", "0", CVAR_ARCHIVE, 0, qtrue }
+  { &g_specNoclip, "g_specNoclip", "0", CVAR_ARCHIVE, 0, qtrue },
+  { &g_practise, "g_practise", "0", CVAR_ARCHIVE, 0, qfalse }
 };
 
 static int gameCvarTableSize = sizeof( gameCvarTable ) / sizeof( gameCvarTable[ 0 ] );
@@ -860,8 +862,16 @@ void G_InitGame( int levelTime, int randomSeed, int restart )
     G_PrintRotations( );
 
   //reset stages
-  trap_Cvar_Set( "g_alienStage", va( "%d", S1 ) );
-  trap_Cvar_Set( "g_humanStage", va( "%d", S1 ) );
+  if( g_practise.integer )
+  {
+    trap_Cvar_Set( "g_alienStage", "2" );
+    trap_Cvar_Set( "g_humanStage", "2" );
+  }
+  else
+  {
+    trap_Cvar_Set( "g_alienStage", va( "%d", S1 ) );
+    trap_Cvar_Set( "g_humanStage", va( "%d", S1 ) );
+  }
   trap_Cvar_Set( "g_alienKills", 0 );
   trap_Cvar_Set( "g_humanKills", 0 );
   trap_Cvar_Set( "g_suddenDeath", 0 );

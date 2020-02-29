@@ -1474,6 +1474,7 @@ void ClientThink_real( gentity_t *ent )
   int       msec;
   usercmd_t *ucmd;
   int       real_pm_type;
+  pTeam_t   team;
 
   client = ent->client;
 
@@ -1922,6 +1923,22 @@ void ClientThink_real( gentity_t *ent )
     client->pers.bubbleTime = level.time + 500;
     bubble = G_TempEntity( client->ps.origin, EV_PLAYER_TELEPORT_OUT );
     bubble->s.clientNum = ent->s.clientNum;
+  }
+
+  if( g_practise.integer )
+  {
+    if( team = PTE_ALIENS )
+    {
+      if( client->pers.credit < 9 )
+        G_AddCreditToClient( client, 9, qtrue );
+    }
+    if( team = PTE_HUMANS )
+    {
+      if( client->pers.credit < 2000 )
+        G_AddCreditToClient( client, 2000, qtrue );
+      else if( client->pers.credit > 2000 )
+        G_AddCreditToClient( client, -2000, qtrue );
+    }
   }
 }
 
