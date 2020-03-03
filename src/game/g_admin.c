@@ -8083,11 +8083,11 @@ qboolean G_admin_showff(gentity_t *ent, int skiparg)
 				continue;
 
 			if (client->pers.teamSelection == PTE_HUMANS)
-				Com_sprintf( team, sizeof( team ), "^4H", team);
+				Com_sprintf( team, sizeof( team ), "^4H" );
 			else if (client->pers.teamSelection == PTE_ALIENS)
-				Com_sprintf( team, sizeof( team ), "^1A", team);
+				Com_sprintf( team, sizeof( team ), "^1A" );
 			else
-				Com_sprintf( team, sizeof( team ), "^3S", team);
+				Com_sprintf( team, sizeof( team ), "^3S" );
 
 			ffpct = calc_ff_pct(&client->pers.statscounters);
 			ADMBP(va("%2d %s ^1%3d%% ^7%s^7\n", i, team, ffpct, client->pers.netname));
