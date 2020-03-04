@@ -908,13 +908,9 @@ void Cmd_Team_f( gentity_t *ent )
 
     if( G_admin_permission( ent, ADMF_NO_ALIENS ) )
       team = PTE_HUMANS;
-    else
-      team = PTE_ALIENS;
 
     if( G_admin_permission( ent, ADMF_NO_HUMANS ) )
       team = PTE_ALIENS;
-    else
-      team = PTE_HUMANS;
   }
   else
   {
