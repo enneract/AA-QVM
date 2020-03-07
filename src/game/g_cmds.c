@@ -2780,8 +2780,7 @@ void Cmd_Class_f( gentity_t *ent )
         return;
       }
       
-      if( ent->client->pers.denyBuild && ( newClass==PCL_ALIEN_BUILDER0 || newClass==PCL_ALIEN_BUILDER0_UPG )
-        || g_practise.integer && ( newClass==PCL_ALIEN_BUILDER0 || newClass==PCL_ALIEN_BUILDER0_UPG ) )
+      if( ent->client->pers.denyBuild && ( newClass==PCL_ALIEN_BUILDER0 || newClass==PCL_ALIEN_BUILDER0_UPG ) )
       {
         trap_SendServerCommand( ent-g_entities, "print \"Your building rights have been revoked\n\"" );
         return;
@@ -2805,22 +2804,12 @@ void Cmd_Class_f( gentity_t *ent )
       else if( !Q_stricmp( s, BG_FindNameForWeapon( WP_HBUILD ) ) &&
                BG_WeaponIsAllowed( WP_HBUILD ) )
       {
-        if( g_practise.integer )
-        {
-          trap_SendServerCommand( ent-g_entities, "print \"Your building rights have been revoked\n\"" );
-          return;
-        }
         ent->client->pers.humanItemSelection = WP_HBUILD;
       }
       else if( !Q_stricmp( s, BG_FindNameForWeapon( WP_HBUILD2 ) ) &&
                BG_WeaponIsAllowed( WP_HBUILD2 ) &&
                BG_FindStagesForWeapon( WP_HBUILD2, g_humanStage.integer ) )
       {
-        if( g_practise.integer )
-        {
-          trap_SendServerCommand( ent-g_entities, "print \"Your building rights have been revoked\n\"" );
-          return;
-        }
         ent->client->pers.humanItemSelection = WP_HBUILD2;
       }
       else
@@ -3044,6 +3033,13 @@ void Cmd_Destroy_f( gentity_t *ent )
     return;
   }
 
+  if( g_practise.integer )
+  {
+    trap_SendServerCommand( ent-g_entities,
+      "print \"You cannot build in practise mode\n\"" );
+    return;
+  }
+
   trap_Argv( 0, cmd, sizeof( cmd ) );
   if( Q_stricmp( cmd, "destroy" ) == 0 )
     deconstruct = qfalse;
@@ -3216,6 +3212,13 @@ void Cmd_Mark_f( gentity_t *ent )
   {
     trap_SendServerCommand( ent-g_entities,
       "print \"Your building rights have been revoked\n\"" );
+    return;
+  }
+
+  if( g_practise.integer )
+  {
+    trap_SendServerCommand( ent-g_entities,
+      "print \"You cannot build in practise mode\n\"" );
     return;
   }
 
@@ -3793,10 +3796,18 @@ void Cmd_Build_f( gentity_t *ent )
       "print \"Your building rights have been revoked\n\"" );
     return;
   }
+
   if( ent->client->pers.paused )
   {
     trap_SendServerCommand( ent-g_entities,
       "print \"You may not mark while paused\n\"" );
+    return;
+  }
+
+  if( g_practise.integer )
+  {
+    trap_SendServerCommand( ent-g_entities,
+      "print \"You cannot build in practise mode\n\"" );
     return;
   }
 
