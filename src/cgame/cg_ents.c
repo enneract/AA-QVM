@@ -947,11 +947,22 @@ static void CG_CalcEntityLerpPositions( centity_t *cent )
     return;
   }
 
-  if( cg_projectileNudge.integer > 0 &&
-    cent->currentState.eType == ET_MISSILE &&
-    !( cg.snap->ps.pm_flags & PMF_FOLLOW ) )
+  // cg_projectileNudge:
+  //       0 = no nudge
+  //       1 = ping based nudge only if unlagged and not playing a demo
+  //       2 = ping based nudge
+  //   other = custom nudge
+  if( cg_projectileNudge.integer != 0 &&
+      cent->currentState.eType == ET_MISSILE &&
+      !( cg.snap->ps.pm_flags & PMF_FOLLOW ) )
   {
-    timeshift = cg.ping;
+    if( cg_projectileNudge.integer == 1 )
+      if( cg_unlagged.integer && !cg.demoPlayback )
+        timeshift = cg.ping;
+    else if ( cg_projectileNudge.integer == 2 )
+      timeshift = cg.ping;
+    else
+      timeshift = cg_projectileNudge.integer;
   }
 
   // just use the current frame and evaluate as best we can
