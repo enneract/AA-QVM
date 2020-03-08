@@ -8715,7 +8715,8 @@ qboolean G_admin_practise( gentity_t *ent, int skiparg )
 		return qfalse;
 	}
 
-	ent->flags ^= FL_NOTARGET;
+	if( ent )
+		ent->flags ^= FL_NOTARGET;
 
 	AP( va( "print \"^3!practise: ^7practise mode was %s by %s\n\"",
 	arg,
