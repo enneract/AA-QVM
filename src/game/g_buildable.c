@@ -1521,8 +1521,58 @@ void ABooster_Touch( gentity_t *self, gentity_t *other, trace_t *trace )
   client->lastBoostedTime = level.time;
 }
 
+/*
+================
+ABooster_Think
 
+Boosts aliens that are in range and line of sight
+================
+*/
+void ABooster_Think( gentity_t *self )
+{
+  int i, num;
+  int entityList[ MAX_GENTITIES ];
+  vec3_t range, mins, maxs;
+  gentity_t *player;
+  gclient_t *client;
 
+  self->powered = G_IsOvermindBuilt( );
+
+  //if there is no creep nearby die
+  if( !G_FindCreep( self ) )
+  {
+    G_Damage( self, NULL, NULL, NULL, NULL, 10000, 0, MOD_SUICIDE );
+    return;
+  }
+
+  G_CreepSlow( self );
+
+  self->nextthink = level.time + BG_FindNextThinkForBuildable( self->s.modelindex );
+
+  VectorSet( range, REGEN_BOOST_RANGE, REGEN_BOOST_RANGE,
+             REGEN_BOOST_RANGE );
+  VectorAdd( self->r.currentOrigin, range, maxs );
+  VectorSubtract( self->r.currentOrigin, range, mins );
+
+  num = trap_EntitiesInBox( mins, maxs, entityList, MAX_GENTITIES );
+    for( i = 0; i < num; i++ )
+  {
+    player = &g_entities[ entityList[ i ] ];
+    client = player->client;
+
+    if( !client )
+      continue;
+
+    if( client->ps.stats[ STAT_PTEAM ] != PTE_ALIENS )
+      continue;
+
+    if( Distance( client->ps.origin, self->r.currentOrigin ) > REGEN_BOOST_RANGE )
+      continue;
+
+    client->ps.stats[ STAT_STATE ] |= SS_BOOSTED;
+    client->lastBoostedTime = level.time;
+  }
+}
 
 //==================================================================================
 
@@ -3550,7 +3600,7 @@ static gentity_t *G_Build( gentity_t *builder, buildable_t buildable, vec3_t ori
 
     case BA_A_BOOSTER:
       built->die = ABarricade_Die;
-      built->think = ABarricade_Think;
+      built->think = ABooster_Think;
       built->pain = ABarricade_Pain;
       built->touch = ABooster_Touch;
       break;
@@ -4378,11 +4428,13 @@ void G_CommitRevertedBuildable( gentity_t *ent )
     switch( ent->s.modelindex )
     {
       case BA_A_SPAWN:
-         ent->think = ASpawn_Think;
-         break;
-      case BA_A_BARRICADE: 
-      case BA_A_BOOSTER:
+        ent->think = ASpawn_Think;
+        break;
+      case BA_A_BARRICADE:
         ent->think = ABarricade_Think;
+        break;
+      case BA_A_BOOSTER:
+        ent->think = ABooster_Think;
         break;
       case BA_A_ACIDTUBE:
         ent->think = AAcidTube_Think;
