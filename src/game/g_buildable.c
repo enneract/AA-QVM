@@ -1549,6 +1549,9 @@ void ABooster_Think( gentity_t *self )
 
   self->nextthink = level.time + BG_FindNextThinkForBuildable( self->s.modelindex );
 
+  if( !self->spawned || !self->powered || self->health <= 0 )
+    return;
+
   VectorSet( range, REGEN_BOOST_RANGE, REGEN_BOOST_RANGE,
              REGEN_BOOST_RANGE );
   VectorAdd( self->r.currentOrigin, range, maxs );
