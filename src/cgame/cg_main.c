@@ -1705,12 +1705,7 @@ static const char *CG_FeederItemText( float feederID, int index, int column, qha
   info = CG_InfoFromScoreIndex( index, team, &scoreIndex );
   sp = &cg.scores[ scoreIndex ];
 
-  if( ( atoi( CG_ConfigString( CS_CLIENTS_READY ) ) & ( 1 << sp->client ) ) &&
-      cg.intermissionStarted )
-    showIcons = qfalse;
-  else if( cg.snap->ps.pm_type == PM_SPECTATOR || cg.snap->ps.pm_flags & PMF_FOLLOW ||
-    team == cg.snap->ps.stats[ STAT_PTEAM ] || cg.intermissionStarted )
-    showIcons = qtrue;
+  showIcons = qtrue;
 
   if( info && info->infoValid )
   {
