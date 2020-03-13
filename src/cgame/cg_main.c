@@ -1707,6 +1707,10 @@ static const char *CG_FeederItemText( float feederID, int index, int column, qha
 
   showIcons = qtrue;
 
+  if( ( atoi( CG_ConfigString( CS_CLIENTS_READY ) ) & ( 1 << sp->client ) ) &&
+      cg.intermissionStarted )
+    showIcons = qfalse;
+
   if( info && info->infoValid )
   {
     switch( column )
