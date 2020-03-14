@@ -7517,7 +7517,7 @@ qboolean G_admin_invisible( gentity_t *ent, int skiparg )
     // Make the player invisible
     G_ChangeTeam( ent, PTE_NONE );
     ent->client->sess.invisible = qtrue;
-    ClientUserinfoChanged( ent->client->pers.connection->clientNum, qfalse );
+    ClientUserinfoChanged( ent-g_entities, qfalse );
     G_admin_namelog_update( ent->client, qtrue );
     trap_SendServerCommand( -1, va( "print \"%s" S_COLOR_WHITE " disconnected\n\"", ent->client->pers.netname ) );
   }
@@ -7525,7 +7525,7 @@ qboolean G_admin_invisible( gentity_t *ent, int skiparg )
   {
     // Make the player visible
     ent->client->sess.invisible = qfalse;
-    ClientUserinfoChanged( ent->client->pers.connection->clientNum, qfalse );
+    ClientUserinfoChanged( ent-g_entities, qfalse );
     G_admin_namelog_update( ent->client, qfalse );
     trap_SendServerCommand( -1, va( "print \"%s" S_COLOR_WHITE " connected\n\"", ent->client->pers.netname ) );
     trap_SendServerCommand( -1, va( "print \"%s" S_COLOR_WHITE " entered the game\n\"", ent->client->pers.netname ) );
