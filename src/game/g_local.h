@@ -217,6 +217,7 @@ struct gentity_s
   gentity_t         *overmindNode;      // controlling overmind
   qboolean          dcced;              // controlled by a dcc or not?
   qboolean          spawned;            // whether or not this buildable has finished spawning
+  int               shrunkTime;         // time when a barricade shrunk or zero
   int               buildTime;          // when this buildable was built
   int               animTime;           // last animation change
   int               time1000;           // timer evaluated every second
