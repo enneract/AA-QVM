@@ -1019,12 +1019,13 @@ void ABarricade_Shrink( gentity_t *self, qboolean shrink )
 
 /*
 ================
-ABarricade_Die
+AGeneric_Die
 
-Called when an alien spawn dies
+Called when an alien buildable dies
 ================
 */
-void ABarricade_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod )
+
+void AGeneric_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod )
 {
   buildHistory_t *new;
   new = G_Alloc( sizeof( buildHistory_t ) );
@@ -1052,8 +1053,6 @@ void ABarricade_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker,
   self->think = ABarricade_Blast;
   self->s.eFlags &= ~EF_FIRING; //prevent any firing effects
 
-  ABarricade_Shrink( self, qtrue );
-
   if( self->spawned )
     self->nextthink = level.time + 5000;
   else
@@ -1077,6 +1076,19 @@ void ABarricade_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker,
       BG_FindNameForBuildable( self->s.modelindex ),
       modNames[ mod ] );
   }
+}
+
+/*
+================
+ABarricade_Die
+
+Called when an alien spawn dies
+================
+*/
+void ABarricade_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod )
+{
+  AGeneric_Die( self, inflictor, attacker, damage, mod );
+  ABarricade_Shrink( self, qtrue );
 }
 
 /*
@@ -3709,26 +3721,26 @@ static gentity_t *G_Build( gentity_t *builder, buildable_t buildable, vec3_t ori
       break;
 
     case BA_A_BOOSTER:
-      built->die = ABarricade_Die;
+      built->die = AGeneric_Die;
       built->think = ABooster_Think;
       built->pain = ABarricade_Pain;
       built->touch = ABooster_Touch;
       break;
 
     case BA_A_ACIDTUBE:
-      built->die = ABarricade_Die;
+      built->die = AGeneric_Die;
       built->think = AAcidTube_Think;
       built->pain = ASpawn_Pain;
       break;
 
     case BA_A_HIVE:
-      built->die = ABarricade_Die;
+      built->die = AGeneric_Die;
       built->think = AHive_Think;
       built->pain = ASpawn_Pain;
       break;
 
     case BA_A_TRAPPER:
-      built->die = ABarricade_Die;
+      built->die = AGeneric_Die;
       built->think = ATrapper_Think;
       built->pain = ASpawn_Pain;
       break;
