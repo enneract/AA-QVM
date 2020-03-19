@@ -695,12 +695,15 @@ TESLA GENERATOR
 void teslaFire( gentity_t *ent )
 {
   trace_t   tr;
-  vec3_t    end;
+  vec3_t    end, origin;
   gentity_t *traceEnt, *tent;
 
   VectorMA( muzzle, TESLAGEN_RANGE, forward, end );
 
-  trap_Trace( &tr, muzzle, NULL, NULL, end, ent->s.number, MASK_SHOT );
+  // Move the muzzle from the entity origin up a bit to fire over turrets
+  VectorMA( muzzle, ent->r.maxs[ 2 ], ent->s.origin2, origin );
+
+  trap_Trace( &tr, origin, NULL, NULL, end, ent->s.number, MASK_SHOT );
 
   if( tr.entityNum == ENTITYNUM_NONE )
     return;
@@ -732,9 +735,6 @@ void teslaFire( gentity_t *ent )
 
   tent->s.generic1 = ent->s.number; //src
   tent->s.clientNum = traceEnt->s.number; //dest
-
-  // move origin a bit to come closer to the drawn gun muzzle
-  VectorMA( tent->s.origin2, 28, up, tent->s.origin2 );
 }
 
 
