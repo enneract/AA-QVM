@@ -930,7 +930,7 @@ int G_admin_level( gentity_t *ent )
 
   if( !ent )
   {
-    return MAX_ADMIN_LEVELS;
+    return 1000000;
   }
 
   for( i = 0; i < MAX_ADMIN_ADMINS && g_admin_admins[ i ]; i++ )
