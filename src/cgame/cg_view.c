@@ -829,8 +829,8 @@ static int CG_CalcFov( void )
 
 
   // set it
-  cg.refdef.fov_x = fov_x;
-  cg.refdef.fov_y = fov_y;
+  cg.refdef.fov_x = fov_x + ( cg_fov.integer - 90 );
+  cg.refdef.fov_y = fov_y + ( cg_fov.integer - 90 );
 
   if( !cg.zoomed )
     cg.zoomSensitivity = 1;
