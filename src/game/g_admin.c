@@ -1143,7 +1143,7 @@ static void admin_log( gentity_t *admin, char *cmd, int skiparg )
     G_AdminsPrintf("%s\n",string);
   }
   
-    G_LogPrintf("Admin Command: %s^7 (%s): %s %s\n",( admin ) ? admin->client->pers.netname : "console", ( admin ) ? admin->client->pers.adminName : "console", cmd, G_SayConcatArgs( 1 + skiparg ));
+    G_LogPrintf("Admin Command: %s^7 (%s^7): %s %s\n",( admin ) ? admin->client->pers.netname : "console", ( admin ) ? admin->client->pers.adminName : "console", cmd, G_SayConcatArgs( 1 + skiparg ));
 }
 
 static int admin_listadmins( gentity_t *ent, int start, char *search, int minlevel )
