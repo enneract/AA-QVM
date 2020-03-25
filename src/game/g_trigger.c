@@ -51,7 +51,7 @@ void multi_trigger( gentity_t *ent, gentity_t *activator )
   if( ent->nextthink )
     return;   // can't retrigger until the wait is over
 
-  if( activator->client )
+  if( activator && activator->client )
   {
     if( ( ent->spawnflags & 1 ) &&
         activator->client->ps.stats[ STAT_PTEAM ] != PTE_HUMANS )
