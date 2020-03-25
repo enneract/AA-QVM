@@ -2105,7 +2105,7 @@ void ClientDisconnect( int clientNum )
   if( ent->client->pers.connection )
     ent->client->pers.connection->clientNum = -1;
 
-  G_LogPrintf( "ClientDisconnect: %i [%s] (%s) \"%s\"\n", clientNum,
+  G_LogPrintf( "ClientDisconnect: %i [%s] (%s) \"%s^7\"\n", clientNum,
    ent->client->pers.ip, ent->client->pers.guid, ent->client->pers.netname );
 
   trap_UnlinkEntity( ent );
