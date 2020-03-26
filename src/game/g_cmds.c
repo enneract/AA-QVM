@@ -1051,7 +1051,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText )
      return;
 
   // Invisible players cannot use chat
-  if( ent->client->sess.invisible == qtrue )
+  if( ent && ent->client->sess.invisible == qtrue )
   {
     if( !G_admin_cmd_check( ent, qtrue ) )
       trap_SendServerCommand( ent-g_entities, "print \"You cannot chat while invisible\n\"" );
@@ -1065,22 +1065,24 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText )
   }
 
   // Spam limit: If they said this message recently, ignore it.
-  if( g_spamTime.integer )
+  if( ent )
   {
-    if ( ( level.time - ent->client->pers.lastMessageTime ) < ( g_spamTime.integer * 1000 ) &&
-         !Q_stricmp( ent->client->pers.lastMessage, chatText) &&
-         !G_admin_permission( ent, ADMF_NOCENSORFLOOD ) &&
-         ent->client->pers.floodDemerits <= g_floodMaxDemerits.integer )
+    if( g_spamTime.integer )
     {
-      trap_SendServerCommand( ent-g_entities, "print \"Your message has been ignored to prevent spam\n\"" );
-      return;
-    }
-    else
-    {
-      ent->client->pers.lastMessageTime = level.time;
-
-      Q_strncpyz( ent->client->pers.lastMessage, chatText,
-        sizeof( ent->client->pers.lastMessage ) );
+      if ( ( level.time - ent->client->pers.lastMessageTime ) < ( g_spamTime.integer * 1000 ) &&
+           !Q_stricmp( ent->client->pers.lastMessage, chatText) &&
+           !G_admin_permission( ent, ADMF_NOCENSORFLOOD ) &&
+           ent->client->pers.floodDemerits <= g_floodMaxDemerits.integer )
+      {
+        trap_SendServerCommand( ent-g_entities, "print \"Your message has been ignored to prevent spam\n\"" );
+        return;
+      }
+      else
+      {
+        ent->client->pers.lastMessageTime = level.time;
+        Q_strncpyz( ent->client->pers.lastMessage, chatText,
+          sizeof( ent->client->pers.lastMessage ) );
+      }
     }
   }
 
