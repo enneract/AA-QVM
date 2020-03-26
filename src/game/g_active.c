@@ -1472,7 +1472,6 @@ void ClientThink_real( gentity_t *ent )
   int       msec;
   usercmd_t *ucmd;
   int       real_pm_type;
-  pTeam_t   team;
 
   client = ent->client;
 
@@ -1925,12 +1924,12 @@ void ClientThink_real( gentity_t *ent )
 
   if( g_practise.integer )
   {
-    if( team = PTE_ALIENS )
+    if( client->pers.teamSelection == PTE_ALIENS )
     {
       if( client->pers.credit < 9 )
         G_AddCreditToClient( client, 9, qtrue );
     }
-    if( team = PTE_HUMANS )
+    if( client->pers.teamSelection == PTE_HUMANS )
     {
       if( client->pers.credit < 2000 )
         G_AddCreditToClient( client, 2000, qtrue );

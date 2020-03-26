@@ -479,7 +479,7 @@ static void G_CreepSlow( gentity_t *self )
   {
     enemy = &g_entities[ entityList[ i ] ];
 
-    if( enemy->flags & FL_NOTARGET )
+    if( enemy->flags & FL_NOTARGET || g_practise.integer )
       continue;
 
     if( enemy->client && enemy->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS &&
@@ -822,7 +822,7 @@ void AOvermind_Think( gentity_t *self )
     {
       enemy = &g_entities[ entityList[ i ] ];
 
-      if( enemy->flags & FL_NOTARGET ) 
+      if( enemy->flags & FL_NOTARGET || g_practise.integer ) 
         continue;
 
       if( enemy->client && enemy->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
@@ -1222,7 +1222,7 @@ void AAcidTube_Think( gentity_t *self )
     {
       enemy = &g_entities[ entityList[ i ] ];
 
-      if( enemy->flags & FL_NOTARGET )
+      if( enemy->flags & FL_NOTARGET || g_practise.integer )
         continue;
 
       if( !G_Visible( self, enemy ) )
@@ -1295,7 +1295,7 @@ void AHive_Think( gentity_t *self )
     {
       enemy = &g_entities[ entityList[ i ] ];
 
-      if( enemy->flags & FL_NOTARGET )
+      if( enemy->flags & FL_NOTARGET || g_practise.integer )
         continue;
 
       if( enemy->health <= 0 )
@@ -1770,7 +1770,7 @@ qboolean ATrapper_CheckTarget( gentity_t *self, gentity_t *target, int range )
     return qfalse;
   if( !target->client ) // is the target a bot or player?
     return qfalse;
-  if( target->flags & FL_NOTARGET ) // is the target cheating?
+  if( target->flags & FL_NOTARGET || g_practise.integer ) // is the target cheating?
     return qfalse;
   if( target->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS ) // one of us?
     return qfalse;
@@ -1961,7 +1961,7 @@ void HReactor_Think( gentity_t *self )
     {
       enemy = &g_entities[ entityList[ i ] ];
 
-      if( enemy->flags & FL_NOTARGET )
+      if( enemy->flags & FL_NOTARGET || g_practise.integer )
         continue;
 
       if( enemy->client && enemy->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
@@ -2313,7 +2313,7 @@ qboolean HMGTurret_CheckTarget( gentity_t *self, gentity_t *target, qboolean ign
   if( !target )
     return qfalse;
 
-  if( target->flags & FL_NOTARGET )
+  if( target->flags & FL_NOTARGET || g_practise.integer )
     return qfalse;
 
   if( !target->client )
@@ -2538,7 +2538,7 @@ void HTeslaGen_Think( gentity_t *self )
     {
       enemy = &g_entities[ entityList[ i ] ];
 
-      if( enemy->flags & FL_NOTARGET )
+      if( enemy->flags & FL_NOTARGET || g_practise.integer )
         continue;
 
       if( enemy->client && enemy->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS &&
