@@ -1958,7 +1958,7 @@ static void PM_GroundClimbTrace( void )
     pm->ps->eFlags &= ~EF_WALLCLIMB;
 
     //just transided from ceiling to floor... apply delta correction
-    if( pm->ps->stats[ STAT_STATE ] & SS_WALLCLIMBINGCEILING )
+    if( ( pm->ps->stats[ STAT_STATE ] & SS_WALLCLIMBINGCEILING ) || pm->ps->grapplePoint[2] < 0 )
     {
       vec3_t  forward, rotated, angles;
 
@@ -2043,7 +2043,7 @@ static void PM_GroundTrace( void )
     }
 
     //just transided from ceiling to floor... apply delta correction
-    if( pm->ps->stats[ STAT_STATE ] & SS_WALLCLIMBINGCEILING )
+    if( ( pm->ps->stats[ STAT_STATE ] & SS_WALLCLIMBINGCEILING ) || pm->ps->grapplePoint[2] < 0 )
     {
       vec3_t  forward, rotated, angles;
 
