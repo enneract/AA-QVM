@@ -331,6 +331,7 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_votableMaps, "g_votableMaps", "", CVAR_ARCHIVE, 0, qtrue },
   { &g_suddenDeathVotePercent, "g_suddenDeathVotePercent", "74", CVAR_ARCHIVE, 0, qfalse },
   { &g_suddenDeathVoteDelay, "g_suddenDeathVoteDelay", "180", CVAR_ARCHIVE, 0, qfalse },
+  { &g_kickVotesPercent, "g_kickVotesPercent", "50", CVAR_ARCHIVE, 0, qfalse },
   { &g_customVote1, "g_customVote1", "", CVAR_ARCHIVE, 0, qfalse  },
   { &g_customVote2, "g_customVote2", "", CVAR_ARCHIVE, 0, qfalse  },
   { &g_customVote3, "g_customVote3", "", CVAR_ARCHIVE, 0, qfalse  },
