@@ -128,7 +128,7 @@ TEMPDIR=/tmp
 endif
 
 ifndef DEBUG_CFLAGS
-DEBUG_CFLAGS=-g -O0
+DEBUG_CFLAGS=-g3 -O1
 endif
 
 #############################################################################
@@ -186,17 +186,17 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
     -pipe -DUSE_ICON -g3
 
-  OPTIMIZEVM = -O3 -funroll-loops -fomit-frame-pointer
+  OPTIMIZEVM = -g3 -O1 -funroll-loops -fomit-frame-pointer
   OPTIMIZE = $(OPTIMIZEVM) -ffast-math
 
   ifeq ($(ARCH),x86_64)
-    OPTIMIZEVM = -O3 -fomit-frame-pointer -funroll-loops \
+    OPTIMIZEVM = -g3 -O1 -fomit-frame-pointer -funroll-loops \
       -falign-functions=2 -fstrength-reduce
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED = true
   else
   ifeq ($(ARCH),x86)
-    OPTIMIZEVM = -O3 -march=i586 -fomit-frame-pointer \
+    OPTIMIZEVM = -g3 -O1 -march=i586 -fomit-frame-pointer \
       -funroll-loops -falign-functions=2 -fstrength-reduce
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED=true
@@ -253,7 +253,7 @@ ifeq ($(PLATFORM),darwin)
 
   ifeq ($(ARCH),ppc)
     BASE_CFLAGS += -arch ppc -faltivec
-    OPTIMIZEVM += -O3
+    OPTIMIZEVM += -g3 -O1
   endif
   ifeq ($(ARCH),ppc64)
     BASE_CFLAGS += -arch ppc64 -faltivec
@@ -353,13 +353,13 @@ ifeq ($(PLATFORM),mingw32)
   endif
 
   ifeq ($(ARCH),x86_64)
-    OPTIMIZEVM = -O3 -fno-omit-frame-pointer \
+    OPTIMIZEVM = -g3 -O1 -fno-omit-frame-pointer \
       -funroll-loops -falign-functions=2 -fstrength-reduce
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED = true
   endif
   ifeq ($(ARCH),x86)
-    OPTIMIZEVM = -O3 -march=i586 -fno-omit-frame-pointer \
+    OPTIMIZEVM = -g3 -O1 -march=i586 -fno-omit-frame-pointer \
       -funroll-loops -falign-functions=2 -fstrength-reduce
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED = true
@@ -399,7 +399,7 @@ ifeq ($(PLATFORM),freebsd)
   BASE_CFLAGS = -Wall -fno-strict-aliasing -DUSE_ICON
   HAVE_VM_COMPILED = true
 
-  OPTIMIZEVM = -O3 -funroll-loops -fomit-frame-pointer
+  OPTIMIZEVM = -g3 -O1 -funroll-loops -fomit-frame-pointer
   OPTIMIZE = $(OPTIMIZEVM) -ffast-math
 
   SHLIBEXT=so
@@ -431,17 +431,17 @@ ifeq ($(PLATFORM),openbsd)
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
     -pipe -DUSE_ICON -DMAP_ANONYMOUS=MAP_ANON
 
-  OPTIMIZEVM = -O3 -funroll-loops -fomit-frame-pointer
+  OPTIMIZEVM = -g3 -O1 -funroll-loops -fomit-frame-pointer
   OPTIMIZE = $(OPTIMIZEVM) -ffast-math
 
   ifeq ($(ARCH),x86_64)
-    OPTIMIZEVM = -O3 -fomit-frame-pointer -funroll-loops \
+    OPTIMIZEVM = -g3 -O1 -fomit-frame-pointer -funroll-loops \
       -falign-functions=2 -fstrength-reduce
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED = true
   else
   ifeq ($(ARCH),x86)
-    OPTIMIZEVM = -O3 -march=i586 -fomit-frame-pointer \
+    OPTIMIZEVM = -g3 -O1 -march=i586 -fomit-frame-pointer \
       -funroll-loops -falign-functions=2 -fstrength-reduce
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
     HAVE_VM_COMPILED=true
@@ -507,7 +507,7 @@ ifeq ($(PLATFORM),irix64)
 
   BASE_CFLAGS=-Dstricmp=strcasecmp -Xcpluscomm -woff 1185 \
     -I. -I$(ROOT)/usr/include
-  OPTIMIZE = -O3
+  OPTIMIZE = -g3 -O1
 
   SHLIBEXT=so
   SHLIBCFLAGS=
@@ -536,10 +536,10 @@ ifeq ($(PLATFORM),sunos)
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
     -pipe -DUSE_ICON
 
-  OPTIMIZEVM = -O3 -funroll-loops
+  OPTIMIZEVM = -g3 -O1 -funroll-loops
 
   ifeq ($(ARCH),sparc)
-    OPTIMIZEVM += -O3 \
+    OPTIMIZEVM += -g3 -O1 \
       -fstrength-reduce -falign-functions=2 \
       -mtune=ultrasparc3 -mv8plus -mno-faster-structs
     HAVE_VM_COMPILED=true
@@ -566,7 +566,7 @@ else # ifeq sunos
 # SETUP AND BUILD -- GENERIC
 #############################################################################
   BASE_CFLAGS=
-  OPTIMIZE = -O3
+  OPTIMIZE = -g3 -O1
 
   SHLIBEXT=so
   SHLIBCFLAGS=-fPIC
@@ -624,8 +624,7 @@ endif
 
 ifneq ($(BUILD_GAME_QVM),0)
   ifeq ($(BUILD_ONLY_GAME),1)
-    TARGETS += \
-      $(B)/out/$(BASEGAME)/vm/game.qvm
+
   else
     ifeq ($(BUILD_ONLY_CGUI),1)
       TARGETS += \
@@ -635,7 +634,6 @@ ifneq ($(BUILD_GAME_QVM),0)
     else
       TARGETS += \
         $(B)/out/$(BASEGAME)/vm/cgame.qvm \
-        $(B)/out/$(BASEGAME)/vm/game.qvm \
         $(B)/out/$(BASEGAME)/vm/ui.qvm \
         $(B)/out/$(BASEGAME)/vms-gpp1-$(VERSION).pk3
     endif
@@ -1097,9 +1095,6 @@ $(B)/out/$(BASEGAME)/game$(SHLIBNAME): $(GOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(GOBJ)
 
-$(B)/out/$(BASEGAME)/vm/game.qvm: $(GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
-	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(GVMOBJ) $(GDIR)/g_syscalls.asm
 
 
 
@@ -1151,7 +1146,7 @@ $(B)/out/$(BASEGAME)_11/vm/ui.qvm: $(UIVMOBJ11) $(UIDIR)/ui_syscalls_11.asm $(Q3
 #############################################################################
 
 ifeq ($(BUILD_ONLY_CGUI),0)
-  $(B)/out/$(BASEGAME)/vms-gpp1-$(VERSION).pk3: $(B)/out/$(BASEGAME)/vm/ui.qvm $(B)/out/$(BASEGAME)/vm/cgame.qvm $(B)/out/$(BASEGAME)/vm/game.qvm
+  $(B)/out/$(BASEGAME)/vms-gpp1-$(VERSION).pk3: $(B)/out/$(BASEGAME)/vm/ui.qvm $(B)/out/$(BASEGAME)/vm/cgame.qvm
 	  @(cd $(B)/out/$(BASEGAME) && zip -r vms-gpp1-$(VERSION).pk3 vm/)
   else
     $(B)/out/$(BASEGAME)/vms-gpp1-$(VERSION).pk3: $(B)/out/$(BASEGAME)/vm/ui.qvm $(B)/out/$(BASEGAME)/vm/cgame.qvm
