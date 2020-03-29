@@ -3019,6 +3019,63 @@ static void CG_DrawCenterString( void )
 
 //==============================================================================
 
+/*
+==============
+CG_DrawSpeed
+
+Ideally this should be a part of the HUD but that would require updating
+all the custom ones
+==============
+*/
+static void CG_DrawSpeed( void )
+{
+  vec4_t white = { 1.0f, 1.0f, 1.0f, 0.6f };
+  vec3_t xyvelocity;
+  int x, y;
+  float speed, dot;
+
+  switch( cg_drawSpeed.integer & 3 )
+  {
+    case 0:
+      return;
+
+    case 1:
+      x = 8;
+      y = 360;
+      break;
+
+    case 2:
+      x = 360;
+      y = 240;
+      break;
+
+    case 3:
+      x = 570;
+      y = 200;
+      break;
+  }
+
+  if( cg_drawSpeed.integer & 4 )
+  {
+    speed = VectorLength( cg.predictedPlayerState.velocity );
+  }
+  else
+  {
+    dot = DotProduct( cg.predictedPlayerState.velocity, cg.predictedPlayerState.grapplePoint );
+    VectorMA( cg.predictedPlayerState.velocity, -dot, cg.predictedPlayerState.grapplePoint, xyvelocity );
+    speed = VectorLength( xyvelocity );
+  }
+
+  if( speed > cg.topSpeed || cg.time > cg.topSpeedTime + 3000 )
+  {
+    cg.topSpeed = speed;
+    cg.topSpeedTime = cg.time;
+  }
+
+  CG_Text_Paint( x, y, 0.3f, white, va( "%.0f %.0f", cg.topSpeed, speed),
+                 0, 0, ITEM_TEXTSTYLE_NORMAL );
+}
+
 //FIXME: both vote notes are hardcoded, change to ownerdrawn?
 
 /*
@@ -3288,6 +3345,7 @@ static void CG_Draw2D( void )
   else if( cg_drawStatus.integer )
     Menu_Paint( defaultMenu, qtrue );
 
+  CG_DrawSpeed( );
   CG_DrawVote( );
   CG_DrawTeamVote( );
   CG_DrawFollow( );

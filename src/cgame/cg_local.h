@@ -1140,6 +1140,10 @@ typedef struct
   playerState_t savedPmoveStates[ NUM_SAVED_STATES ];
   int           stateHead, stateTail;
   int           ping;
+
+  // speedometer
+  float         topSpeed;
+  int           topSpeedTime;
 } cg_t;
 
 
@@ -1429,6 +1433,7 @@ extern  vmCvar_t    cg_drawTeamOverlay;
 extern  vmCvar_t    cg_teamOverlayUserinfo;
 extern  vmCvar_t    cg_crosshairX;
 extern  vmCvar_t    cg_crosshairY;
+extern  vmCvar_t    cg_drawSpeed;
 extern  vmCvar_t    cg_drawStatus;
 extern  vmCvar_t    cg_draw2D;
 extern  vmCvar_t    cg_animSpeed;
