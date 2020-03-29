@@ -2374,9 +2374,10 @@ void Cmd_CallTeamVote_f( gentity_t *ent )
       Q_CleanStr( name );
       if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) )
       {
-       char reasonprint[ MAX_STRING_CHARS ] = "";
-       if( reason[ 0 ] != '\0' )
-        Com_sprintf(reasonprint, sizeof(reasonprint), "With reason: %s", reason);
+        char reasonprint[ MAX_STRING_CHARS ] = {0};
+
+        if( reason[ 0 ] != '\0' )
+          Com_sprintf(reasonprint, sizeof(reasonprint), "With reason: %s", reason);
 
         Com_sprintf( message, sizeof( message ), "%s^7 attempted /callteamvote %s %s on immune admin %s^7 %s^7",
           ent->client->pers.netname, arg1, arg2, g_entities[ clientNum ].client->pers.netname, reasonprint );
@@ -5043,8 +5044,7 @@ static void Cmd_Ignore_f( gentity_t *ent )
      return;
    }
 
-  if( g_floodMinTime.integer )
-   if ( G_Flood_Limited( ent ) )
+   if( g_floodMinTime.integer && G_Flood_Limited( ent ) )
    {
     trap_SendServerCommand( ent-g_entities, "print \"Your chat is flood-limited; wait before chatting again\n\"" );
     return;
@@ -5607,7 +5607,7 @@ void G_PrivateMessage( gentity_t *ent )
       matches,
       color,
       msg,
-      ent ? ent-g_entities : -1 ) );
+      ent ? (int)(ent-g_entities) : -1 ) );
 
     trap_SendServerCommand( pids[ i ], va( 
       "cp \"^%cprivate message from ^7%s^7\"", color,

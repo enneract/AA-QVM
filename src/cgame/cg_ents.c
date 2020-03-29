@@ -844,7 +844,7 @@ void CG_AdjustPositionForMover( const vec3_t in, int moverNum, int fromTime, int
 {
   centity_t *cent;
   vec3_t    oldOrigin, origin, deltaOrigin;
-  vec3_t    oldAngles, angles, deltaAngles;
+  vec3_t    oldAngles, angles;
 
   if( moverNum <= 0 || moverNum >= ENTITYNUM_MAX_NORMAL )
   {
@@ -867,7 +867,6 @@ void CG_AdjustPositionForMover( const vec3_t in, int moverNum, int fromTime, int
   BG_EvaluateTrajectory( &cent->currentState.apos, toTime, angles );
 
   VectorSubtract( origin, oldOrigin, deltaOrigin );
-  VectorSubtract( angles, oldAngles, deltaAngles );
 
   VectorAdd( in, deltaOrigin, out );
 
@@ -957,8 +956,10 @@ static void CG_CalcEntityLerpPositions( centity_t *cent )
       !( cg.snap->ps.pm_flags & PMF_FOLLOW ) )
   {
     if( cg_projectileNudge.integer == 1 )
+    {
       if( cg_unlagged.integer && !cg.demoPlayback )
         timeshift = cg.ping;
+    }
     else if ( cg_projectileNudge.integer == 2 )
       timeshift = cg.ping;
     else

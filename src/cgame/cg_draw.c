@@ -862,7 +862,7 @@ static void CG_DrawPlayerPoisonBarbs( rectDef_t *rect, vec4_t color, qhandle_t s
     vertical = qtrue;
     iconsize = width;
   }
-  else if( height <= width )
+  else
   {
     vertical = qfalse;
     iconsize = height;
@@ -1270,7 +1270,7 @@ static void CG_DrawLoadingString( rectDef_t *rect, float text_x, float text_y, v
     return;
 
   strcpy( buffer, s );
-  tw = CG_Text_Width( s, scale, 0 );
+  CG_Text_Width( s, scale, 0 );
   th = scale * 40.0f;
 
   pos = i = 0;
@@ -1795,17 +1795,14 @@ CG_DrawTimerMins
 */
 static void CG_DrawTimerMins( rectDef_t *rect, vec4_t color )
 {
-  int     mins, seconds;
+  int     mins;
   int     msec;
 
   if( !cg_drawTimer.integer )
     return;
 
   msec = cg.time - cgs.levelStartTime;
-
-  seconds = msec / 1000;
-  mins = seconds / 60;
-  seconds -= mins * 60;
+  mins = msec / 1000 / 60;
 
   trap_R_SetColor( color );
   CG_DrawField( rect->x, rect->y, 3, rect->w / 3, rect->h, mins );
@@ -1820,17 +1817,14 @@ CG_DrawTimerSecs
 */
 static void CG_DrawTimerSecs( rectDef_t *rect, vec4_t color )
 {
-  int     mins, seconds;
+  int     seconds;
   int     msec;
 
   if( !cg_drawTimer.integer )
     return;
 
   msec = cg.time - cgs.levelStartTime;
-
-  seconds = msec / 1000;
-  mins = seconds / 60;
-  seconds -= mins * 60;
+  seconds = msec / 1000 % 60;
 
   trap_R_SetColor( color );
   CG_DrawFieldPadded( rect->x, rect->y, 2, rect->w / 2, rect->h, seconds );
@@ -1907,12 +1901,11 @@ static void CG_DrawClock( rectDef_t *rect, float text_x, float text_y,
   char    *s;
   int     i, tx, w, totalWidth, strLength;
   qtime_t qt;
-  int     t;
 
   if( !cg_drawClock.integer )
     return;
 
-  t = trap_RealTime( &qt );
+  trap_RealTime( &qt );
 
   if( cg_drawClock.integer == 2 )
   {
@@ -2910,10 +2903,6 @@ CG_DrawLighting
 */
 static void CG_DrawLighting( void )
 {
-  centity_t   *cent;
-
-  cent = &cg_entities[ cg.snap->ps.clientNum ];
-
   //fade to black if stamina is low
   if( ( cg.snap->ps.stats[ STAT_STAMINA ] < -800 ) &&
       ( cg.snap->ps.stats[ STAT_PTEAM ] == PTE_HUMANS ) )
@@ -3113,7 +3102,6 @@ static void CG_DrawTeamVote( void )
 static qboolean CG_DrawScoreboard( void )
 {
   static qboolean firstTime = qtrue;
-  float fade, *fadeColor;
 
   if( menuScoreboard )
     menuScoreboard->window.flags &= ~WINDOW_FORCED;
@@ -3125,13 +3113,8 @@ static qboolean CG_DrawScoreboard( void )
     return qfalse;
   }
 
-  if( cg.showScores ||
-      cg.predictedPlayerState.pm_type == PM_INTERMISSION )
-  {
-    fade = 1.0;
-    fadeColor = colorWhite;
-  }
-  else
+  if( !cg.showScores &&
+      cg.predictedPlayerState.pm_type != PM_INTERMISSION )
   {
     cg.deferredPlayerLoading = 0;
     cg.killerName[ 0 ] = 0;

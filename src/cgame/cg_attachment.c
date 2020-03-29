@@ -371,7 +371,7 @@ void CG_SetAttachmentTag( attachment_t *a, refEntity_t parent,
 
   a->parent = parent;
   a->model = model;
-  strncpy( a->tagName, tagName, MAX_STRING_CHARS );
+  strncpy( a->tagName, tagName, MAX_STRING_CHARS - 1 );
   a->tagValid = qtrue;
 }
 

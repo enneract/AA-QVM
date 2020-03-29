@@ -245,8 +245,6 @@ CG_CheckLocalSounds
 */
 void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops )
 {
-  int reward;
-
   // don't play the sounds if the player just changed teams
   if( ps->persistant[ PERS_TEAM ] != ops->persistant[ PERS_TEAM ] )
     return;
@@ -262,9 +260,6 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops )
   // if we are going into the intermission, don't start any voices
   if( cg.intermissionStarted )
     return;
-
-  // reward sounds
-  reward = qfalse;
 }
 
 

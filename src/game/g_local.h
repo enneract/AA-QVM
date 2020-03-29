@@ -1304,7 +1304,7 @@ connectionRecord_t  *G_FindConnectionForCode( int code );
 extern  level_locals_t  level;
 extern  gentity_t       g_entities[ MAX_GENTITIES ];
 
-#define FOFS(x) ((int)&(((gentity_t *)0)->x))
+#define FOFS(x) ((intptr_t)&(((gentity_t *)0)->x))
 
 extern  vmCvar_t  g_dedicated;
 extern  vmCvar_t  g_cheats;

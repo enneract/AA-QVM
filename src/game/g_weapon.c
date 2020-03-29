@@ -451,11 +451,7 @@ LOCKBLOB
 
 void lockBlobLauncherFire( gentity_t *ent )
 {
-  gentity_t *m;
-
-  m = fire_lockblob( ent, muzzle, forward );
-
-//  VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );  // "real" physics
+  fire_lockblob( ent, muzzle, forward );
 }
 
 /*
@@ -468,11 +464,7 @@ HIVE
 
 void hiveFire( gentity_t *ent )
 {
-  gentity_t *m;
-
-  m = fire_hive( ent, muzzle, forward );
-
-//  VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );  // "real" physics
+  fire_hive( ent, muzzle, forward );
 }
 
 /*
@@ -485,11 +477,7 @@ BLASTER PISTOL
 
 void blasterFire( gentity_t *ent )
 {
-  gentity_t *m;
-
-  m = fire_blaster( ent, muzzle, forward );
-
-//  VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );  // "real" physics
+  fire_blaster( ent, muzzle, forward );
 }
 
 /*
@@ -502,11 +490,7 @@ PULSE RIFLE
 
 void pulseRifleFire( gentity_t *ent )
 {
-  gentity_t *m;
-
-  m = fire_pulseRifle( ent, muzzle, forward );
-
-//  VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );  // "real" physics
+  fire_pulseRifle( ent, muzzle, forward );
 }
 
 /*
@@ -519,9 +503,7 @@ FLAME THROWER
 
 void flamerFire( gentity_t *ent )
 {
-  gentity_t *m;
-
-  m = fire_flamer( ent, muzzle, forward );
+  fire_flamer( ent, muzzle, forward );
 }
 
 /*
@@ -534,9 +516,7 @@ GRENADE
 
 void throwGrenade( gentity_t *ent )
 {
-  gentity_t *m;
-
-  m = launch_grenade( ent, muzzle, forward );
+  launch_grenade( ent, muzzle, forward );
 }
 
 /*
@@ -666,17 +646,15 @@ LCChargeFire
 */
 void LCChargeFire( gentity_t *ent, qboolean secondary )
 {
-  gentity_t *m;
-
   if( secondary )
   {
-    m = fire_luciferCannon( ent, muzzle, forward, LCANNON_SECONDARY_DAMAGE,
+    fire_luciferCannon( ent, muzzle, forward, LCANNON_SECONDARY_DAMAGE,
       LCANNON_SECONDARY_RADIUS );
     ent->client->ps.weaponTime = LCANNON_REPEAT;
   }
   else
   {
-    m = fire_luciferCannon( ent, muzzle, forward, ent->client->ps.stats[ STAT_MISC ], LCANNON_RADIUS );
+    fire_luciferCannon( ent, muzzle, forward, ent->client->ps.stats[ STAT_MISC ], LCANNON_RADIUS );
     ent->client->ps.weaponTime = LCANNON_CHARGEREPEAT;
   }
 
@@ -856,11 +834,7 @@ void buildFire( gentity_t *ent, dynMenu_t menu )
 
 void slowBlobFire( gentity_t *ent )
 {
-  gentity_t *m;
-
-  m = fire_slowBlob( ent, muzzle, forward );
-
-//  VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );  // "real" physics
+  fire_slowBlob( ent, muzzle, forward );
 }
 
 
@@ -1421,11 +1395,7 @@ qboolean CheckPounceAttack( gentity_t *ent )
 
 void bounceBallFire( gentity_t *ent )
 {
-  gentity_t *m;
-
-  m = fire_bounceBall( ent, muzzle, forward );
-
-//  VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );  // "real" physics
+  fire_bounceBall( ent, muzzle, forward );
 }
 
 

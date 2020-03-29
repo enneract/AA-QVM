@@ -409,7 +409,7 @@ static void CG_OffsetFirstPersonView( void )
   vec3_t        predictedVelocity;
   int           timeDelta;
   float         bob2;
-  vec3_t        normal, baseOrigin;
+  vec3_t        normal;
   playerState_t *ps = &cg.predictedPlayerState;
 
   if( ps->stats[ STAT_STATE ] & SS_WALLCLIMBING )
@@ -428,8 +428,6 @@ static void CG_OffsetFirstPersonView( void )
 
   origin = cg.refdef.vieworg;
   angles = cg.refdefViewAngles;
-
-  VectorCopy( origin, baseOrigin );
 
   // if dead, fix the angle and don't add any kick
   if( cg.snap->ps.stats[ STAT_HEALTH ] <= 0 )
@@ -562,7 +560,6 @@ static void CG_OffsetFirstPersonView( void )
     usercmd_t cmd;
     int       cmdNum;
     float     fFraction, rFraction, uFraction;
-    float     fFraction2, rFraction2, uFraction2;
 
     cmdNum = trap_GetCurrentCmdNumber();
     trap_GetUserCmd( cmdNum, &cmd );
@@ -579,10 +576,6 @@ static void CG_OffsetFirstPersonView( void )
       rFraction = 1.0f;
     if( uFraction > 1.0f )
       uFraction = 1.0f;
-
-    fFraction2 = -sin( fFraction * M_PI / 2 );
-    rFraction2 = -sin( rFraction * M_PI / 2 );
-    uFraction2 = -sin( uFraction * M_PI / 2 );
 
     if( cmd.forwardmove > 0 )
       VectorMA( origin, STRUGGLE_DIST * fFraction, forward, origin );

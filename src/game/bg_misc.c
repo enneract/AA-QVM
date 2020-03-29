@@ -4964,7 +4964,7 @@ Check if a weapon has full ammo
 */
 qboolean BG_WeaponIsFull( weapon_t weapon, int stats[ ], int ammo, int clips )
 {
-  int maxAmmo, maxClips;
+  int maxAmmo = 0, maxClips = 0;
 
   BG_FindAmmoForWeapon( weapon, &maxAmmo, &maxClips );
 

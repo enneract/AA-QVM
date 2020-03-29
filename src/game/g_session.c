@@ -59,7 +59,7 @@ void G_WriteClientSessionData( gclient_t *client )
     BG_ClientListString( &client->sess.ignoreList )
     );
 
-  var = va( "session%i", client - level.clients );
+  var = va( "session%i", (int)(client - level.clients) );
 
   trap_Cvar_Set( var, s );
 }
@@ -83,7 +83,7 @@ void G_ReadSessionData( gclient_t *client )
   int restartTeam;
   int invisible;
 
-  var = va( "session%i", client - level.clients );
+  var = va( "session%i", (int)(client - level.clients) );
   trap_Cvar_VariableStringBuffer( var, s, sizeof(s) );
 
   // FIXME: should be using BG_ClientListParse() for ignoreList, but

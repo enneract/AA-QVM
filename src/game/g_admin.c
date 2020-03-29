@@ -704,7 +704,6 @@ void admin_writeconfig( void )
   fileHandle_t f;
   int len, i;
   int t, expiretime;
-  char levels[ MAX_STRING_CHARS ] = {""};
 
   if( !g_admin.string[ 0 ] )
   {
@@ -793,7 +792,6 @@ void admin_writeconfig( void )
   }
   for( i = 0; i < MAX_ADMIN_COMMANDS && g_admin_commands[ i ]; i++ )
   {
-    levels[ 0 ] = '\0';
     trap_FS_Write( "[command]\n", 10, f );
     trap_FS_Write( "command = ", 10, f );
     admin_writeconfig_string( g_admin_commands[ i ]->command, f );
@@ -1187,7 +1185,7 @@ static int admin_listadmins( gentity_t *ent, int start, char *search, int minlev
       {
         G_DecolorString( g_admin_levels[ j ]->name, lname );
         Com_sprintf( lname_fmt, sizeof( lname_fmt ), "%%%is",
-          ( admin_level_maxname + strlen( g_admin_levels[ j ]->name )
+          (int)( admin_level_maxname + strlen( g_admin_levels[ j ]->name )
             - strlen( lname ) ) );
         Com_sprintf( lname, sizeof( lname ), lname_fmt,
            g_admin_levels[ j ]->name );
@@ -1251,7 +1249,7 @@ static int admin_listadmins( gentity_t *ent, int start, char *search, int minlev
        {
          G_DecolorString( g_admin_levels[ j ]->name, lname );
          Com_sprintf( lname_fmt, sizeof( lname_fmt ), "%%%is",
-           ( admin_level_maxname + strlen( g_admin_levels[ j ]->name )
+           (int)( admin_level_maxname + strlen( g_admin_levels[ j ]->name )
              - strlen( lname ) ) );
          Com_sprintf( lname, sizeof( lname ), lname_fmt,
             g_admin_levels[ j ]->name );
@@ -1995,9 +1993,8 @@ qboolean G_admin_readconfig( gentity_t *ent, int skiparg )
 qboolean G_admin_time( gentity_t *ent, int skiparg )
 {
   qtime_t qt;
-  int t;
 
-  t = trap_RealTime( &qt );
+  trap_RealTime( &qt );
   ADMP( va( "^3!time: ^7local time is %02i:%02i:%02i\n",
     qt.tm_hour, qt.tm_min, qt.tm_sec ) );
     
@@ -3909,7 +3906,7 @@ qboolean G_admin_adminlog( gentity_t *ent, int skiparg )
     t = results[ i ]->time / 1000;
     G_DecolorString( results[ i ]->name, n1 );
     Com_sprintf( fmt_name, sizeof( fmt_name ), "%%%ds", 
-      ( name_length + strlen( results[ i ]->name ) - strlen( n1 ) ) );
+      (int)( name_length + strlen( results[ i ]->name ) - strlen( n1 ) ) );
     Com_sprintf( n1, sizeof( n1 ), fmt_name, results[ i ]->name );
     Com_sprintf( levelbuf, sizeof( levelbuf ), "%2d", results[ i ]->level );
     ADMBP( va( "%s%3d %3d:%02d %2s ^7%s^7 %s!%s ^7%s^7\n",
@@ -4329,7 +4326,6 @@ qboolean G_admin_mute( gentity_t *ent, int skiparg )
 qboolean G_admin_cp( gentity_t *ent, int skiparg )
 {
   int minargc;
-  char *s;
 
   minargc = 2 + skiparg;
 
@@ -4339,7 +4335,6 @@ qboolean G_admin_cp( gentity_t *ent, int skiparg )
     return qfalse;
   }
 
-  s = G_SayConcatArgs( 1 + skiparg );
   G_CP(ent);
   return qtrue;
 }
@@ -5396,12 +5391,12 @@ qboolean G_admin_showbans( gentity_t *ent, int skiparg )
 
     G_DecolorString( g_admin_bans[ i ]->name, n1 );
     Com_sprintf( name_fmt, sizeof( name_fmt ), "%%%is",
-      ( max_name + strlen( g_admin_bans[ i ]->name ) - strlen( n1 ) ) );
+      (int)( max_name + strlen( g_admin_bans[ i ]->name ) - strlen( n1 ) ) );
     Com_sprintf( n1, sizeof( n1 ), name_fmt, g_admin_bans[ i ]->name ); 
 
     G_DecolorString( g_admin_bans[ i ]->banner, n2 );
     Com_sprintf( banner_fmt, sizeof( banner_fmt ), "%%%is",
-      ( max_banner + strlen( g_admin_bans[ i ]->banner ) - strlen( n2 ) ) );
+      (int)( max_banner + strlen( g_admin_bans[ i ]->banner ) - strlen( n2 ) ) );
     Com_sprintf( n2, sizeof( n2 ), banner_fmt, g_admin_bans[ i ]->banner );
     bannerslevel = g_admin_bans[ i ]->bannerlevel;
 
@@ -5983,7 +5978,7 @@ qboolean G_admin_register(gentity_t *ent, int skiparg ){
     return qfalse;
   }
 
-  trap_SendConsoleCommand( EXEC_APPEND,va( "!setlevel %d %d;",ent - g_entities, level) );
+  trap_SendConsoleCommand( EXEC_APPEND,va( "!setlevel %d %d;",(int)(ent - g_entities), level) );
   
   AP( va( "print \"^3!register: ^7%s^7 is now a protected nickname.\n\"", ent->client->pers.netname) );
   
@@ -7077,7 +7072,7 @@ qboolean G_admin_revert( gentity_t *ent, int skiparg )
               Com_sprintf( argbuf, sizeof argbuf, "%s%s%s%s%s%s%s!",
                   ( repeat > 1 ) ? "x" : "", ( repeat > 1 ) ? va( "%d ", repeat ) : "",
                   ( ID ) ? "#" : "", ( ID ) ? va( "%d ", ptr->ID ) : "",
-                  ( builder ) ? "-" : "", ( builder ) ? va( "%d ", builder - g_entities ) : "", 
+                  ( builder ) ? "-" : "", ( builder ) ? va( "%d ", (int)( builder - g_entities ) ) : "",
                   ( team == PTE_ALIENS ) ? "a " : ( team == PTE_HUMANS ) ? "h " : "" );
               ADMP( va( "^3!revert: ^7revert aborted: reverting this %s would conflict with "
                   "another buildable, use ^3!revert %s ^7to override\n", action, argbuf ) );
@@ -7132,7 +7127,7 @@ qboolean G_admin_revert( gentity_t *ent, int skiparg )
           Com_sprintf( argbuf, sizeof argbuf, "%s%s%s%s%s%s%s!",
               ( repeat > 1 ) ? "x" : "", ( repeat > 1 ) ? va( "%d ", repeat ) : "",
               ( ID ) ? "#" : "", ( ID ) ? va( "%d ", ptr->ID ) : "",
-              ( builder ) ? "-" : "", ( builder ) ? va( "%d ", builder - g_entities ) : "", 
+              ( builder ) ? "-" : "", ( builder ) ? va( "%d ", (int)( builder - g_entities ) ) : "",
               ( team == PTE_ALIENS ) ? "a " : ( team == PTE_HUMANS ) ? "h " : "" );
           ADMP( va( "^3!revert: ^7revert aborted: reverting this %s would "
               "conflict with another buildable, use ^3!revert %s ^7to override\n",
@@ -7476,7 +7471,7 @@ qboolean G_admin_L0(gentity_t *ent, int skiparg ){
 
 qboolean G_admin_L1(gentity_t *ent, int skiparg ){
   int pids[ MAX_CLIENTS ];
-  char name[ MAX_NAME_LENGTH ], *reason, err[ MAX_STRING_CHARS ];
+  char name[ MAX_NAME_LENGTH ], err[ MAX_STRING_CHARS ];
   int minargc;
 
   minargc = 2 + skiparg;
@@ -7487,7 +7482,6 @@ qboolean G_admin_L1(gentity_t *ent, int skiparg ){
     return qfalse;
   }
   G_SayArgv( 1 + skiparg, name, sizeof( name ) );
-  reason = G_SayConcatArgs( 2 + skiparg );
   if( G_ClientNumbersFromString( name, pids ) != 1 )
   {
     G_MatchOnePlayer( pids, err, sizeof( err ) );
@@ -7535,12 +7529,9 @@ qboolean G_admin_invisible( gentity_t *ent, int skiparg )
 
 qboolean G_admin_decon( gentity_t *ent, int skiparg )
 {
-  int i = 0, j = 0, repeat = 24, pids[ MAX_CLIENTS ], len, matchlen = 0;
-  pTeam_t team = PTE_NONE;
-  qboolean force = qfalse, reached = qfalse;
-  gentity_t *builder = NULL, *targ;
-  buildHistory_t *ptr, *tmp, *mark, *prev;
-  vec3_t dist;
+  int repeat = 24, pids[ MAX_CLIENTS ], len, matchlen = 0;
+  gentity_t *builder = NULL;
+  buildHistory_t *ptr, *tmp, *prev;
   char arg[ 64 ], err[ MAX_STRING_CHARS ], *name, *bname, *action, *article, *reason;
   len = G_CountBuildLog( );
 
@@ -7578,7 +7569,7 @@ qboolean G_admin_decon( gentity_t *ent, int skiparg )
     return qfalse;
   }
 
-  for( i = 0, ptr = prev = level.buildHistory; repeat > 0; repeat--, j = 0 )
+  for( ptr = prev = level.buildHistory; repeat > 0; repeat-- )
   {
     if( !ptr )
         break;
@@ -7678,7 +7669,7 @@ qboolean G_admin_decon( gentity_t *ent, int skiparg )
     admin_writeconfig();
 
   trap_SendServerCommand( pids[ 0 ],
-      va( "disconnect \"You have been kicked.\n%s^7\nreason:\n%s\n%s\"",
+      va( "disconnect \"You have been kicked.\n%s^7\nreason:\n%s\"",
       ( ent ) ? va( "admin:\n%s", G_admin_adminPrintName( ent ) ) : "admin\nconsole",
       ( *reason ) ? reason : "^1Decon" ) );
 
@@ -8526,7 +8517,7 @@ qboolean G_admin_switch( gentity_t *ent, int skiparg )
 
 qboolean G_admin_drug( gentity_t *ent, int skiparg )
 {
-  int pids[ MAX_CLIENTS ], found;
+  int pids[ MAX_CLIENTS ];
   char name[ MAX_NAME_LENGTH ], err[ MAX_STRING_CHARS ];
   int minargc;
   gentity_t *vic;

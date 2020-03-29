@@ -3370,7 +3370,6 @@ itemBuildError_t G_CanBuild( gentity_t *ent, buildable_t buildable, int distance
   qboolean          invert;
   int               contents;
   playerState_t     *ps = &ent->client->ps;
-  int               buildPoints;
   gentity_t	    *tmp;
   itemBuildError_t  tempReason;
 
@@ -3398,7 +3397,6 @@ itemBuildError_t G_CanBuild( gentity_t *ent, buildable_t buildable, int distance
     reason = IBE_NORMAL;
 
   contents = trap_PointContents( entity_origin, -1 );
-  buildPoints = BG_FindBuildPointsForBuildable( buildable );
   
   //check if we are near a nobuild marker, if so, can't build here...
   for( i = 0; i < MAX_GENTITIES; i++ )

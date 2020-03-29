@@ -574,8 +574,7 @@ void ClientTimerActions( gentity_t *ent, int msec )
   usercmd_t *ucmd;
   int       aForward, aRight;
   qboolean  walking = qfalse, stopped = qfalse,
-            crouched = qfalse, jumping = qfalse,
-            strafing = qfalse;
+            crouched = qfalse;
 
   ucmd = &ent->client->pers.cmd;
 
@@ -601,12 +600,7 @@ void ClientTimerActions( gentity_t *ent, int msec )
   else if( aForward <= 64 && aRight <= 64 )
     walking = qtrue;
 
-  if( aRight > 0 )
-    strafing = qtrue;
-
-  if( ucmd->upmove > 0 )
-    jumping = qtrue;
-  else if( ent->client->ps.pm_flags & PMF_DUCKED )
+  if( ent->client->ps.pm_flags & PMF_DUCKED )
     crouched = qtrue;
 
   while ( client->time100 >= 100 )

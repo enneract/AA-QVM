@@ -1188,13 +1188,8 @@ void CG_DrawItemSelect( rectDef_t *rect, vec4_t color )
   int           length;
   int           selectWindow;
   qboolean      vertical;
-  centity_t     *cent;
-  playerState_t *ps;
   
   int		colinfo[ 64 ];
-
-  cent = &cg_entities[ cg.snap->ps.clientNum ];
-  ps = &cg.snap->ps;
 
   // don't display if dead
   if( cg.predictedPlayerState.stats[ STAT_HEALTH ] <= 0 )
