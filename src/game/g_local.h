@@ -1541,6 +1541,9 @@ extern  vmCvar_t  g_debugRewards;
 extern  vmCvar_t  g_sdDefenderPenalty;
 extern  vmCvar_t  g_sdDestructionBonus;
 
+extern  vmCvar_t  g_covidInfectionFactor;
+extern  vmCvar_t  g_covidSeverityFactor;
+
 void      trap_Printf( const char *fmt );
 void      trap_Error( const char *fmt );
 int       trap_Milliseconds( void );

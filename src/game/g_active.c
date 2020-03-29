@@ -658,6 +658,8 @@ void G_Coronavirus( gentity_t *ent )
     else if( distance < COVID_RANGE / 2.0f )
       chance *= 2.0f;
 
+    chance *= g_covidInfectionFactor.value;
+
     trap_SendServerCommand( (int)( ent - g_entities ), va( "print \"^1COVID:^7 Chance to infect %s^7 is ^1%f^7\n\"",
       target->client->pers.netname, chance ) );
 
@@ -699,7 +701,7 @@ void G_Coronavirus( gentity_t *ent )
     G_AddEvent( ent, EV_COUGH, 0 );
   }
    
-  client->covidDamage += client->covidSeverity;
+  client->covidDamage += client->covidSeverity * g_covidSeverityFactor.value;
   if( client->covidDamage > 1.0f )
   {
     int damage;

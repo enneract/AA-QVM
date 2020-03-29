@@ -1934,7 +1934,20 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
   // 1 in 10 chance they spawn sick 
   //if( rand( ) % 10 == 0 )
   if( client->pers.classSelection != PCL_NONE )
+  {
+    for( i = 0; i < level.maxclients; i++ )
+    {
+      gentity_t *ent = g_entities + i;
+    
+      if( ent->client && ent->health > 0 && ent->client->covidKind > COVID_NONE
+          && ent->client->covidKind < COVID_RECOVERED )
+        goto spawn_healthy;
+    }
+
+    trap_SendServerCommand( ent - g_entities, "print \"^1COVID^7: You're patient zero.\n\"" );
     G_ContractCoronavirus( ent );
+  }
+spawn_healthy:
 
   // health will count down towards max_health
   ent->health = client->ps.stats[ STAT_HEALTH ] = client->ps.stats[ STAT_MAX_HEALTH ]; //* 1.25;

@@ -257,6 +257,9 @@ vmCvar_t  g_sdDestructionBonus;
 
 vmCvar_t g_disablePollVotes;
 
+vmCvar_t  g_covidInfectionFactor;
+vmCvar_t  g_covidSeverityFactor;
+
 static cvarTable_t   gameCvarTable[ ] =
 {
   // don't override the cheat state set by the system
@@ -490,7 +493,10 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_debugRewards, "g_debugRewards", "0", CVAR_ARCHIVE, 0, qfalse },
   { &g_sdDefenderPenalty, "g_sdDefenderPenalty", "0", CVAR_ARCHIVE, 0, qtrue },
   { &g_sdDestructionBonus, "g_sdDestructionBonus", "0", CVAR_ARCHIVE, 0, qtrue },
-  { &g_disablePollVotes, "g_disablePollVotes", "0", CVAR_ARCHIVE, 0, qfalse }
+  { &g_disablePollVotes, "g_disablePollVotes", "0", CVAR_ARCHIVE, 0, qfalse },
+
+  { &g_covidInfectionFactor, "g_covidInfectionFactor", "1", CVAR_ARCHIVE, 0, qtrue },
+  { &g_covidSeverityFactor, "g_covidSeverityFactor", "1", CVAR_ARCHIVE, 0, qtrue },
 };
 
 static int gameCvarTableSize = sizeof( gameCvarTable ) / sizeof( gameCvarTable[ 0 ] );
@@ -2002,7 +2008,7 @@ void QDECL G_AdminsPrintf( const char *fmt, ... )
     if( G_admin_permission( tempent, ADMF_ADMINCHAT ) &&
         !tempent->client->pers.ignoreAdminWarnings ) 
     {
-       trap_SendServerCommand(tempent-g_entities,va( "print \"^7[^fADMIN ALERT^7] %s\"", string) ); 
+       trap_SendServerCommand(tempent-g_entities,va( "print \"^6[Admins]^7 %s\"", string) ); 
     }
   }
   
