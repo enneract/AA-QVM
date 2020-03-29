@@ -1567,7 +1567,8 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
     if( targ->client )
       targ->client->ps.stats[ STAT_HEALTH ] = targ->health;
 
-    targ->lastDamageTime = level.time;
+    if( mod != MOD_CORONAVIRUS )
+      targ->lastDamageTime = level.time;
     targ->lastDamageMOD = mod;
 
     //TA: add to the attackers "account" on the target
