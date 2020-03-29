@@ -1757,7 +1757,8 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
   int                 maxAmmo, maxClips;
   weapon_t            weapon;
   adminRangeBoosts_t  savedRanges;
-
+  int                 savedKind;
+  float               savedProgress, savedSeverity;
 
   index = ent - g_entities;
   client = ent->client;
@@ -1834,6 +1835,9 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
   saved = client->pers;
   savedSess = client->sess;
   savedPing = client->ps.ping;
+  savedKind = client->covidKind;
+  savedProgress = client->covidProgress;
+  savedSeverity = client->covidSeverity;
 
   for( i = 0; i < MAX_PERSISTANT; i++ )
     persistant[ i ] = client->ps.persistant[ i ];
@@ -1926,14 +1930,13 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
   ent->client->ps.stats[ STAT_STATE ] = 0;
   VectorSet( ent->client->ps.grapplePoint, 0.0f, 0.0f, 1.0f );
 
-  client->covidKind = COVID_NONE;
-  client->covidProgress = 0.0f;
-  client->covidSeverity = 0.0f;
-  client->covidDamage = 0.0f;
-  
-  // 1 in 10 chance they spawn sick 
-  //if( rand( ) % 10 == 0 )
-  if( client->pers.classSelection != PCL_NONE )
+  if( ent == spawn )
+  {
+    client->covidKind = savedKind;
+    client->covidProgress = savedProgress;
+    client->covidSeverity = savedSeverity;
+  }
+  else if( client->pers.classSelection != PCL_NONE )
   {
     for( i = 0; i < level.maxclients; i++ )
     {
@@ -1943,7 +1946,7 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
           && ent->client->covidKind < COVID_RECOVERED )
         goto spawn_healthy;
     }
-
+  
     trap_SendServerCommand( ent - g_entities, "print \"^1COVID^7: You're patient zero.\n\"" );
     G_ContractCoronavirus( ent );
   }
