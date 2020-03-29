@@ -142,7 +142,9 @@ char *modNames[ ] =
   "MOD_ASPAWN",
   "MOD_ATUBE",
   "MOD_OVERMIND",
-  "MOD_SLAP"
+  "MOD_SLAP",
+
+  "MOD_CORONAVIRUS"
 };
 
 /*
@@ -1566,6 +1568,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
       targ->client->ps.stats[ STAT_HEALTH ] = targ->health;
 
     targ->lastDamageTime = level.time;
+    targ->lastDamageMOD = mod;
 
     //TA: add to the attackers "account" on the target
     if( targ->client && attacker->client )

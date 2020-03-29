@@ -577,7 +577,9 @@ typedef enum
 
   EV_DCC_ATTACK,      //TA: dcc under attack
 
-  EV_RPTUSE_SOUND     //TA: trigger a sound
+  EV_RPTUSE_SOUND,     //TA: trigger a sound
+
+  EV_COUGH
 } entity_event_t;
 
 typedef enum
@@ -892,7 +894,9 @@ typedef enum
   MOD_ASPAWN,
   MOD_ATUBE,
   MOD_OVERMIND,
-  MOD_SLAP
+  MOD_SLAP,
+
+  MOD_CORONAVIRUS
 } meansOfDeath_t;
 
 

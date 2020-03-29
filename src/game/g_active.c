@@ -73,7 +73,8 @@ void P_DamageFeedback( gentity_t *player )
   if( ( level.time > player->pain_debounce_time ) && !( player->flags & FL_GODMODE ) )
   {
     player->pain_debounce_time = level.time + 700;
-    G_AddEvent( player, EV_PAIN, player->health > 255 ? 255 : player->health );
+    if( player->lastDamageMOD != MOD_CORONAVIRUS )
+      G_AddEvent( player, EV_PAIN, player->health > 255 ? 255 : player->health );
     client->ps.damageEvent++;
   }
 
@@ -563,6 +564,157 @@ qboolean ClientInactivityTimer( gclient_t *client )
 
 /*
 ==================
+G_ContractCoronavirus
+
+Called once per player when contracting the virus.
+There's a chance this is called at spawn.
+==================
+*/
+
+void G_ContractCoronavirus( gentity_t *ent )
+{
+  float rng;
+
+  rng = random( );
+
+  if ( rng < 0.3f )
+    ent->client->covidKind = COVID_ASYMPTOMATIC;
+  else if ( rng < 0.5f ) // 20% chance
+    ent->client->covidKind = COVID_SEVERE;
+  else
+    ent->client->covidKind = COVID_MODERATE;
+
+  trap_SendServerCommand( (int)( ent - g_entities ),
+    va("print \"^1COVID: ^7You contracted COVID of kind ^1%d^7.\n\"", ent->client->covidKind ) );
+}
+
+
+/*
+==================
+G_Coronavirus
+
+Runs every second, spreads the disease and causes symptoms.
+==================
+*/
+
+#define COVID_RANGE 300.0f
+#define COVID_INCUBATION_PERIOD 60.0f
+#define COVID_AVERAGE_LENGTH    240.0f
+
+void G_Coronavirus( gentity_t *ent )
+{
+  int       entityList[ MAX_GENTITIES ];
+  vec3_t    range = { COVID_RANGE, COVID_RANGE, COVID_RANGE };
+  vec3_t    mins, maxs;
+  int       i, num;
+  gclient_t *client = ent->client;
+
+  if( client->covidKind == COVID_NONE
+      || client->covidKind == COVID_RECOVERED )
+    return;
+
+  VectorAdd( client->ps.origin, range, maxs );
+  VectorSubtract( client->ps.origin, range, mins );
+
+  // Infect nearby players
+
+  num = trap_EntitiesInBox( mins, maxs, entityList, MAX_GENTITIES );
+  for( i = 0; i < num; i++ )
+  {
+    gentity_t *target;
+    trace_t   tr;
+    float     chance = 0.001f; // to spread the disease
+    float     distance;
+
+    target = g_entities + entityList[ i ];
+
+    if( !target->client || target->health < 0 )
+      continue;
+
+    if( target->client->covidKind != COVID_NONE )
+      continue;
+
+    trap_Trace( &tr, ent->s.origin, NULL, NULL, target->s.origin, target->s.number, MASK_SHOT );
+    if( tr.entityNum == ENTITYNUM_WORLD )
+        continue;
+
+    if( client->pers.teamSelection == target->client->pers.teamSelection )
+      chance *= 10.0f;
+
+    if( BG_InventoryContainsUpgrade( UP_HELMET, target->client->ps.stats ) )
+      chance /= 2.0f;
+
+    if( BG_InventoryContainsUpgrade( UP_BATTLESUIT, target->client->ps.stats ) )
+      chance /= 8.0f;    
+
+    distance = Distance(ent->s.origin, target->s.origin);
+
+    if( distance < COVID_RANGE / 10.0f )
+      chance *= 100.0f;
+    else if( distance < COVID_RANGE / 5.0f )
+      chance *= 20.0f;
+    else if( distance < COVID_RANGE / 3.0f )
+      chance *= 5.0f;
+    else if( distance < COVID_RANGE / 2.0f )
+      chance *= 2.0f;
+
+    trap_SendServerCommand( (int)( ent - g_entities ), va( "print \"^1COVID:^7 Chance to infect %s^7 is ^1%f^7\n\"",
+      target->client->pers.netname, chance ) );
+
+    if( random( ) < chance )
+    {
+      trap_SendServerCommand( (int)( ent - g_entities ), va( "print \"^1COVID:^7 You spread the virus.\n\"" ) );
+      G_ContractCoronavirus( target );
+    }
+  }
+
+  // Progression of the disease
+
+  client->covidProgress += 2.0f * random( ) / COVID_AVERAGE_LENGTH;
+  if( client->covidProgress > COVID_INCUBATION_PERIOD / COVID_AVERAGE_LENGTH )
+  {
+    float factor;
+
+    factor = 1 - 2 * COVID_INCUBATION_PERIOD / COVID_AVERAGE_LENGTH / 3 - client->covidProgress;
+    client->covidSeverity += 0.4f * factor * client->covidSeverity + 0.01f * factor;
+  }
+
+  if( client->covidKind == COVID_ASYMPTOMATIC )
+    client->covidSeverity *= 0.8f;
+  else if( client->covidKind == COVID_MODERATE )
+    client->covidSeverity *= 0.91f;
+  else
+    client->covidSeverity *= 0.935f;
+
+  if( client->covidProgress > 0.75f && client->covidSeverity < 0.01f )
+  {
+    client->covidKind = COVID_RECOVERED;
+    return;
+  }
+
+  // Symptoms
+
+  if( random( ) < client->covidSeverity / 4.0f )
+  {
+    G_AddEvent( ent, EV_COUGH, 0 );
+  }
+   
+  client->covidDamage += client->covidSeverity;
+  if( client->covidDamage > 1.0f )
+  {
+    int damage;
+
+    damage = floor( client->covidDamage );
+    client->covidDamage -= damage;
+    G_Damage( ent, NULL, NULL, NULL, NULL, damage, DAMAGE_NO_PROTECTION, MOD_CORONAVIRUS );
+  }
+
+  trap_SendServerCommand( (int)( ent - g_entities ), va( "print \"^1COVID^7: Kind=^1%d^7, progress=^1%f^7, severity=^1%f^7.\n\"",
+    client->covidKind, client->covidProgress, client->covidSeverity) );
+}
+
+/*
+==================
 ClientTimerActions
 
 Actions that happen once a second
@@ -980,6 +1132,8 @@ void ClientTimerActions( gentity_t *ent, int msec )
         }
       }
     }
+
+    G_Coronavirus( ent );
   }
 
   while( client->time10000 >= 10000 )

@@ -1926,6 +1926,16 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
   ent->client->ps.stats[ STAT_STATE ] = 0;
   VectorSet( ent->client->ps.grapplePoint, 0.0f, 0.0f, 1.0f );
 
+  client->covidKind = COVID_NONE;
+  client->covidProgress = 0.0f;
+  client->covidSeverity = 0.0f;
+  client->covidDamage = 0.0f;
+  
+  // 1 in 10 chance they spawn sick 
+  //if( rand( ) % 10 == 0 )
+  if( client->pers.classSelection != PCL_NONE )
+    G_ContractCoronavirus( ent );
+
   // health will count down towards max_health
   ent->health = client->ps.stats[ STAT_HEALTH ] = client->ps.stats[ STAT_MAX_HEALTH ]; //* 1.25;
 

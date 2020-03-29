@@ -132,6 +132,9 @@ static void CG_Obituary( entityState_t *ent )
     case MOD_SWARM:
       message = "was hunted down by the swarm";
       break;
+    case MOD_CORONAVIRUS:
+      message = "died of viral lung infection";
+      break;
     default:
       message = NULL;
       break;
@@ -656,6 +659,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position )
     case EV_WATER_CLEAR:
       DEBUGNAME( "EV_WATER_CLEAR" );
       trap_S_StartSound( NULL, es->number, CHAN_AUTO, CG_CustomSound( es->number, "*gasp.wav" ) );
+      break;
+
+    case EV_COUGH:
+      DEBUGNAME( "EV_COUGH" );
+      trap_S_StartSound( NULL, es->number, CHAN_VOICE, cgs.media.coughingSounds[ rand ( ) % NUM_COUGHING_SOUNDS ] );
       break;
 
     //

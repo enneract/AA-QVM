@@ -960,6 +960,9 @@ static void CG_RegisterSounds( void )
   cgs.media.buildableRepairedSound  = trap_S_RegisterSound( "sound/buildables/human/repaired.wav", qfalse );
 
   cgs.media.lCannonWarningSound     = trap_S_RegisterSound( "models/weapons/lcannon/warning.wav", qfalse );
+
+  for( i = 0; i < NUM_COUGHING_SOUNDS; i++ )
+    cgs.media.coughingSounds[ i ] = trap_S_RegisterSound( va( "sound/player/cough%d.wav", i ), qfalse );
 }
 
 
