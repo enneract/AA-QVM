@@ -707,13 +707,17 @@ Fixed fov at intermissions, otherwise account for fov variable and zooms.
 
 #define FOVWARPTIME     400.0
 
+// Horizontal (linear) field of view to angular and back
+#define HFOV(x) ( tan( (x) / 180.0f * M_PI / 2.0f ) )
+#define AFOV(x) ( 2.0f * atan2( x, 1.0f ) * 180.0f / M_PI )
+
 static int CG_CalcFov( void )
 {
   float     x;
   float     phase;
   float     v;
   int       contents;
-  float     fov_x, fov_y;
+  float     hfov_mul, fov_x, fov_y;
   float     zoomFov;
   float     f;
   int       inwater;
@@ -827,10 +831,17 @@ static int CG_CalcFov( void )
     fov_y += v;
   }
 
+  // clamp cg_fov to prevent graphical artifacts like seeing through walls
+  if ( cg_fov.value < 0.01f )
+    hfov_mul = HFOV( 0.01f );
+  else if ( cg_fov.value > 150.0f )
+    hfov_mul = HFOV( 150.0f );
+  else
+    hfov_mul = HFOV( cg_fov.value );
 
   // set it
-  cg.refdef.fov_x = fov_x + ( cg_fov.integer - 90 );
-  cg.refdef.fov_y = fov_y + ( cg_fov.integer - 90 );
+  cg.refdef.fov_x = AFOV( HFOV( fov_x ) * hfov_mul );
+  cg.refdef.fov_y = AFOV( HFOV( fov_y ) * hfov_mul );
 
   if( !cg.zoomed )
     cg.zoomSensitivity = 1;
