@@ -584,8 +584,9 @@ void G_ContractCoronavirus( gentity_t *ent )
   else
     ent->client->covidKind = COVID_MODERATE;
 
-  trap_SendServerCommand( (int)( ent - g_entities ),
-    va("print \"^1COVID: ^7You contracted COVID of kind ^1%d^7.\n\"", ent->client->covidKind ) );
+  if( g_covidDebug.integer )
+   trap_SendServerCommand( (int)( ent - g_entities ),
+     va("print \"^1COVID^7: ^7You contracted COVID of kind ^1%d^7.\n\"", ent->client->covidKind ) );
 }
 
 
@@ -660,12 +661,14 @@ void G_Coronavirus( gentity_t *ent )
 
     chance *= g_covidInfectionFactor.value;
 
-    trap_SendServerCommand( (int)( ent - g_entities ), va( "print \"^1COVID:^7 Chance to infect %s^7 is ^1%f^7\n\"",
-      target->client->pers.netname, chance ) );
+    if( g_covidDebug.integer )
+      trap_SendServerCommand( (int)( ent - g_entities ), va( "print \"^1COVID^7: Chance to infect %s^7 is ^1%f^7\n\"",
+        target->client->pers.netname, chance ) );
 
     if( random( ) < chance )
     {
-      trap_SendServerCommand( (int)( ent - g_entities ), va( "print \"^1COVID:^7 You spread the virus.\n\"" ) );
+      if( g_covidDebug.integer )
+        trap_SendServerCommand( (int)( ent - g_entities ), va( "print \"^1COVID^7: You spread the virus.\n\"" ) );
       G_ContractCoronavirus( target );
     }
   }
@@ -711,8 +714,9 @@ void G_Coronavirus( gentity_t *ent )
     G_Damage( ent, NULL, NULL, NULL, NULL, damage, DAMAGE_NO_PROTECTION, MOD_CORONAVIRUS );
   }
 
-  trap_SendServerCommand( (int)( ent - g_entities ), va( "print \"^1COVID^7: Kind=^1%d^7, progress=^1%f^7, severity=^1%f^7.\n\"",
-    client->covidKind, client->covidProgress, client->covidSeverity) );
+  if( g_covidDebug.integer )
+    trap_SendServerCommand( (int)( ent - g_entities ), va( "print \"^1COVID^7: Kind=^1%d^7, progress=^1%f^7, severity=^1%f^7.\n\"",
+      client->covidKind, client->covidProgress, client->covidSeverity) );
 }
 
 /*

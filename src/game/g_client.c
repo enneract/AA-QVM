@@ -1946,8 +1946,9 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
           && ent->client->covidKind < COVID_RECOVERED )
         goto spawn_healthy;
     }
-  
-    trap_SendServerCommand( ent - g_entities, "print \"^1COVID^7: You're patient zero.\n\"" );
+
+    if( g_covidDebug.integer )
+      trap_SendServerCommand( ent - g_entities, "print \"^1COVID^7: You're patient zero.\n\"" );
     G_ContractCoronavirus( ent );
   }
 spawn_healthy:
