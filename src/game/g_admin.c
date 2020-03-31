@@ -36,6 +36,72 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 static char g_bfb[ 32000 ];
 
 // note: list ordered alphabetically
+g_admin_schachts_t g_admin_schachts[ ] =
+  {
+    {"adjustban", "%s^7, bans are issued as-is with with no warranty or accidental damage cover.", NULL},
+    {"admintest", "you have no power here, %s^7.", NULL},
+    {"allready", "%s^7 must gather their party before venturing forth from this place.", NULL},
+    {"ban", "wir fahren, fahren, fahren, auf die Autoban - %s^7.", NULL},
+    {"cp", "I didn't you were into ^1that, ^7%s^7. I'm calling the cops.", NULL},
+    {"devmap", "%s^7 should be using ^3!setdevmode^7 in the middle of a pub, just like a true Zittriger would.", NULL},
+    {"cancelvote", "this is a democracy, and %s^7 cannot change that.", NULL},
+    {"decon", "sorry, %s^7! no refunds, no returns!", NULL},
+    {"denybuild", "denywhat? sorry %s^7, never heard of that here.", NULL},
+    {"denyweapon", "%s^7 should be using callvote!", NULL},
+    {"drop", "%s^7 is trying to hide something by not using ^3!kick^7.", NULL},
+    {"flag", "%s^7 wants to put up the white flag and surrender.", NULL},
+    {"flaglist", "sorry, %s^7, i can't even shitpost country flags because this game doesn't support emoticons :(", NULL},
+    {"help", "no one can help you now, %s^7.", NULL},
+    {"invisible", "how about /disconnect, eh %s^7?", NULL},
+    {"kick", "ever tried using ^3!drop^7, %s^7?", NULL},
+    {"l0", "the Overmind needs spawns, %s^7, do you have some?", NULL},
+    {"l1", "the Overmind needs spawns, %s^7, do you have some?", NULL},
+    {"listadmins", "uh, there's a bunch of people on the list, but %s^7 isn't one of them.", NULL},
+    {"listplayers", "some NPCs, campers, stackers, a few overseers, and you, %s^7.", NULL},
+    {"listmaps", "might as well contain atcs, utcs, nano and niveus, which are %s^7's favourite maps, right?", NULL},
+    {"lock", "can't lock the team as %s^7 lost the keys.", NULL},
+    {"map", "go open an Atlas, %s^7.", NULL},
+    {"maplog", "atcs, atcs, atcs, atcs, atcs, atcs, atcs....", NULL},
+    {"mute", "this is a democracy, where people like %s^7 should be using /callvote", NULL},
+    {"namelog", "sorry, %s^7, but only the NSA have access to this feature.", NULL},
+    {"nextmap", "%s^7 must gather their party before venturing forth from this place.", NULL},
+    {"nobuild", "it's not like %s^7 would know how to use it anyway.", NULL},
+    {"passvote", "this is a democracy, and %s^7 cannot change that.", NULL},
+    {"pause", "there's no stopping now, %s^7.", NULL},
+    {"putteam", "%s^7 attempted to force the hand of the People.", NULL},
+    {"readconfig", "shitpost mode already active.", NULL},
+    {"register", "we already know who you are, %s^7.", NULL},
+    {"rename", "sorry, %s^7, but only the NSA have access to this feature.", NULL},
+    {"revert", "sorry, %s^7! no refunds, no returns!", NULL},
+    {"rotation", "%s^7, is a circular movement of an object around a center (or point) of rotation. (from Wikipedia, the free encyclopedia)", NULL},
+    {"seen", "seen who, %s^7? ( o).( o)", NULL},
+    {"setlevel", "the Overmind needs spawns, %s^7, do you have some?", NULL},
+    {"slap", "%s^7 is trying to get kinky!", NULL},
+    {"spec999", "999ing is still a thing in 2020? %s^7 should up their game...", NULL},
+    {"specme", "%s^7 is a confirmed ragequitter.", NULL},
+    {"subnetban", "%s^7, bans are issued as-is with with no warranty or accidental damage cover.", NULL},
+    {"suspendban", "%s^7, bans are issued as-is with with no warranty or accidental damage cover.", NULL},
+    {"time", "time %s^7 got a watch.", NULL},
+    {"unban", "%s^7, bans are issued as-is with with no warranty or accidental damage cover.", NULL},
+    {"unlock", "can't unlock the team as %s^7 lost the keys.", NULL},
+    {"mute", "this is a democracy, where people like %s^7 should be using /callvote", NULL},
+    {"unpase", "there's no stopping now, %s^7.", NULL},
+    {"warn", "it's not like they would have taken any notice of %s^7's warn anyway.", NULL},
+
+    {"setdevmode", "%s^7 should be using ^3!devmap^7 to start a new game with cheats on!", NULL},
+    {"hstage", "the Game cannot be changed, %s^7.", NULL},
+    {"astage", "the Game cannot be changed, %s^7.", NULL},
+    {"bubble", "try /disconnect to see bubbles, %s^7.", NULL},
+    {"scrim", "this is a pub, %s^7.", NULL},
+    {"give", "in accordance with the Zittrig Code of Conduct, %s^7 is not permitted to give credits or evos.", NULL},
+    {"setrotation", "the laws of physics set the rotation, not mere mortals like you, %s^7.", NULL},
+    {"print", "^ilp0 is on fire.", NULL},
+    {"drug", "%s^7 should try using Basilisk gas instead.", NULL},
+    {"god", "too late, %s^7 killed them.", NULL},
+    {"range", "don't know what you're on about, %s^7.", NULL},
+    {"practise", "get gud, %s^7.", NULL},
+  };
+
 g_admin_cmd_t g_admin_cmds[ ] = 
   {
     {"adjustban", G_admin_adjustban, "ban",
@@ -461,6 +527,7 @@ g_admin_cmd_t g_admin_cmds[ ] =
   };
 
 static int adminNumCmds = sizeof( g_admin_cmds ) / sizeof( g_admin_cmds[ 0 ] );
+static int adminNumSchachts = sizeof( g_admin_schachts ) / sizeof( g_admin_schachts[ 0 ] );
 
 static int admin_level_maxname = 0;
 g_admin_level_t *g_admin_levels[ MAX_ADMIN_LEVELS ];
@@ -1456,7 +1523,8 @@ qboolean G_admin_ban_check( char *userinfo, char *reason, int rlen )
 
 qboolean G_admin_cmd_check( gentity_t *ent, qboolean say )
 {
-  int i;
+  int i, j;
+  char buffer [256];
   char command[ MAX_ADMIN_CMD_LEN ];
   char *cmd;
   int skip = 0;
@@ -1520,6 +1588,19 @@ qboolean G_admin_cmd_check( gentity_t *ent, qboolean say )
 
     if( G_admin_permission( ent, g_admin_cmds[ i ].flag ) )
     {
+      if( G_admin_permission( ent, ADMF_SCHACHT ) && ent )
+      {
+        for( j = 0; j < adminNumSchachts; j++ )
+        {
+          if( !Q_stricmp( cmd, g_admin_schachts[ j ].keyword )) // Q_stricmp = 0 means the values are equal
+          {
+            Com_sprintf( buffer, sizeof( buffer ), g_admin_schachts[ j ].schacht, ent->client->pers.netname );
+            AP( va( "print \"^3!%s: ^7%s^7\n\"", cmd, buffer ));
+            admin_log( ent, "schachted command:", skip - 1 );
+            return qtrue;
+          }
+        }
+      }
       g_admin_cmds[ i ].handler( ent, skip );
       admin_log( ent, cmd, skip );
       G_admin_adminlog_log( ent, cmd, NULL, skip, qtrue );

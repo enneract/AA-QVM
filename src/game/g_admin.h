@@ -84,6 +84,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ADMF_TEAMCHAT_CMD        "TEAMCHATCMD"
 #define ADMF_ACTIVITY            "ACTIVITY"
 
+#define ADMF_SCHACHT             "SCHACHT"
+
 #define ADMF_IMMUTABLE           "IMMUTABLE"
 #define ADMF_INCOGNITO           "INCOGNITO"
 #define ADMF_SEESINCOGNITO       "SEESINCOGNITO"
@@ -115,6 +117,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // important note: QVM does not seem to allow a single char to be a
 // member of a struct at init time.  flag has been converted to char*
+typedef struct
+{
+  char *keyword; // the cmd
+  char *schacht; // the shitpost
+  char *sound;   // optional sound played
+}
+g_admin_schachts_t;
+
 typedef struct
 {
   char *keyword;
