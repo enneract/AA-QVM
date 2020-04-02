@@ -1586,7 +1586,7 @@ void FireWeapon( gentity_t *ent )
       break;
     case WP_ALEVEL4:
       if( g_tyrantNerf.integer )
-        meleeAttack( ent, ( LEVEL4_CLAW_RANGE * ( newRange->rangeBoost + 1.0f ) ) , LEVEL4_CLAW_WIDTH - 4, LEVEL4_CLAW_DMG, MOD_LEVEL4_CLAW );
+        meleeAttack( ent, LEVEL4_CLAW_RANGE * ( newRange->rangeBoost + 1.0f ) - 32.0f, LEVEL4_CLAW_WIDTH - 4.0f, LEVEL4_CLAW_DMG, MOD_LEVEL4_CLAW );
       else
         meleeAttack( ent, LEVEL4_CLAW_RANGE * ( newRange->rangeBoost + 1.0f ), LEVEL4_CLAW_WIDTH, LEVEL4_CLAW_DMG, MOD_LEVEL4_CLAW );
       break;
