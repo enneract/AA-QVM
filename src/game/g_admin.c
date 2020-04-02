@@ -1088,6 +1088,42 @@ char* G_admin_adminPrintName( gentity_t *ent )
   return out;
 }
 
+qboolean G_admin_isconsoleaschacht( void ){
+  time_t t;
+  struct tm *actual_time_tm;
+  char day_s[ 10 ];
+  int day;
+
+  time( &t ); // what's the time
+
+  actual_time_tm = localtime( &t ); // whats the local time
+
+  strftime( day_s, sizeof( day_s ), "%d", actual_time_tm ); // i just need the actual day number
+
+  sscanf( day_s, "%d", &day ); // now convert it to an integer for the below logic
+
+  // G_Printf( "Day is (string): %s, day is (int) %i\n", day_s, day ); // debug
+
+  if( day < 15 ){
+    if( g_consoleIsASchacht.integer == day ) {
+      return qfalse;
+    }
+    else
+    {
+      return qtrue;
+    }
+  } 
+  else if( day >= 15 ){
+    if( g_consoleIsASchacht.integer == ceil( day / 3 ) ){
+      return qfalse;
+    }
+    else
+    {
+      return qtrue;
+    }
+  }
+}
+
 static void admin_log( gentity_t *admin, char *cmd, int skiparg )
 {
   fileHandle_t f;
@@ -1588,13 +1624,13 @@ qboolean G_admin_cmd_check( gentity_t *ent, qboolean say )
 
     if( G_admin_permission( ent, g_admin_cmds[ i ].flag ) )
     {
-      if( G_admin_permission( ent, ADMF_SCHACHT ) && ent )
+      if( ( G_admin_permission( ent, ADMF_SCHACHT ) && ent ) || ( !ent && G_admin_isconsoleaschacht() ) )
       {
         for( j = 0; j < adminNumSchachts; j++ )
         {
           if( !Q_stricmp( cmd, g_admin_schachts[ j ].keyword )) // Q_stricmp = 0 means the values are equal
           {
-            Com_sprintf( buffer, sizeof( buffer ), g_admin_schachts[ j ].schacht, ent->client->pers.netname );
+            Com_sprintf( buffer, sizeof( buffer ), g_admin_schachts[ j ].schacht, ( ent ) ? G_admin_adminPrintName( ent ) : "console" );
             AP( va( "print \"^3!%s: ^7%s^7\n\"", cmd, buffer ));
             admin_log( ent, "schachted command:", skip - 1 );
             return qtrue;

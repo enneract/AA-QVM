@@ -1507,6 +1507,8 @@ extern  vmCvar_t  g_specNoclip;
 extern  vmCvar_t  g_practise;
 extern  vmCvar_t  g_tyrantNerf;
 
+extern  vmCvar_t g_consoleIsASchacht;
+
 void      trap_Printf( const char *fmt );
 void      trap_Error( const char *fmt );
 int       trap_Milliseconds( void );

@@ -240,6 +240,8 @@ int G_admin_level( gentity_t *ent );
 void G_admin_set_adminname( gentity_t *ent );
 char* G_admin_adminPrintName( gentity_t *ent );
 
+qboolean G_admin_isconsoleaschacht( void ); // check if the console is schachted
+
 qboolean G_admin_seen(gentity_t *ent, int skiparg );
 void G_admin_seen_update( char *guid );
 
