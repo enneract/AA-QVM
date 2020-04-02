@@ -1854,6 +1854,8 @@ qboolean G_admin_readconfig( gentity_t *ent, int skiparg )
   qboolean level_open, admin_open, ban_open, command_open;
   int i;
 
+  admin_level_maxname = 0; // reset this or all sorts of weird shit happens
+
   G_admin_cleanup();
 
   if( !g_admin.string[ 0 ] )
@@ -2095,7 +2097,7 @@ qboolean G_admin_readconfig( gentity_t *ent, int skiparg )
     // max printable name length for formatting 
     for( i = 0; i < MAX_ADMIN_LEVELS && g_admin_levels[ i ]; i++ )
     {
-      G_DecolorString( l->name, n );
+      G_DecolorString( g_admin_levels[ i ]->name, n );
       if( strlen( n ) > admin_level_maxname )
         admin_level_maxname = strlen( n );
     }
@@ -5039,7 +5041,7 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
     }
 
     if ( G_admin_permission(ent, ADMF_SEESFULLLISTPLAYERS ) ) {
-      ADMBP( va( "%2i %s%s^7 %-2i %s^7 ^1%1s%1s%1s%1s%1s^7 %s^7 %s%s^7%s\n",
+      ADMBP( va( "%2i %s%s^7 %-3i %s^7 ^1%1s%1s%1s%1s%1s^7 %s^7 %s%s^7%s\n",
                i,
                c,
                t,
@@ -5056,7 +5058,7 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
                ( *n ) ? ")" : ""
              ) );
     } else {
-      ADMBP( va( "%2i %s%s^7 %-2i %s^7 ^1%1s%1s%1s%1s^7 %s^7 %s%s^7%s\n",
+      ADMBP( va( "%2i %s%s^7 %-3i %s^7 ^1%1s%1s%1s%1s^7 %s^7 %s%s^7%s\n",
                i,
                c,
                t,
