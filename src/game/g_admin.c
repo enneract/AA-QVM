@@ -1089,38 +1089,19 @@ char* G_admin_adminPrintName( gentity_t *ent )
 }
 
 qboolean G_admin_isconsoleaschacht( void ){
-  time_t t;
-  struct tm *actual_time_tm;
-  char day_s[ 10 ];
-  int day;
+  qtime_t qt;
 
-  time( &t ); // what's the time
+  trap_RealTime( &qt );
 
-  actual_time_tm = localtime( &t ); // whats the local time
+  // G_Printf( "Day is %i (integer)\n", qt.tm_mday ); // debug
 
-  strftime( day_s, sizeof( day_s ), "%d", actual_time_tm ); // i just need the actual day number
-
-  sscanf( day_s, "%d", &day ); // now convert it to an integer for the below logic
-
-  // G_Printf( "Day is (string): %s, day is (int) %i\n", day_s, day ); // debug
-
-  if( day < 15 ){
-    if( g_consoleIsASchacht.integer == day ) {
-      return qfalse;
-    }
-    else
-    {
-      return qtrue;
-    }
+  if( qt.tm_mday < 15 )
+  {
+    return g_consoleIsASchacht.integer != qt.tm_mday;
   } 
-  else if( day >= 15 ){
-    if( g_consoleIsASchacht.integer == ceil( day / 3 ) ){
-      return qfalse;
-    }
-    else
-    {
-      return qtrue;
-    }
+  else
+  {
+    return g_consoleIsASchacht.integer != ceil( qt.tm_mday / 3.0f );
   }
 }
 
