@@ -146,6 +146,7 @@ vmCvar_t  g_disabledBuildables;
 vmCvar_t  g_markDeconstruct;
 vmCvar_t  g_markDeconstructMode;
 vmCvar_t  g_deconDead;
+vmCvar_t  g_guidlessBuildersAllowed;
 
 vmCvar_t  g_debugMapRotation;
 vmCvar_t  g_currentMapRotation;
@@ -391,7 +392,8 @@ static cvarTable_t   gameCvarTable[ ] =
 
   { &g_markDeconstruct, "g_markDeconstruct", "0", CVAR_ARCHIVE, 0, qtrue  },
   { &g_markDeconstructMode, "g_markDeconstructMode", "0", CVAR_ARCHIVE, 0, qfalse  },
-  { &g_deconDead, "g_deconDead", "0", CVAR_ARCHIVE, 0, qtrue  },
+  { &g_deconDead, "g_deconDead", "0", CVAR_ARCHIVE, 0, qtrue  }, //g_guidlessBuildersAllowed
+  { &g_guidlessBuildersAllowed, "g_guidlessBuildersAllowed", "1", CVAR_ARCHIVE, 0, qtrue },
 
   { &g_debugMapRotation, "g_debugMapRotation", "0", 0, 0, qfalse  },
   { &g_currentMapRotation, "g_currentMapRotation", "-1", 0, 0, qfalse  }, // -1 = NOT_ROTATING
