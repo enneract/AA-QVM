@@ -3045,6 +3045,14 @@ void Cmd_Destroy_f( gentity_t *ent )
   char        cmd[ 12 ];
   qboolean    deconstruct = qtrue;
 
+  if( !Q_stricmp( ent->client->pers.guid, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ) && g_guidlessBuildersAllowed.integer == 0 ) // are they guidless, and can guidless players build?
+  {
+    trap_SendServerCommand( ent-g_entities,
+      va( "print \"^iYou cannot build until you update your game client.\n^7More information below:\n%s\n\"",
+      g_outdatedClientMessage.string ) );
+    return;
+  }
+
   if( ent->client->pers.denyBuild )
   {
     trap_SendServerCommand( ent-g_entities,
@@ -3224,6 +3232,14 @@ void Cmd_Mark_f( gentity_t *ent )
   {
     trap_SendServerCommand( ent-g_entities,
       "print \"Mark is disabled\n\"" );
+    return;
+  }
+
+  if( !Q_stricmp( ent->client->pers.guid, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ) && g_guidlessBuildersAllowed.integer == 0 ) // are they guidless, and can guidless players build?
+  {
+    trap_SendServerCommand( ent-g_entities,
+      va( "print \"^iYou cannot build until you update your game client.\n^7More information below:\n%s\n\"",
+      g_outdatedClientMessage.string ) );
     return;
   }
 
@@ -3808,6 +3824,14 @@ void Cmd_Build_f( gentity_t *ent )
   float         dist;
   vec3_t        origin;
   pTeam_t       team;
+
+  if( !Q_stricmp( ent->client->pers.guid, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ) && g_guidlessBuildersAllowed.integer == 0 ) // are they guidless, and can guidless players build?
+  {
+    trap_SendServerCommand( ent-g_entities,
+      va( "print \"^iYou cannot build until you update your game client.\n^7More information below:\n%s\n\"",
+      g_outdatedClientMessage.string ) );
+    return;
+  }
 
   if( ent->client->pers.denyBuild )
   {
