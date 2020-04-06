@@ -605,11 +605,19 @@ static void CG_DrawPlayerCreditsValue( rectDef_t *rect, vec4_t color, qboolean p
 
     if( cg_drawFractionalEvos.integer
         && cg.predictedPlayerState.stats[ STAT_PTEAM ] == PTE_ALIENS )
+    {
       CG_DrawPlayerEvos( rect, value );
-    else if( padding )
-      CG_DrawFieldPadded( rect->x, rect->y, 4, rect->w / 4, rect->h, value );
+    }
     else
-      CG_DrawField( rect->x, rect->y, 1, rect->w, rect->h, value );
+    {
+      if( cg.predictedPlayerState.stats[ STAT_PTEAM ] == PTE_ALIENS )
+        value /= EVO_TO_CREDS_RATE;
+      
+      if( padding )
+        CG_DrawFieldPadded( rect->x, rect->y, 4, rect->w / 4, rect->h, value );
+      else
+        CG_DrawField( rect->x, rect->y, 1, rect->w, rect->h, value );
+    }
 
     trap_R_SetColor( NULL );
   }
