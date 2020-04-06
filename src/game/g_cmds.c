@@ -4962,7 +4962,7 @@ void Cmd_Share_f( gentity_t *ent )
     //check arg2 is a number
     for( i = 0; arg2[ i ]; i++ )
     {
-      if( arg2[ i ] < '0' || arg2[ i ] > '9' )
+      if( ( arg2[ i ] < '0' || arg2[ i ] > '9' ) && arg2[ i ] != '.' )
       {
         trap_SendServerCommand( ent-g_entities,
           "print \"usage: share [name|slot#] [amount]\n\"" );
@@ -5171,7 +5171,7 @@ void Cmd_Donate_f( gentity_t *ent ) {
           ent->client->pers.netname, totals[ i ] / EVO_TO_CREDS_RATE ) );
         trap_SendServerCommand( ent-g_entities,
           va( "print \"Donated %.3f evo(s) to the cause.\n\"",
-          total-value / EVO_TO_CREDS_RATE ) );
+          ( total - value ) / EVO_TO_CREDS_RATE ) );
       }
       else
       {
