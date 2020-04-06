@@ -4837,324 +4837,324 @@ static void Cmd_Ignore_f( gentity_t *ent )
   }
 }
 
- /*
- =================
- Cmd_Share_f
- =================
- */
- void Cmd_Share_f( gentity_t *ent )
- {
-   int   i, clientNum = 0, creds = 0, skipargs = 0;
-   int   clientNums[ MAX_CLIENTS ] = { -1 };
-   char  cmd[ 12 ];
-   char  arg1[ MAX_STRING_TOKENS ];
-   char  arg2[ MAX_STRING_TOKENS ];
-   pTeam_t team;
+/*
+=================
+Cmd_Share_f
+=================
+*/
+void Cmd_Share_f( gentity_t *ent )
+{
+  int   i, clientNum = 0, creds = 0, skipargs = 0;
+  int   clientNums[ MAX_CLIENTS ] = { -1 };
+  char  cmd[ 12 ];
+  char  arg1[ MAX_STRING_TOKENS ];
+  char  arg2[ MAX_STRING_TOKENS ];
+  pTeam_t team;
 
-   if( !ent || !ent->client || ( ent->client->pers.teamSelection == PTE_NONE ) )
-   {
-     return;
-   }
-
-   if( !g_allowShare.integer )
-   {
-     trap_SendServerCommand( ent-g_entities, "print \"Share has been disabled.\n\"" );
-     return;
-   }
-
-   if( g_floodMinTime.integer )
-   if ( G_Flood_Limited( ent ) )
-   {
-    trap_SendServerCommand( ent-g_entities, "print \"Your chat is flood-limited; wait before chatting again\n\"" );
+  if( !ent || !ent->client || ( ent->client->pers.teamSelection == PTE_NONE ) )
+  {
     return;
-   }
+  }
 
-   team = ent->client->pers.teamSelection;
-
-   G_SayArgv( 0, cmd, sizeof( cmd ) );
-   if( !Q_stricmp( cmd, "say" ) || !Q_stricmp( cmd, "say_team" ) )
-   {
-     skipargs = 1;
-     G_SayArgv( 1, cmd, sizeof( cmd ) );
-   }
-
-   // target player name is in arg1
-   G_SayArgv( 1+skipargs, arg1, sizeof( arg1 ) );
-   // amount to be shared is in arg2
-   G_SayArgv( 2+skipargs, arg2, sizeof( arg2 ) );
-
-   if( arg1[0] && !strchr( arg1, ';' ) && Q_stricmp( arg1, "target_in_aim" ) )
-   {
-     //check arg1 is a number
-     for( i = 0; arg1[ i ]; i++ )
-     {
-       if( arg1[ i ] < '0' || arg1[ i ] > '9' )
-       {
-         clientNum = -1;
-         break;
-       }
-     }
-
-     if( clientNum >= 0 )
-     {
-       clientNum = atoi( arg1 );
-     }
-     else if( G_ClientNumbersFromString( arg1, clientNums ) == 1 )
-     {
-       // there was one partial name match
-       clientNum = clientNums[ 0 ]; 
-     }
-     else
-     {
-       // look for an exact name match before bailing out
-       clientNum = G_ClientNumberFromString( ent, arg1 );
-       if( clientNum == -1 )
-       {
-         trap_SendServerCommand( ent-g_entities,
-           "print \"share: invalid player name specified.\n\"" );
-         return;
-       }
-     }
-   }
-   else // arg1 not set
-   {
-     vec3_t      forward, end;
-     trace_t     tr;
-     gentity_t   *traceEnt;
-
-     // trace a teammate
-     AngleVectors( ent->client->ps.viewangles, forward, NULL, NULL );
-     VectorMA( ent->client->ps.origin, 8192 * 16, forward, end );
-
-     trap_Trace( &tr, ent->client->ps.origin, NULL, NULL, end, ent->s.number, MASK_PLAYERSOLID );
-     traceEnt = &g_entities[ tr.entityNum ];
-
-     if( tr.fraction < 1.0f && traceEnt->client &&
-       ( traceEnt->client->pers.teamSelection == team ) )
-     {
-       clientNum = traceEnt - g_entities;
-     }
-     else
-     {
-       trap_SendServerCommand( ent-g_entities,
-         va( "print \"share: aim at a teammate to share %s.\n\"",
-         ( team == PTE_HUMANS ) ? "credits" : "evolvepoints" ) );
-       return;
-     }
-   }
-
-   // verify target player team
-   if( ( clientNum < 0 ) || ( clientNum >= level.maxclients ) ||
-       ( level.clients[ clientNum ].pers.teamSelection != team ) )
-   {
-     trap_SendServerCommand( ent-g_entities,
-       "print \"share: not a valid player of your team.\n\"" );
-     return;
-   }
-
-   if( !arg2[0] || strchr( arg2, ';' ) )
-   {
-     // default credit count
-     if( team == PTE_HUMANS )
-     {
-       creds = FREEKILL_HUMAN;
-     }
-     else if( team == PTE_ALIENS )
-     {
-       creds = FREEKILL_ALIEN;
-     }
-   }
-   else
-   {
-     //check arg2 is a number
-     for( i = 0; arg2[ i ]; i++ )
-     {
-       if( arg2[ i ] < '0' || arg2[ i ] > '9' )
-       {
-         trap_SendServerCommand( ent-g_entities,
-           "print \"usage: share [name|slot#] [amount]\n\"" );
-         return;
-       }
-     }
-
-     // credit count from parameter
-     creds = atoi( arg2 );
-   }
-
-   // player specified "0" to transfer
-   if( creds <= 0 )
-   {
-     trap_SendServerCommand( ent-g_entities,
-       "print \"Ooh, you are a generous one, indeed!\n\"" );
-     return;
-   }
-
-   // transfer only credits the player really has
-   if( creds > ent->client->pers.credit )
-   {
-     creds = ent->client->pers.credit;
-   }
-
-   // player has no credits
-   if( creds <= 0 )
-   {
-     trap_SendServerCommand( ent-g_entities,
-       "print \"Earn some first, lazy gal!\n\"" );
-     return;
-   }
-
-   // allow transfers only up to the credit/evo limit
-   if( ( team == PTE_HUMANS ) && 
-       ( creds > HUMAN_MAX_CREDITS - level.clients[ clientNum ].pers.credit ) )
-   {
-     creds = HUMAN_MAX_CREDITS - level.clients[ clientNum ].pers.credit;
-   }
-   else if( ( team == PTE_ALIENS ) && 
-       ( creds > ALIEN_MAX_KILLS - level.clients[ clientNum ].pers.credit ) )
-   {
-     creds = ALIEN_MAX_KILLS - level.clients[ clientNum ].pers.credit;
-   }
-
-   // target cannot take any more credits
-   if( creds <= 0 )
-   {
-     trap_SendServerCommand( ent-g_entities,
-       va( "print \"share: player cannot receive any more %s.\n\"",
-         ( team == PTE_HUMANS ) ? "credits" : "evolvepoints" ) );
-     return;
-   }
-
-   // transfer credits
-   G_AddCreditToClient( ent->client, -creds, qfalse );
-   trap_SendServerCommand( ent-g_entities,
-     va( "print \"share: transferred %d %s to %s^7.\n\"", creds,
-       ( team == PTE_HUMANS ) ? "credits" : "evolvepoints",
-       level.clients[ clientNum ].pers.netname ) );
-   G_AddCreditToClient( &(level.clients[ clientNum ]), creds, qtrue );
-   trap_SendServerCommand( clientNum,
-     va( "print \"You have received %d %s from %s^7.\n\"", creds,
-       ( team == PTE_HUMANS ) ? "credits" : "evolvepoints",
-       ent->client->pers.netname ) );
-
-   G_LogPrintf( "Share: %i %i %i %d: %s^7 transferred %d%s to %s^7\n",
-     ent->client->ps.clientNum,
-     clientNum,
-     team,
-     creds,
-     ent->client->pers.netname,
-     creds,
-     ( team == PTE_HUMANS ) ? "c" : "e",
-     level.clients[ clientNum ].pers.netname );
- }
-
- /*
- =================
- Cmd_Donate_f
-
- Alms for the poor
- =================
- */
- void Cmd_Donate_f( gentity_t *ent ) {
-   char s[ MAX_TOKEN_CHARS ] = "", *type = "evo(s)";
-   int i, value, divisor, portion, new_credits, total=0,
-     max = ALIEN_MAX_KILLS, *amounts, *totals;
-   qboolean donated = qtrue;
-
-   if( !ent->client ) return;
-
-   if( !g_allowShare.integer )
-   {
-     trap_SendServerCommand( ent-g_entities, "print \"Donate has been disabled.\n\"" );
-     return;
-   }
-
-   if( g_floodMinTime.integer && G_Flood_Limited( ent ) )
-   {
-    trap_SendServerCommand( ent-g_entities, "print \"Your chat is flood-limited; wait before chatting again\n\"" );
+  if( !g_allowShare.integer )
+  {
+    trap_SendServerCommand( ent-g_entities, "print \"Share has been disabled.\n\"" );
     return;
-   }
+  }
 
-   if( ent->client->pers.teamSelection == PTE_ALIENS )
-     divisor = level.numAlienClients-1;
-   else if( ent->client->pers.teamSelection == PTE_HUMANS ) {
-     divisor = level.numHumanClients-1;
-     max = HUMAN_MAX_CREDITS;
-     type = "credit(s)";
-   } else {
-     trap_SendServerCommand( ent-g_entities,
-       va( "print \"donate: spectators cannot be so gracious\n\"" ) );
-     return;
-   }
+  if( g_floodMinTime.integer )
+  if ( G_Flood_Limited( ent ) )
+  {
+   trap_SendServerCommand( ent-g_entities, "print \"Your chat is flood-limited; wait before chatting again\n\"" );
+   return;
+  }
 
-   if( divisor < 1 ) {
-     trap_SendServerCommand( ent-g_entities,
-       "print \"donate: get yourself some teammates first\n\"" );
-     return;
-   }
+  team = ent->client->pers.teamSelection;
 
-   trap_Argv( 1, s, sizeof( s ) );
-   value = atoi(s);
-   if( value <= 0 ) {
-     trap_SendServerCommand( ent-g_entities,
-       "print \"donate: very funny\n\"" );
-     return;
-   }
-   if( value > ent->client->pers.credit)
-     value = ent->client->pers.credit;
+  G_SayArgv( 0, cmd, sizeof( cmd ) );
+  if( !Q_stricmp( cmd, "say" ) || !Q_stricmp( cmd, "say_team" ) )
+  {
+    skipargs = 1;
+    G_SayArgv( 1, cmd, sizeof( cmd ) );
+  }
 
-   // allocate memory for distribution amounts
-   amounts = G_Alloc( level.maxclients * sizeof( int ) );
-   totals = G_Alloc( level.maxclients * sizeof( int ) );
-   for( i = 0; i < level.maxclients; i++ ) {
-     amounts[ i ] = 0;
-     totals[ i ] = 0;
-   }
+  // target player name is in arg1
+  G_SayArgv( 1+skipargs, arg1, sizeof( arg1 ) );
+  // amount to be shared is in arg2
+  G_SayArgv( 2+skipargs, arg2, sizeof( arg2 ) );
 
-   // determine donation amounts for each client
-   total = value;
-   while( donated && value ) {
-     donated = qfalse;
-     portion = value / divisor;
-     if( portion < 1 ) portion = 1;
-     for( i = 0; i < level.maxclients; i++ )
-       if( level.clients[ i ].pers.connected == CON_CONNECTED &&
-            ent->client != level.clients + i &&
-            level.clients[ i ].pers.teamSelection ==
-            ent->client->pers.teamSelection  &&
-            level.clients[ i ].pers.credit < max  ) {
-         new_credits = level.clients[ i ].pers.credit + portion;
-         amounts[ i ] = portion;
-         totals[ i ] += portion;
-         if( new_credits > max ) {
-           amounts[ i ] -= new_credits - max;
-           totals[ i ] -= new_credits - max;
-           new_credits = max;
-         }
-         if( amounts[ i ] ) {
-           G_AddCreditToClient( &(level.clients[ i ]), amounts[ i ], qtrue );
-           donated = qtrue;
-           value -= amounts[ i ];
-           if( value < portion ) break;
-         }
-       }
-   }
+  if( arg1[0] && !strchr( arg1, ';' ) && Q_stricmp( arg1, "target_in_aim" ) )
+  {
+    //check arg1 is a number
+    for( i = 0; arg1[ i ]; i++ )
+    {
+      if( arg1[ i ] < '0' || arg1[ i ] > '9' )
+      {
+        clientNum = -1;
+        break;
+      }
+    }
 
-   // transfer funds
-   G_AddCreditToClient( ent->client, value - total, qtrue );
-   for( i = 0; i < level.maxclients; i++ )
-     if( totals[ i ] ) {
-       trap_SendServerCommand( i,
-         va( "print \"%s^7 donated %d %s to you, don't forget to say 'thank you'!\n\"",
-         ent->client->pers.netname, totals[ i ], type ) );
-     }
+    if( clientNum >= 0 )
+    {
+      clientNum = atoi( arg1 );
+    }
+    else if( G_ClientNumbersFromString( arg1, clientNums ) == 1 )
+    {
+      // there was one partial name match
+      clientNum = clientNums[ 0 ]; 
+    }
+    else
+    {
+      // look for an exact name match before bailing out
+      clientNum = G_ClientNumberFromString( ent, arg1 );
+      if( clientNum == -1 )
+      {
+        trap_SendServerCommand( ent-g_entities,
+          "print \"share: invalid player name specified.\n\"" );
+        return;
+      }
+    }
+  }
+  else // arg1 not set
+  {
+    vec3_t      forward, end;
+    trace_t     tr;
+    gentity_t   *traceEnt;
 
-   G_Free( amounts );
-   G_Free( totals );
+    // trace a teammate
+    AngleVectors( ent->client->ps.viewangles, forward, NULL, NULL );
+    VectorMA( ent->client->ps.origin, 8192 * 16, forward, end );
 
-   trap_SendServerCommand( ent-g_entities,
-     va( "print \"Donated %d %s to the cause.\n\"",
-     total-value, type ) );
- }
+    trap_Trace( &tr, ent->client->ps.origin, NULL, NULL, end, ent->s.number, MASK_PLAYERSOLID );
+    traceEnt = &g_entities[ tr.entityNum ];
+
+    if( tr.fraction < 1.0f && traceEnt->client &&
+      ( traceEnt->client->pers.teamSelection == team ) )
+    {
+      clientNum = traceEnt - g_entities;
+    }
+    else
+    {
+      trap_SendServerCommand( ent-g_entities,
+        va( "print \"share: aim at a teammate to share %s.\n\"",
+        ( team == PTE_HUMANS ) ? "credits" : "evolvepoints" ) );
+      return;
+    }
+  }
+
+  // verify target player team
+  if( ( clientNum < 0 ) || ( clientNum >= level.maxclients ) ||
+      ( level.clients[ clientNum ].pers.teamSelection != team ) )
+  {
+    trap_SendServerCommand( ent-g_entities,
+      "print \"share: not a valid player of your team.\n\"" );
+    return;
+  }
+
+  if( !arg2[0] || strchr( arg2, ';' ) )
+  {
+    // default credit count
+    if( team == PTE_HUMANS )
+    {
+      creds = FREEKILL_HUMAN;
+    }
+    else if( team == PTE_ALIENS )
+    {
+      creds = FREEKILL_ALIEN;
+    }
+  }
+  else
+  {
+    //check arg2 is a number
+    for( i = 0; arg2[ i ]; i++ )
+    {
+      if( arg2[ i ] < '0' || arg2[ i ] > '9' )
+      {
+        trap_SendServerCommand( ent-g_entities,
+          "print \"usage: share [name|slot#] [amount]\n\"" );
+        return;
+      }
+    }
+
+    // credit count from parameter
+    creds = atoi( arg2 );
+  }
+
+  // player specified "0" to transfer
+  if( creds <= 0 )
+  {
+    trap_SendServerCommand( ent-g_entities,
+      "print \"Ooh, you are a generous one, indeed!\n\"" );
+    return;
+  }
+
+  // transfer only credits the player really has
+  if( creds > ent->client->pers.credit )
+  {
+    creds = ent->client->pers.credit;
+  }
+
+  // player has no credits
+  if( creds <= 0 )
+  {
+    trap_SendServerCommand( ent-g_entities,
+      "print \"Earn some first, lazy gal!\n\"" );
+    return;
+  }
+
+  // allow transfers only up to the credit/evo limit
+  if( ( team == PTE_HUMANS ) && 
+      ( creds > HUMAN_MAX_CREDITS - level.clients[ clientNum ].pers.credit ) )
+  {
+    creds = HUMAN_MAX_CREDITS - level.clients[ clientNum ].pers.credit;
+  }
+  else if( ( team == PTE_ALIENS ) && 
+      ( creds > ALIEN_MAX_KILLS - level.clients[ clientNum ].pers.credit ) )
+  {
+    creds = ALIEN_MAX_KILLS - level.clients[ clientNum ].pers.credit;
+  }
+
+  // target cannot take any more credits
+  if( creds <= 0 )
+  {
+    trap_SendServerCommand( ent-g_entities,
+      va( "print \"share: player cannot receive any more %s.\n\"",
+        ( team == PTE_HUMANS ) ? "credits" : "evolvepoints" ) );
+    return;
+  }
+
+  // transfer credits
+  G_AddCreditToClient( ent->client, -creds, qfalse );
+  trap_SendServerCommand( ent-g_entities,
+    va( "print \"share: transferred %d %s to %s^7.\n\"", creds,
+      ( team == PTE_HUMANS ) ? "credits" : "evolvepoints",
+      level.clients[ clientNum ].pers.netname ) );
+  G_AddCreditToClient( &(level.clients[ clientNum ]), creds, qtrue );
+  trap_SendServerCommand( clientNum,
+    va( "print \"You have received %d %s from %s^7.\n\"", creds,
+      ( team == PTE_HUMANS ) ? "credits" : "evolvepoints",
+      ent->client->pers.netname ) );
+
+  G_LogPrintf( "Share: %i %i %i %d: %s^7 transferred %d%s to %s^7\n",
+    ent->client->ps.clientNum,
+    clientNum,
+    team,
+    creds,
+    ent->client->pers.netname,
+    creds,
+    ( team == PTE_HUMANS ) ? "c" : "e",
+    level.clients[ clientNum ].pers.netname );
+}
+
+/*
+=================
+Cmd_Donate_f
+
+Alms for the poor
+=================
+*/
+void Cmd_Donate_f( gentity_t *ent ) {
+  char s[ MAX_TOKEN_CHARS ] = "", *type = "evo(s)";
+  int i, value, divisor, portion, new_credits, total=0,
+    max = ALIEN_MAX_KILLS, *amounts, *totals;
+  qboolean donated = qtrue;
+
+  if( !ent->client ) return;
+
+  if( !g_allowShare.integer )
+  {
+    trap_SendServerCommand( ent-g_entities, "print \"Donate has been disabled.\n\"" );
+    return;
+  }
+
+  if( g_floodMinTime.integer && G_Flood_Limited( ent ) )
+  {
+   trap_SendServerCommand( ent-g_entities, "print \"Your chat is flood-limited; wait before chatting again\n\"" );
+   return;
+  }
+
+  if( ent->client->pers.teamSelection == PTE_ALIENS )
+    divisor = level.numAlienClients-1;
+  else if( ent->client->pers.teamSelection == PTE_HUMANS ) {
+    divisor = level.numHumanClients-1;
+    max = HUMAN_MAX_CREDITS;
+    type = "credit(s)";
+  } else {
+    trap_SendServerCommand( ent-g_entities,
+      va( "print \"donate: spectators cannot be so gracious\n\"" ) );
+    return;
+  }
+
+  if( divisor < 1 ) {
+    trap_SendServerCommand( ent-g_entities,
+      "print \"donate: get yourself some teammates first\n\"" );
+    return;
+  }
+
+  trap_Argv( 1, s, sizeof( s ) );
+  value = atoi(s);
+  if( value <= 0 ) {
+    trap_SendServerCommand( ent-g_entities,
+      "print \"donate: very funny\n\"" );
+    return;
+  }
+  if( value > ent->client->pers.credit)
+    value = ent->client->pers.credit;
+
+  // allocate memory for distribution amounts
+  amounts = G_Alloc( level.maxclients * sizeof( int ) );
+  totals = G_Alloc( level.maxclients * sizeof( int ) );
+  for( i = 0; i < level.maxclients; i++ ) {
+    amounts[ i ] = 0;
+    totals[ i ] = 0;
+  }
+
+  // determine donation amounts for each client
+  total = value;
+  while( donated && value ) {
+    donated = qfalse;
+    portion = value / divisor;
+    if( portion < 1 ) portion = 1;
+    for( i = 0; i < level.maxclients; i++ )
+      if( level.clients[ i ].pers.connected == CON_CONNECTED &&
+           ent->client != level.clients + i &&
+           level.clients[ i ].pers.teamSelection ==
+           ent->client->pers.teamSelection  &&
+           level.clients[ i ].pers.credit < max  ) {
+        new_credits = level.clients[ i ].pers.credit + portion;
+        amounts[ i ] = portion;
+        totals[ i ] += portion;
+        if( new_credits > max ) {
+          amounts[ i ] -= new_credits - max;
+          totals[ i ] -= new_credits - max;
+          new_credits = max;
+        }
+        if( amounts[ i ] ) {
+          G_AddCreditToClient( &(level.clients[ i ]), amounts[ i ], qtrue );
+          donated = qtrue;
+          value -= amounts[ i ];
+          if( value < portion ) break;
+        }
+      }
+  }
+
+  // transfer funds
+  G_AddCreditToClient( ent->client, value - total, qtrue );
+  for( i = 0; i < level.maxclients; i++ )
+    if( totals[ i ] ) {
+      trap_SendServerCommand( i,
+        va( "print \"%s^7 donated %d %s to you, don't forget to say 'thank you'!\n\"",
+        ent->client->pers.netname, totals[ i ], type ) );
+    }
+
+  G_Free( amounts );
+  G_Free( totals );
+
+  trap_SendServerCommand( ent-g_entities,
+    va( "print \"Donated %d %s to the cause.\n\"",
+    total-value, type ) );
+}
 
 commands_t cmds[ ] = {
   // normal commands
