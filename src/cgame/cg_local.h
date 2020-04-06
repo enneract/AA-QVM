@@ -64,6 +64,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_MARK_POLYS      256
 
 #define STAT_MINUS          10  // num frame for '-' stats digit
+#define STAT_PERIOD         11
 
 #define ICON_SIZE           48
 #define CHAR_WIDTH          32
@@ -1174,7 +1175,7 @@ typedef struct
   qhandle_t   scannerLineShader;
 
 
-  qhandle_t   numberShaders[ 11 ];
+  qhandle_t   numberShaders[ 12 ];
 
   qhandle_t   shadowMarkShader;
   qhandle_t   wakeMarkShader;
@@ -1434,6 +1435,7 @@ extern  vmCvar_t    cg_teamOverlayUserinfo;
 extern  vmCvar_t    cg_crosshairX;
 extern  vmCvar_t    cg_crosshairY;
 extern  vmCvar_t    cg_drawSpeed;
+extern  vmCvar_t    cg_drawFractionalEvos;
 extern  vmCvar_t    cg_drawStatus;
 extern  vmCvar_t    cg_draw2D;
 extern  vmCvar_t    cg_animSpeed;

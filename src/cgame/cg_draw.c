@@ -520,6 +520,59 @@ static void CG_DrawProgressBar( rectDef_t *rect, vec4_t color, float scale,
 
 //=============== TA: was cg_newdraw.c
 
+static void CG_DrawPlayerEvos( rectDef_t *rect, int value )
+{
+  int fprec, len;
+  char buffer[ 30 ], *p;
+  float evos, x, y, w, h;
+
+  if( cg_drawFractionalEvos.integer < 1 )
+  {
+    fprec = 0;
+  }
+  else if( cg_drawFractionalEvos.integer > 4 )
+  {
+    fprec = 4;
+  }
+  else
+  {
+    fprec = cg_drawFractionalEvos.integer;
+  }
+
+  evos = value / EVO_TO_CREDS_RATE;
+
+  Com_sprintf( buffer, sizeof( buffer ), va( "%%.%df", fprec ), evos );
+  len = strlen( buffer );
+
+  w = rect->w / ( len - 0.5f ); // the dot is half-width
+  h = w * rect->h / rect->w * 1.6f;
+  x = rect->x + 2.0f; // same random offset as in CG_DrawField
+  y = rect->y + (rect->h - h) / 2.0f;
+
+  for( p = buffer; *p; p++ )
+  {
+    int digit;
+    float w2 = w;
+
+    if( *p >= '0' && *p <= '9' )
+    {
+      digit = *p - '0';
+    }
+    else if( *p == '.' )
+    {
+      digit = STAT_PERIOD;
+      w2 /= 2;
+    }
+    else
+    {
+      digit = STAT_MINUS;
+    }
+
+    CG_DrawPic( x, y, w2, h, cgs.media.numberShaders[ digit ] );
+    x += w2;
+  }
+}
+
 #define NO_CREDITS_TIME 2000
 
 static void CG_DrawPlayerCreditsValue( rectDef_t *rect, vec4_t color, qboolean padding )
@@ -541,8 +594,6 @@ static void CG_DrawPlayerCreditsValue( rectDef_t *rect, vec4_t color, qboolean p
   {
     if( cg.predictedPlayerState.stats[ STAT_PTEAM ] == PTE_ALIENS )
     {
-      value = floor( value / EVO_TO_CREDS_RATE );
-
       if( !CG_AtHighestClass( ) && cg.time - cg.lastEvolveAttempt <= NO_CREDITS_TIME )
       {
         if( ( ( cg.time - cg.lastEvolveAttempt ) / 300 ) % 2 )
@@ -552,7 +603,10 @@ static void CG_DrawPlayerCreditsValue( rectDef_t *rect, vec4_t color, qboolean p
 
     trap_R_SetColor( color );
 
-    if( padding )
+    if( cg_drawFractionalEvos.integer
+        && cg.predictedPlayerState.stats[ STAT_PTEAM ] == PTE_ALIENS )
+      CG_DrawPlayerEvos( rect, value );
+    else if( padding )
       CG_DrawFieldPadded( rect->x, rect->y, 4, rect->w / 4, rect->h, value );
     else
       CG_DrawField( rect->x, rect->y, 1, rect->w, rect->h, value );

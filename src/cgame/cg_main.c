@@ -139,6 +139,7 @@ vmCvar_t  cg_drawRewards;
 vmCvar_t  cg_crosshairX;
 vmCvar_t  cg_crosshairY;
 vmCvar_t  cg_drawSpeed;
+vmCvar_t  cg_drawFractionalEvos;
 vmCvar_t  cg_draw2D;
 vmCvar_t  cg_drawStatus;
 vmCvar_t  cg_animSpeed;
@@ -285,6 +286,7 @@ static cvarTable_t cvarTable[ ] =
   { &cg_crosshairX, "cg_crosshairX", "0", CVAR_ARCHIVE },
   { &cg_crosshairY, "cg_crosshairY", "0", CVAR_ARCHIVE },
   { &cg_drawSpeed, "cg_drawSpeed", "0", CVAR_ARCHIVE },
+  { &cg_drawFractionalEvos, "cg_drawFractionalEvos", "0", CVAR_ARCHIVE },
   { &cg_brassTime, "cg_brassTime", "2500", CVAR_ARCHIVE },
   { &cg_simpleItems, "cg_simpleItems", "0", CVAR_ARCHIVE },
   { &cg_addMarks, "cg_marks", "1", CVAR_ARCHIVE },
@@ -972,7 +974,7 @@ This function may execute for a couple of minutes with a slow disk.
 static void CG_RegisterGraphics( void )
 {
   int         i;
-  static char *sb_nums[ 11 ] =
+  static char *sb_nums[ 12 ] =
   {
     "gfx/2d/numbers/zero_32b",
     "gfx/2d/numbers/one_32b",
@@ -985,6 +987,7 @@ static void CG_RegisterGraphics( void )
     "gfx/2d/numbers/eight_32b",
     "gfx/2d/numbers/nine_32b",
     "gfx/2d/numbers/minus_32b",
+    "gfx/2d/numbers/period_32b",
   };
   static char *buildWeaponTimerPieShaders[ 8 ] =
   {
@@ -1005,7 +1008,7 @@ static void CG_RegisterGraphics( void )
   trap_R_LoadWorldMap( cgs.mapname );
   CG_UpdateMediaFraction( 0.66f );
 
-  for( i = 0; i < 11; i++ )
+  for( i = 0; i < 12; i++ )
     cgs.media.numberShaders[ i ] = trap_R_RegisterShader( sb_nums[ i ] );
 
   cgs.media.viewBloodShader           = trap_R_RegisterShader( "gfx/damage/fullscreen_painblend" );
