@@ -1332,11 +1332,6 @@ void AHive_Think( gentity_t *self )
 
 //==================================================================================
 
-
-
-
-#define HOVEL_TRACE_DEPTH 128.0f
-
 /*
 ================
 AHovel_Blocked
@@ -1346,62 +1341,66 @@ Is this hovel entrance blocked?
 */
 qboolean AHovel_Blocked( gentity_t *hovel, gentity_t *player, qboolean provideExit )
 {
-  vec3_t    forward, normal, origin, start, end, angles, hovelMaxs;
-  vec3_t    mins, maxs;
-  float     displacement;
-  trace_t   tr;
+  vec3_t   mins, maxs;
+  vec3_t   hovelMins, hovelMaxs;
+  vec3_t   globalMins, globalMaxs;
+  vec3_t   traceOrigin, origin, forward, angles;
+  qboolean unlink;
+  trace_t  tr;
 
-  BG_FindBBoxForBuildable( BA_A_HOVEL, NULL, hovelMaxs );
+  BG_FindBBoxForBuildable( BA_A_HOVEL, hovelMins, hovelMaxs );
   BG_FindBBoxForClass( player->client->ps.stats[ STAT_PCLASS ],
                        mins, maxs, NULL, NULL, NULL );
 
-  VectorCopy( hovel->s.origin2, normal );
+  // Compute the Hovel's bbox in global coordinates. Enlarge it by the player's
+  // box so the 'while' loop below is reduced from a box-box intersection to a
+  // simple point-in-box test.
+  VectorAdd( mins, hovelMins, globalMins );
+  VectorAdd( maxs, hovelMaxs, globalMaxs );
+  VectorAdd( globalMins, hovel->s.origin, globalMins );
+  VectorAdd( globalMaxs, hovel->s.origin, globalMaxs );
+
+  // Start a bit above the Hovel because it's about as big as a Granger.
+  VectorMA( hovel->s.origin, 5.0f, hovel->s.origin2, traceOrigin );
+  VectorCopy( traceOrigin, origin );
   AngleVectors( hovel->s.angles, forward, NULL, NULL );
-  VectorInverse( forward );
+  VectorInverse( forward ); // The model is actually backwards...
 
-  displacement = VectorMaxComponent( maxs ) +
-                 VectorMaxComponent( hovelMaxs ) + 1.0f;
+  // Keep marching forward until we're just outside the global box. This kind
+  // of problem has simple analytic solutions, but I CBA; computing is cheap.
+  while( origin[ 0 ] >= globalMins[ 0 ] && origin[ 0 ] <= globalMaxs[ 0 ] &&
+         origin[ 1 ] >= globalMins[ 1 ] && origin[ 1 ] <= globalMaxs[ 1 ] &&
+         origin[ 2 ] >= globalMins[ 2 ] && origin[ 2 ] <= globalMaxs[ 2 ] )
+  {
+    VectorMA( origin, 2.0f, forward, origin );
+  }
 
-  VectorMA( hovel->s.origin, displacement, forward, origin );
+  // Make sure the spot is actually reachable.
+  unlink = ( hovel->s.number != ENTITYNUM_NONE ); // Watch out for fake hovels
 
-  VectorCopy( hovel->s.origin, start );
-  VectorCopy( origin, end );
+  if( unlink )
+    trap_UnlinkEntity( hovel );
+  trap_Trace( &tr, traceOrigin, mins, maxs, origin, player->s.number, MASK_PLAYERSOLID );
+  if( unlink )
+    trap_LinkEntity( hovel );
 
-  // see if there's something between the hovel and its exit 
-  // (eg built right up against a wall)
-  trap_Trace( &tr, start, NULL, NULL, end, player->s.number, MASK_PLAYERSOLID );
-  if( tr.fraction < 1.0f )
+  if( tr.startsolid || tr.fraction < 1.0f )
+  {
     return qtrue;
-
-  vectoangles( forward, angles );
-
-  VectorMA( origin, HOVEL_TRACE_DEPTH, normal, start );
-
-  //compute a place up in the air to start the real trace
-  trap_Trace( &tr, origin, mins, maxs, start, player->s.number, MASK_PLAYERSOLID );
-
-  VectorMA( origin, ( HOVEL_TRACE_DEPTH * tr.fraction ) - 1.0f, normal, start );
-  VectorMA( origin, -HOVEL_TRACE_DEPTH, normal, end );
-
-  trap_Trace( &tr, start, mins, maxs, end, player->s.number, MASK_PLAYERSOLID );
-
-  VectorCopy( tr.endpos, origin );
-
-  trap_Trace( &tr, origin, mins, maxs, origin, player->s.number, MASK_PLAYERSOLID );
+  }
 
   if( provideExit )
   {
     G_SetOrigin( player, origin );
     VectorCopy( origin, player->client->ps.origin );
     // nudge
-    VectorMA( normal, 200.0f, forward, player->client->ps.velocity );
+    VectorMA( hovel->s.origin2, 200.0f, forward, player->client->ps.velocity );
+    VectorCopy( hovel->s.angles, angles );
+    angles[ ROLL ] = 0.0f;
     G_SetClientViewAngle( player, angles );
   }
 
-  if( tr.fraction < 1.0f )
-    return qtrue;
-  else
-    return qfalse;
+  return qfalse;
 }
 
 /*
@@ -1419,6 +1418,7 @@ static qboolean APropHovel_Blocked( vec3_t origin, vec3_t angles, vec3_t normal,
   VectorCopy( origin, hovel.s.origin );
   VectorCopy( angles, hovel.s.angles );
   VectorCopy( normal, hovel.s.origin2 );
+  hovel.s.number = ENTITYNUM_NONE;
 
   return AHovel_Blocked( &hovel, player, qfalse );
 }
