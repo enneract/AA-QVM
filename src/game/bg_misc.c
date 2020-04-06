@@ -5256,7 +5256,7 @@ int BG_GetValueOfHuman( playerState_t *ps )
   else if( portion > 1.0f )
     portion = 1.0f;
 
-  return ceil( ALIEN_MAX_SINGLE_KILLS * portion );
+  return ceil( ALIEN_MAX_SINGLE_KILLS * portion / EVO_TO_CREDS_RATE ) * EVO_TO_CREDS_RATE;
 }
 
 /*
