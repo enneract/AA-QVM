@@ -21,6 +21,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
+/*
+ * For simplicity and finer granularity, both alien evos and human credits
+ * are now stored as a number from 0 to 2000. This means that dealing with
+ * evos is a bit more involved and requires exchanging between the old 0-9
+ * range and the new one when appropriate (hardcoded stats and display code).
+ */
+#define EVO_TO_CREDS_RATE 222.0f // 9 * 222 = 1998, close enough
+#define EVOS(x)           ( ( x ) * EVO_TO_CREDS_RATE )
 
 /*
  * ALIEN weapons
@@ -142,61 +150,61 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ABUILDER_VALUE              AVM(200)
 #define ABUILDER_HEALTH             AHM(50)
 #define ABUILDER_REGEN              2
-#define ABUILDER_COST               0
+#define ABUILDER_COST               EVOS(0)
 
 #define ABUILDER_UPG_SPEED          1.0f
 #define ABUILDER_UPG_VALUE          AVM(250)
 #define ABUILDER_UPG_HEALTH         AHM(75)
 #define ABUILDER_UPG_REGEN          3
-#define ABUILDER_UPG_COST           0
+#define ABUILDER_UPG_COST           EVOS(0)
 
 #define LEVEL0_SPEED                1.3f
 #define LEVEL0_VALUE                AVM(175)
 #define LEVEL0_HEALTH               AHM(25)
 #define LEVEL0_REGEN                1
-#define LEVEL0_COST                 0
+#define LEVEL0_COST                 EVOS(0)
 
 #define LEVEL1_SPEED                1.25f
 #define LEVEL1_VALUE                AVM(225)
 #define LEVEL1_HEALTH               AHM(75)
 #define LEVEL1_REGEN                2
-#define LEVEL1_COST                 1
+#define LEVEL1_COST                 EVOS(1)
 
 #define LEVEL1_UPG_SPEED            1.25f
 #define LEVEL1_UPG_VALUE            AVM(275)
 #define LEVEL1_UPG_HEALTH           AHM(100)
 #define LEVEL1_UPG_REGEN            3
-#define LEVEL1_UPG_COST             1
+#define LEVEL1_UPG_COST             EVOS(1)
 
 #define LEVEL2_SPEED                1.2f
 #define LEVEL2_VALUE                AVM(350)
 #define LEVEL2_HEALTH               AHM(150)
 #define LEVEL2_REGEN                4
-#define LEVEL2_COST                 1
+#define LEVEL2_COST                 EVOS(1)
 
 #define LEVEL2_UPG_SPEED            1.2f
 #define LEVEL2_UPG_VALUE            AVM(450)
 #define LEVEL2_UPG_HEALTH           AHM(175)
 #define LEVEL2_UPG_REGEN            5
-#define LEVEL2_UPG_COST             1
+#define LEVEL2_UPG_COST             EVOS(1)
 
 #define LEVEL3_SPEED                1.1f
 #define LEVEL3_VALUE                AVM(500)
 #define LEVEL3_HEALTH               AHM(200)
 #define LEVEL3_REGEN                6
-#define LEVEL3_COST                 1
+#define LEVEL3_COST                 EVOS(1)
 
 #define LEVEL3_UPG_SPEED            1.1f
 #define LEVEL3_UPG_VALUE            AVM(600)
 #define LEVEL3_UPG_HEALTH           AHM(250)
 #define LEVEL3_UPG_REGEN            7
-#define LEVEL3_UPG_COST             1
+#define LEVEL3_UPG_COST             EVOS(1)
 
 #define LEVEL4_SPEED                1.2f
 #define LEVEL4_VALUE                AVM(800)
 #define LEVEL4_HEALTH               AHM(400)
 #define LEVEL4_REGEN                7
-#define LEVEL4_COST                 2
+#define LEVEL4_COST                 EVOS(2)
 
 
 
@@ -513,7 +521,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define HSPAWN_HEALTH               HBHM(310)
 #define HSPAWN_SPLASHDAMAGE         50
 #define HSPAWN_SPLASHRADIUS         100
-#define HSPAWN_VALUE                1
+#define HSPAWN_VALUE                EVOS(1)
 
 #define MEDISTAT_BP                 8
 #define MEDISTAT_BT                 10000
@@ -569,7 +577,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define REACTOR_ATTACK_RANGE        100.0f
 #define REACTOR_ATTACK_REPEAT       1000
 #define REACTOR_ATTACK_DAMAGE       40
-#define REACTOR_VALUE               2
+#define REACTOR_VALUE               EVOS(2)
 
 #define REPEATER_BP                 0
 #define REPEATER_BT                 10000
@@ -604,11 +612,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define HUMAN_MAXED                 900   //a human with a strong selection of weapons/upgrades
 #define HUMAN_MAX_CREDITS           2000
-#define ALIEN_MAX_KILLS             9
-#define ALIEN_MAX_SINGLE_KILLS      3
+#define ALIEN_MAX_KILLS             EVOS(9)
+#define ALIEN_MAX_SINGLE_KILLS      EVOS(3)
 
 #define FREEKILL_PERIOD             120000 //msec
-#define FREEKILL_ALIEN              1
+#define FREEKILL_ALIEN              EVOS(1)
 #define FREEKILL_HUMAN              LEVEL0_VALUE
 
 #define DEFAULT_ALIEN_BUILDPOINTS   "130"

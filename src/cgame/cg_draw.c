@@ -539,10 +539,11 @@ static void CG_DrawPlayerCreditsValue( rectDef_t *rect, vec4_t color, qboolean p
   value = ps->persistant[ PERS_CREDIT ];
   if( value > -1 )
   {
-    if( cg.predictedPlayerState.stats[ STAT_PTEAM ] == PTE_ALIENS &&
-        !CG_AtHighestClass( ) )
+    if( cg.predictedPlayerState.stats[ STAT_PTEAM ] == PTE_ALIENS )
     {
-      if( cg.time - cg.lastEvolveAttempt <= NO_CREDITS_TIME )
+      value = floor( value / EVO_TO_CREDS_RATE );
+
+      if( !CG_AtHighestClass( ) && cg.time - cg.lastEvolveAttempt <= NO_CREDITS_TIME )
       {
         if( ( ( cg.time - cg.lastEvolveAttempt ) / 300 ) % 2 )
           color[ 3 ] = 0.0f;

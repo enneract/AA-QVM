@@ -7982,7 +7982,6 @@ qboolean G_admin_give(gentity_t *ent, int skiparg)
 	char arg_amount[30];
 	int target_id, amount;
 	gentity_t *target;
-	const char *currency;
 
 	if (G_SayArgc() < 3 + skiparg) {
 		ADMP("^3!give: ^7usage: !give [player] [amount]\n");
@@ -8024,24 +8023,31 @@ qboolean G_admin_give(gentity_t *ent, int skiparg)
 	}
 
 	G_SayArgv(2 + skiparg, arg_amount, sizeof(arg_amount));
+  
 	amount = atoi(arg_amount);
 
 	switch (target->client->pers.teamSelection) {
 	case PTE_ALIENS:
-		if (amount < -9 || amount > 9) {
+		amount = floor(EVOS(atof(arg_amount)));
+		if (amount < -ALIEN_MAX_KILLS || amount > ALIEN_MAX_KILLS) {
 		too_big:
 			ADMP("^3!give: ^7amount is too big\n");
 			return qfalse;
 		}
 
-		currency = "evo";
+		AP(va("print \"^3!give: ^7%s^7 was given %.3f evo%s by ^7%s^7\n\"",
+		   target->client->pers.netname, amount / EVO_TO_CREDS_RATE,
+		   (abs(amount) != 1 ? "s" : ""),
+		   ent ? G_admin_adminPrintName(ent) : "console"));
 		break;
 
 	case PTE_HUMANS:
-		if (amount < -2000 || amount > 2000)
+		if (amount < -HUMAN_MAX_CREDITS || amount > HUMAN_MAX_CREDITS)
 			goto too_big;
 
-		currency = "credit";
+		AP(va("print \"^3!give: ^7%s^7 was given %d credit%s by ^7%s^7\n\"",
+		   target->client->pers.netname, amount, (abs(amount) != 1 ? "s" : ""),
+		   ent ? G_admin_adminPrintName(ent) : "console"));
 		break;
 
 	default:
@@ -8049,11 +8055,6 @@ qboolean G_admin_give(gentity_t *ent, int skiparg)
 	}
 
 	G_AddCreditToClient(target->client, amount, qtrue);
-	AP(va("print \"^3!give: ^7%s^7 was given %i %s%s by ^7%s^7\n\"",
-	   target->client->pers.netname, amount, currency,
-	   (abs(amount) != 1 ? "s" : ""),
-	   ent ? G_admin_adminPrintName(ent) : "console"));
-
 	return qtrue;
 }
 

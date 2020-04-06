@@ -681,17 +681,10 @@ void G_ChangeTeam( gentity_t *ent, pTeam_t newTeam )
 
   // under certain circumstances, clients can keep their kills and credits
   // when switching teams
-  if( G_admin_permission( ent, ADMF_TEAMCHANGEFREE ) ||
-    ( g_teamImbalanceWarnings.integer && isFixingImbalance ) ||
-    ( ( oldTeam == PTE_HUMANS || oldTeam == PTE_ALIENS )
-    && ( level.time - ent->client->pers.teamChangeTime ) > 60000 ) )
-  {
-    if( oldTeam == PTE_ALIENS )
-      ent->client->pers.credit *= (float)FREEKILL_HUMAN / FREEKILL_ALIEN;
-    else if( newTeam == PTE_ALIENS )
-      ent->client->pers.credit *= (float)FREEKILL_ALIEN / FREEKILL_HUMAN;
-  }
-  else
+  if( !G_admin_permission( ent, ADMF_TEAMCHANGEFREE ) &&
+      !( g_teamImbalanceWarnings.integer && isFixingImbalance ) &&
+      !( ( oldTeam == PTE_HUMANS || oldTeam == PTE_ALIENS )
+         && ( level.time - ent->client->pers.teamChangeTime ) > 60000 ) )
   {
     ent->client->pers.credit = 0;
     ent->client->pers.score = 0;
@@ -4978,7 +4971,14 @@ void Cmd_Share_f( gentity_t *ent )
     }
 
     // credit count from parameter
-    creds = atoi( arg2 );
+    if( team == PTE_ALIENS )
+    {
+      creds = floor( EVOS( atof( arg2 ) ) );
+    }
+    else
+    {
+      creds = atoi( arg2 );
+    }
   }
 
   // player specified "0" to transfer
@@ -5026,15 +5026,28 @@ void Cmd_Share_f( gentity_t *ent )
 
   // transfer credits
   G_AddCreditToClient( ent->client, -creds, qfalse );
-  trap_SendServerCommand( ent-g_entities,
-    va( "print \"share: transferred %d %s to %s^7.\n\"", creds,
-      ( team == PTE_HUMANS ) ? "credits" : "evolvepoints",
-      level.clients[ clientNum ].pers.netname ) );
   G_AddCreditToClient( &(level.clients[ clientNum ]), creds, qtrue );
-  trap_SendServerCommand( clientNum,
-    va( "print \"You have received %d %s from %s^7.\n\"", creds,
-      ( team == PTE_HUMANS ) ? "credits" : "evolvepoints",
-      ent->client->pers.netname ) );
+
+  if( team == PTE_ALIENS )
+  {
+    float evos = creds / EVO_TO_CREDS_RATE;
+
+    trap_SendServerCommand( ent-g_entities,
+      va( "print \"share: transferred %.3f evolvepoints to %s^7.\n\"", evos,
+        level.clients[ clientNum ].pers.netname ) );
+    trap_SendServerCommand( clientNum,
+      va( "print \"You have received %.3f evolvepoints from %s^7.\n\"", evos,
+        ent->client->pers.netname ) );
+  }
+  else
+  {
+    trap_SendServerCommand( ent-g_entities,
+      va( "print \"share: transferred %d credits to %s^7.\n\"", creds,
+        level.clients[ clientNum ].pers.netname ) );
+    trap_SendServerCommand( clientNum,
+      va( "print \"You have received %d credits from %s^7.\n\"", creds,
+        ent->client->pers.netname ) );
+  }
 
   G_LogPrintf( "Share: %i %i %i %d: %s^7 transferred %d%s to %s^7\n",
     ent->client->ps.clientNum,
@@ -5055,7 +5068,7 @@ Alms for the poor
 =================
 */
 void Cmd_Donate_f( gentity_t *ent ) {
-  char s[ MAX_TOKEN_CHARS ] = "", *type = "evo(s)";
+  char s[ MAX_TOKEN_CHARS ] = "";
   int i, value, divisor, portion, new_credits, total=0,
     max = ALIEN_MAX_KILLS, *amounts, *totals;
   qboolean donated = qtrue;
@@ -5079,7 +5092,6 @@ void Cmd_Donate_f( gentity_t *ent ) {
   else if( ent->client->pers.teamSelection == PTE_HUMANS ) {
     divisor = level.numHumanClients-1;
     max = HUMAN_MAX_CREDITS;
-    type = "credit(s)";
   } else {
     trap_SendServerCommand( ent-g_entities,
       va( "print \"donate: spectators cannot be so gracious\n\"" ) );
@@ -5093,7 +5105,14 @@ void Cmd_Donate_f( gentity_t *ent ) {
   }
 
   trap_Argv( 1, s, sizeof( s ) );
-  value = atoi(s);
+  if( ent->client->pers.teamSelection == PTE_ALIENS )
+  {
+    value = floor( EVOS( atof( s ) ) );
+  }
+  else
+  {
+    value = atoi( s );
+  }
   if( value <= 0 ) {
     trap_SendServerCommand( ent-g_entities,
       "print \"donate: very funny\n\"" );
@@ -5142,18 +5161,31 @@ void Cmd_Donate_f( gentity_t *ent ) {
   // transfer funds
   G_AddCreditToClient( ent->client, value - total, qtrue );
   for( i = 0; i < level.maxclients; i++ )
-    if( totals[ i ] ) {
-      trap_SendServerCommand( i,
-        va( "print \"%s^7 donated %d %s to you, don't forget to say 'thank you'!\n\"",
-        ent->client->pers.netname, totals[ i ], type ) );
+  {
+    if( totals[ i ] )
+    {
+      if( ent->client->pers.teamSelection == PTE_ALIENS )
+      {
+        trap_SendServerCommand( i,
+          va( "print \"%s^7 donated %.3f evo(s) to you, don't forget to say 'thank you'!\n\"",
+          ent->client->pers.netname, totals[ i ] / EVO_TO_CREDS_RATE ) );
+        trap_SendServerCommand( ent-g_entities,
+          va( "print \"Donated %.3f evo(s) to the cause.\n\"",
+          total-value / EVO_TO_CREDS_RATE ) );
+      }
+      else
+      {
+        trap_SendServerCommand( i,
+          va( "print \"%s^7 donated %d credit(s) to you, don't forget to say 'thank you'!\n\"",
+          ent->client->pers.netname, totals[ i ] ) );
+        trap_SendServerCommand( ent-g_entities,
+          va( "print \"Donated %d credit(s) to the cause.\n\"", total-value ) );
+      }
     }
+  }
 
   G_Free( amounts );
   G_Free( totals );
-
-  trap_SendServerCommand( ent-g_entities,
-    va( "print \"Donated %d %s to the cause.\n\"",
-    total-value, type ) );
 }
 
 commands_t cmds[ ] = {

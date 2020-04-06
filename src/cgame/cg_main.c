@@ -489,6 +489,7 @@ static void CG_SetPVars( void )
     trap_Cvar_Set( "player_stage", va( "%d", cgs.alienStage+1 ) );
     trap_Cvar_Set( "player_bp",    va( "%d", cgs.alienBuildPoints ));
     trap_Cvar_Set( "player_maxbp", va( "%d", cgs.alienBuildPointsTotal ));
+    trap_Cvar_Set( "player_credits", va( "%f", ps->persistant[ PERS_CREDIT ] / EVO_TO_CREDS_RATE ) );
     break;
 
     case PTE_HUMANS:
@@ -498,10 +499,10 @@ static void CG_SetPVars( void )
     trap_Cvar_Set( "player_kns",   va( "%d",((cgs.humanStage==2)?0:abs(cgs.humanNextStageThreshold-cgs.humanKills))));
     trap_Cvar_Set( "player_bp",    va( "%d", cgs.humanBuildPoints ));
     trap_Cvar_Set( "player_maxbp", va( "%d", cgs.humanBuildPointsTotal ));
+    trap_Cvar_Set( "player_credits", va( "%d", ps->persistant[ PERS_CREDIT ] ) );
     break;
   }
 
-  trap_Cvar_Set( "player_credits", va( "%d", ps->persistant[ PERS_CREDIT ] ) );
   trap_Cvar_Set( "player_score",   va( "%d", ps->persistant[ PERS_SCORE ] ) );
   trap_Cvar_Set( "player_deaths",  va( "%d", ps->persistant[ PERS_KILLED ] ) );
 
