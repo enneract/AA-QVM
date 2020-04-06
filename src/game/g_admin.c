@@ -994,7 +994,7 @@ static void admin_default_levels( void )
   Q_strncpyz( g_admin_levels[ 5 ]->name, "^1Server Operator",
     sizeof( l->name ) );
   Q_strncpyz( g_admin_levels[ 5 ]->flags, 
-    "ALLFLAGS -INCOGNITO -IMMUTABLE -DBUILDER -BANIMMUNITY",
+    "ALLFLAGS -INCOGNITO -IMMUTABLE -DBUILDER -BANIMMUNITY -SCHACHT",
     sizeof( l->flags ) );
 }
 
