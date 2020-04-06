@@ -1438,7 +1438,7 @@ const char *ClientConnect( int clientNum, qboolean firstTime )
   char      ip[ 16 ] = {""};
   char      reason[ MAX_STRING_CHARS ] = {""};
   int       i;
-  schachtmeisterJudgement_t *smj = NULL;
+  schachtmeisterJudgement_t *smj;
 
   ent = &g_entities[ clientNum ];
 
@@ -1512,6 +1512,8 @@ const char *ClientConnect( int clientNum, qboolean firstTime )
   if( g_password.string[ 0 ] && Q_stricmp( g_password.string, "none" ) &&
       strcmp( g_password.string, value ) != 0 )
     return "Invalid password";
+
+  smj = NULL;
 
   if (!(G_admin_permission_guid(guid, ADMF_NOAUTOBAHN)
      || G_admin_permission_guid(guid, ADMF_IMMUNITY)))
