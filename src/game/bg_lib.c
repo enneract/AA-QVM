@@ -830,6 +830,10 @@ double rint( double v )
     return floor( v );
 }
 
+double round( double x ) {
+  return floor( x + 0.5 );
+}
+
 // bk001127 - guarded this tan replacement
 // ld: undefined versioned symbol name tan@@GLIBC_2.0
 double tan( double x )

@@ -106,6 +106,7 @@ void    *memcpy( void *dest, const void *src, size_t count );
 // Math functions
 double  ceil( double x );
 double  floor( double x );
+double  round( double x );
 double  sqrt( double x );
 double  sin( double x );
 double  cos( double x );
