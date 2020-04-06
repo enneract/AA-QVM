@@ -1347,6 +1347,7 @@ qboolean AHovel_Blocked( gentity_t *hovel, gentity_t *player, qboolean provideEx
   vec3_t   traceOrigin, origin, forward, angles;
   qboolean unlink;
   trace_t  tr;
+  int      i = 0;
 
   BG_FindBBoxForBuildable( BA_A_HOVEL, hovelMins, hovelMaxs );
   BG_FindBBoxForClass( player->client->ps.stats[ STAT_PCLASS ],
@@ -1373,6 +1374,9 @@ qboolean AHovel_Blocked( gentity_t *hovel, gentity_t *player, qboolean provideEx
          origin[ 2 ] >= globalMins[ 2 ] && origin[ 2 ] <= globalMaxs[ 2 ] )
   {
     VectorMA( origin, 2.0f, forward, origin );
+
+    if ( i++ > 500 ) // Just in case..
+      break;
   }
 
   // Make sure the spot is actually reachable.
