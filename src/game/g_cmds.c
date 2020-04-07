@@ -1912,71 +1912,80 @@ void Cmd_CallVote_f( gentity_t *ent )
       Com_sprintf( level.voteDisplayString,
           sizeof( level.voteDisplayString ), "[Poll] \'%s\'", arg2plus );
    }
-   else if( !Q_stricmp( arg1, "sudden_death" ) ||
-     !Q_stricmp( arg1, "suddendeath" ) )
-   {
-     if(!g_suddenDeathVotePercent.integer)
-     {
-       trap_SendServerCommand( ent-g_entities, "print \"Sudden Death votes have been disabled\n\"" );
-       return;
-     } 
-     else if( g_suddenDeath.integer ) 
-     {
+  else if( !Q_stricmp( arg1, "sudden_death" ) ||
+    !Q_stricmp( arg1, "suddendeath" ) )
+  {
+    if(!g_suddenDeathVotePercent.integer)
+    {
+      trap_SendServerCommand( ent-g_entities, "print \"Sudden Death votes have been disabled\n\"" );
+      return;
+    } 
+    else if( g_suddenDeath.integer ) 
+    {
       trap_SendServerCommand( ent - g_entities, va( "print \"callvote: Sudden Death has already begun\n\"") );
       return;
-     }
-     else if( G_TimeTilSuddenDeath() <= g_suddenDeathVoteDelay.integer * 1000 )
-     {
+    }
+    else if( G_TimeTilSuddenDeath() <= g_suddenDeathVoteDelay.integer * 1000 )
+    {
       trap_SendServerCommand( ent - g_entities, va( "print \"callvote: Sudden Death is already immenent\n\"") );
       return;
-     }
+    }
     else 
-     {
-       level.votePassThreshold = g_suddenDeathVotePercent.integer;
-       Com_sprintf( level.voteString, sizeof( level.voteString ), "suddendeath" );
-       Com_sprintf( level.voteDisplayString,
-           sizeof( level.voteDisplayString ), "Begin sudden death" );
+    {
+      level.votePassThreshold = g_suddenDeathVotePercent.integer;
+      Com_sprintf( level.voteString, sizeof( level.voteString ), "suddendeath" );
+      Com_sprintf( level.voteDisplayString,
+          sizeof( level.voteDisplayString ), "Begin sudden death" );
 
-       if( g_suddenDeathVoteDelay.integer )
-         Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( " in %d seconds", g_suddenDeathVoteDelay.integer ) );
+      if( g_suddenDeathVoteDelay.integer )
+        Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( " in %d seconds", g_suddenDeathVoteDelay.integer ) );
 
-     }
-   }
-   else if( !Q_stricmp( arg1, "extend" ) )
-   {
-     if( !g_extendVotesPercent.integer )
-     {
-       trap_SendServerCommand( ent-g_entities, "print \"Extend votes have been disabled\n\"" );
-       return;
-     }
-     if( g_extendVotesCount.integer
-         && level.extend_vote_count >= g_extendVotesCount.integer )
-     {
-       trap_SendServerCommand( ent-g_entities,
-                               va( "print \"callvote: Maximum number of %d extend votes has been reached\n\"",
-                                   g_extendVotesCount.integer ) );
-       return;
-     }
-     if( !g_timelimit.integer ) {
-       trap_SendServerCommand( ent-g_entities,
-                               "print \"This match has no timelimit so extend votes wont work\n\"" );
-       return;
-     }
-     if( level.time - level.startTime <
-         ( g_timelimit.integer - g_extendVotesTime.integer / 2 ) * 60000 )
-     {
-       trap_SendServerCommand( ent-g_entities,
-                               va( "print \"callvote: Extend votes only allowed with less than %d minutes remaining\n\"",
-                                   g_extendVotesTime.integer / 2 ) );
-       return;
-     }
-     level.extend_vote_count++;
-     level.votePassThreshold = g_extendVotesPercent.integer; 
-     Com_sprintf( level.voteString, sizeof( level.voteString ),
-                  "timelimit %i", g_timelimit.integer + g_extendVotesTime.integer );
-     Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
-                  "Extend the timelimit by %d minutes", g_extendVotesTime.integer );
-   }
+    }
+  }
+  else if( !Q_stricmp( arg1, "extend" ) )
+  {
+    if( !g_extendVotesPercent.integer )
+    {
+      trap_SendServerCommand( ent-g_entities, "print \"Extend votes have been disabled\n\"" );
+      return;
+    }
+    if( g_extendVotesCount.integer
+        && level.extend_vote_count >= g_extendVotesCount.integer )
+    {
+      trap_SendServerCommand( ent-g_entities, va( "print \"callvote: Maximum number of %d extend votes has been reached\n\"", g_extendVotesCount.integer ) );
+      return;
+    }
+    if( !g_timelimit.integer ) {
+      trap_SendServerCommand( ent-g_entities, "print \"This match has no timelimit so extend votes wont work\n\"" );
+      return;
+    }
+    if( level.time - level.startTime <
+        ( g_timelimit.integer - g_extendVotesTime.integer / 2 ) * 60000 )
+    {
+      trap_SendServerCommand( ent-g_entities, va( "print \"callvote: Extend votes only allowed with less than %d minutes remaining\n\"", g_extendVotesTime.integer / 2 ) );
+      return;
+    }
+    level.extend_vote_count++;
+    level.votePassThreshold = g_extendVotesPercent.integer; 
+
+    if( ( g_extendVotesCount.integer - level.extend_vote_count ) > 1 )
+    {
+      AP( va( "print \"^7Only ^3%i^7 more extension votes may be called.\n\"", g_extendVotesCount.integer - level.extend_vote_count ) );
+    }
+    else if( g_extendVotesCount.integer - level.extend_vote_count == 1 )
+    {
+      AP( va( "print \"^7Only ^3%i^7 more extension vote may be called.\n\"", g_extendVotesCount.integer - level.extend_vote_count ) );
+    }
+    else
+    {
+      AP( va( "print \"^3This is your last extension vote, make it count!\n\"", g_extendVotesCount.integer - level.extend_vote_count ) );
+    }
+
+    Com_sprintf( level.voteString, sizeof( level.voteString ),
+                 "timelimit %i", g_timelimit.integer + g_extendVotesTime.integer );
+    Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
+                 "Extend the timelimit by %d minutes", g_extendVotesTime.integer );
+  }
   else
   {
     qboolean match = qfalse;
