@@ -1960,7 +1960,7 @@ void Cmd_CallVote_f( gentity_t *ent )
     }
     else
     {
-      AP( va( "print \"^3This is your last extension vote, make it count!\n\"", g_extendVotesCount.integer - level.extend_vote_count ) );
+      AP( va( "print \"^3This is your last extension vote, make it count!\n\"" ) );
     }
 
     Com_sprintf( level.voteString, sizeof( level.voteString ),
