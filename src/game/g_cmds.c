@@ -5169,6 +5169,19 @@ void Cmd_Donate_f( gentity_t *ent ) {
 
   // transfer funds
   G_AddCreditToClient( ent->client, value - total, qtrue );
+
+  if( ent->client->pers.teamSelection == PTE_ALIENS )
+  {
+    trap_SendServerCommand( ent-g_entities,
+      va( "print \"Donated %.3f evo(s) to the cause.\n\"",
+      ( total - value ) / EVO_TO_CREDS_RATE ) );
+  }
+  else
+  {
+    trap_SendServerCommand( ent-g_entities,
+      va( "print \"Donated %d credit(s) to the cause.\n\"", ( total - value ) ) );
+  }
+
   for( i = 0; i < level.maxclients; i++ )
   {
     if( totals[ i ] )
@@ -5178,17 +5191,12 @@ void Cmd_Donate_f( gentity_t *ent ) {
         trap_SendServerCommand( i,
           va( "print \"%s^7 donated %.3f evo(s) to you, don't forget to say 'thank you'!\n\"",
           ent->client->pers.netname, totals[ i ] / EVO_TO_CREDS_RATE ) );
-        trap_SendServerCommand( ent-g_entities,
-          va( "print \"Donated %.3f evo(s) to the cause.\n\"",
-          ( total - value ) / EVO_TO_CREDS_RATE ) );
       }
       else
       {
         trap_SendServerCommand( i,
           va( "print \"%s^7 donated %d credit(s) to you, don't forget to say 'thank you'!\n\"",
           ent->client->pers.netname, totals[ i ] ) );
-        trap_SendServerCommand( ent-g_entities,
-          va( "print \"Donated %d credit(s) to the cause.\n\"", total-value ) );
       }
     }
   }
