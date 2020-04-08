@@ -672,9 +672,15 @@ void ASpawn_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
     if( attacker->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
     {
       if( self->s.modelindex == BA_A_OVERMIND )
+      {
         G_AddCreditToClient( attacker->client, OVERMIND_VALUE, qtrue );
+        attacker->client->pers.statscounters.earned += OVERMIND_VALUE;
+      }
       else if( self->s.modelindex == BA_A_SPAWN )
+      {
         G_AddCreditToClient( attacker->client, ASPAWN_VALUE, qtrue );
+        attacker->client->pers.statscounters.earned += ASPAWN_VALUE;
+      }
     }
     else
     {
@@ -2691,9 +2697,15 @@ void HSpawn_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
     if( attacker->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
     {
       if( self->s.modelindex == BA_H_REACTOR )
+      {
         G_AddCreditToClient( attacker->client, REACTOR_VALUE, qtrue );
+        attacker->client->pers.statscounters.earned += REACTOR_VALUE;
+      }
       else if( self->s.modelindex == BA_H_SPAWN )
+      {
         G_AddCreditToClient( attacker->client, HSPAWN_VALUE, qtrue );
+        attacker->client->pers.statscounters.earned += HSPAWN_VALUE;
+      }
     }
     else
     {

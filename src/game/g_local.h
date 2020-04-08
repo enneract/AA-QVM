@@ -364,6 +364,10 @@ typedef struct
   int timeLastViewed;
   int AllstatstimeLastViewed;
   int spreebleeds;
+  int earned;
+  int shared;
+  int overflowed;
+  int received;
 } statsCounters_t;
 
 typedef struct

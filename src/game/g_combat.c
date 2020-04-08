@@ -266,9 +266,15 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
       if( !g_retribution.integer )
       {
         if( attacker->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
+        {
           G_AddCreditToClient( attacker->client, -FREEKILL_ALIEN, qtrue );
+          attacker->client->pers.statscounters.earned -= FREEKILL_ALIEN;
+        }
         else if( attacker->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
+        {
           G_AddCreditToClient( attacker->client, -FREEKILL_HUMAN, qtrue );
+          attacker->client->pers.statscounters.earned -= FREEKILL_HUMAN;
+        }
       }
     }
     else
@@ -358,6 +364,9 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
             G_AddCreditToClient( self->client, price, qtrue );
             G_AddCreditToClient( g_entities[ i ].client, -price, qtrue );
 
+            self->client->pers.statscounters.received += price;
+            g_entities[ i ].client->pers.statscounters.shared += price;
+
             trap_SendServerCommand( self->client->ps.clientNum,
               va( "print \"Received ^3%d credits ^7from %s ^7in retribution.\n\"",
                 price, g_entities[ i ].client->pers.netname ) );
@@ -418,13 +427,16 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
           
           G_AddCreditToClient( self->client, toPay[ i ], qtrue );
           G_AddCreditToClient( g_entities[ i ].client, -toPay[ i ], qtrue );
+          
+          self->client->pers.statscounters.received += toPay[ i ];
+          g_entities[ i ].client->pers.statscounters.shared += toPay[ i ];
 
           trap_SendServerCommand( self->client->ps.clientNum,
-            va( "print \"Received ^3%d ^7evos from %s ^7in retribution.\n\"",
-              toPay[ i ], g_entities[ i ].client->pers.netname ) );
+            va( "print \"Received ^3%.3f ^7evos from %s ^7in retribution.\n\"",
+              toPay[ i ] / EVO_TO_CREDS_RATE, g_entities[ i ].client->pers.netname ) );
           trap_SendServerCommand( g_entities[ i ].client->ps.clientNum,
-            va( "print \"Transfered ^3%d ^7evos to %s ^7in retribution.\n\"",
-              toPay[ i ], self->client->pers.netname ) );
+            va( "print \"Transfered ^3%.3f ^7evos to %s ^7in retribution.\n\"",
+              toPay[ i ] / EVO_TO_CREDS_RATE, self->client->pers.netname ) );
         }
       }
     }
@@ -462,6 +474,8 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
       for( i = 0; i < MAX_CLIENTS; i++ )
       {
+        int amount;
+
         player = g_entities + i;
 
         if( !player->client )
@@ -481,8 +495,9 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
         }
 
         //add credit
-        G_AddCreditToClient( player->client,
-            (int)( classValue * percentDamage ), qtrue );
+        amount = classValue * percentDamage; 
+        G_AddCreditToClient( player->client, amount, qtrue );
+        player->client->pers.statscounters.earned += amount;
       }
     }
     else if( self->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
@@ -523,6 +538,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
         {
           //add kills
           G_AddCreditToClient( player->client, frags, qtrue );
+          player->client->pers.statscounters.earned += frags;
 
           //can't revist this account later
           self->credits[ i ] = 0;
@@ -564,6 +580,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
             //add kills
             G_AddCreditToClient( player->client, 1, qtrue );
+            player->client->pers.statscounters.earned += 1;
 
             //can't revist this account again
             self->credits[ topClient ] = 0;

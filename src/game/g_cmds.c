@@ -691,25 +691,7 @@ void G_ChangeTeam( gentity_t *ent, pTeam_t newTeam )
   }
   
   ent->client->ps.persistant[ PERS_KILLED ] = 0;
-  ent->client->pers.statscounters.kills = 0;
-  ent->client->pers.statscounters.structskilled = 0;
-  ent->client->pers.statscounters.assists = 0;
-  ent->client->pers.statscounters.repairspoisons = 0;
-  ent->client->pers.statscounters.headshots = 0;
-  ent->client->pers.statscounters.hits = 0;
-  ent->client->pers.statscounters.hitslocational = 0;
-  ent->client->pers.statscounters.deaths = 0;
-  ent->client->pers.statscounters.feeds = 0;
-  ent->client->pers.statscounters.suicides = 0;
-  ent->client->pers.statscounters.teamkills = 0;
-  ent->client->pers.statscounters.dmgdone = 0;
-  ent->client->pers.statscounters.structdmgdone = 0;
-  ent->client->pers.statscounters.ffdmgdone = 0;
-  ent->client->pers.statscounters.structsbuilt = 0;
-  ent->client->pers.statscounters.timealive = 0;
-  ent->client->pers.statscounters.timeinbase = 0;
-  ent->client->pers.statscounters.dretchbasytime = 0;
-  ent->client->pers.statscounters.jetpackusewallwalkusetime = 0;
+  memset( &ent->client->pers.statscounters, 0, sizeof( statsCounters_t ) );
 
   if( G_admin_permission( ent, ADMF_DBUILDER ) )
   {
@@ -4072,9 +4054,9 @@ void Cmd_MyStats_f( gentity_t *ent )
    if(!ent) return;
 
 
-   if( !level.intermissiontime && ent->client->pers.statscounters.timeLastViewed && (level.time - ent->client->pers.statscounters.timeLastViewed) <60000 ) 
+   if( !level.intermissiontime && ent->client->pers.statscounters.timeLastViewed && (level.time - ent->client->pers.statscounters.timeLastViewed) < 10000 ) 
    {   
-     ADMP( "You may only check your stats once per minute and during intermission.\n");
+     ADMP( "You may only check your stats once every 10 seconds and during intermission.\n");
      return;
    }
    
@@ -4120,7 +4102,7 @@ char *G_statsString( statsCounters_t *sc, pTeam_t *pt )
     if( sc->hitslocational )
       percentHeadshots = (int)(100 * (float) sc->headshots / ((float) (sc->hitslocational) ) );
     
-    s = va( "^3Kills:^7 %3i ^3StructKills:^7 %3i ^3Assists:^7 %3i^7 ^3Poisons:^7 %3i ^3Headshots:^7 %3i (%3i)\n^3Deaths:^7 %3i ^3Feeds:^7 %3i ^3Suicides:^7 %3i ^3TKs:^7 %3i ^3Avg Lifespan:^7 %4d:%02d\n^3Damage to:^7 ^3Enemies:^7 %5i ^3Structs:^7 %5i ^3Friendlies:^7 %3i \n^3Structs Built:^7 %3i ^3Time Near Base:^7 %3i ^3Time wallwalking:^7 %3i\n",
+    s = va( "^3Kills:^7 %3i ^3StructKills:^7 %3i ^3Assists:^7 %3i^7 ^3Poisons:^7 %3i ^3Headshots:^7 %3i (%3i)\n^3Deaths:^7 %3i ^3Feeds:^7 %3i ^3Suicides:^7 %3i ^3TKs:^7 %3i ^3Avg Lifespan:^7 %4d:%02d\n^3Damage to:^7 ^3Enemies:^7 %5i ^3Structs:^7 %5i ^3Friendlies:^7 %3i \n^3Structs Built:^7 %3i ^3Time Near Base:^7 %3i ^3Time wallwalking:^7 %3i\n^3Earned:^7 %6.3f ^3Shared:^7 %6.3f ^3Overflowed:^7 %6.3f ^3Recvd:^7 %6.3f\n",
      sc->kills,
      sc->structskilled,
      sc->assists,
@@ -4138,14 +4120,18 @@ char *G_statsString( statsCounters_t *sc, pTeam_t *pt )
      sc->ffdmgdone,
      sc->structsbuilt,
      percentNearBase,
-     percentJetpackWallwalk
+     percentJetpackWallwalk,
+     sc->earned / EVO_TO_CREDS_RATE,
+     sc->shared / EVO_TO_CREDS_RATE,
+     sc->overflowed / EVO_TO_CREDS_RATE,
+     sc->received / EVO_TO_CREDS_RATE
          );
   }
   else if( *pt == PTE_HUMANS )
   {
     if( sc->timealive )
      percentJetpackWallwalk = (int)(100 *  (float) sc->jetpackusewallwalkusetime / ((float) ( sc->timealive ) ) );
-    s = va( "^3Kills:^7 %3i ^3StructKills:^7 %3i ^3Assists:^7 %3i \n^3Deaths:^7 %3i ^3Feeds:^7 %3i ^3Suicides:^7 %3i ^3TKs:^7 %3i ^3Avg Lifespan:^7 %4d:%02d\n^3Damage to:^7 ^3Enemies:^7 %5i ^3Structs:^7 %5i ^3Friendlies:^7 %3i \n^3Structs Built:^7 %3i ^3Repairs:^7 %4i ^3Time Near Base:^7 %3i ^3Time Jetpacking:^7 %3i\n",
+    s = va( "^3Kills:^7 %3i ^3StructKills:^7 %3i ^3Assists:^7 %3i \n^3Deaths:^7 %3i ^3Feeds:^7 %3i ^3Suicides:^7 %3i ^3TKs:^7 %3i ^3Avg Lifespan:^7 %4d:%02d\n^3Damage to:^7 ^3Enemies:^7 %5i ^3Structs:^7 %5i ^3Friendlies:^7 %3i \n^3Structs Built:^7 %3i ^3Repairs:^7 %4i ^3Time Near Base:^7 %3i ^3Time Jetpacking:^7 %3i\n^3Earned:^7 %6d ^3Shared:^7 %6d ^3Overflowed:^7 %6d ^3Recvd:^7 %6d\n",
      sc->kills,
      sc->structskilled,
      sc->assists,
@@ -4161,7 +4147,11 @@ char *G_statsString( statsCounters_t *sc, pTeam_t *pt )
      sc->structsbuilt,
      sc->repairspoisons,
      percentNearBase,
-     percentJetpackWallwalk
+     percentJetpackWallwalk,
+     sc->earned,
+     sc->shared,
+     sc->overflowed,
+     sc->received
          );
   }
   else s="No stats available\n";
@@ -5036,6 +5026,8 @@ void Cmd_Share_f( gentity_t *ent )
   // transfer credits
   G_AddCreditToClient( ent->client, -creds, qfalse );
   G_AddCreditToClient( &(level.clients[ clientNum ]), creds, qtrue );
+  ent->client->pers.statscounters.shared += creds;
+  level.clients[ clientNum ].pers.statscounters.received += creds;
 
   if( team == PTE_ALIENS )
   {
@@ -5160,6 +5152,7 @@ void Cmd_Donate_f( gentity_t *ent ) {
         }
         if( amounts[ i ] ) {
           G_AddCreditToClient( &(level.clients[ i ]), amounts[ i ], qtrue );
+          level.clients[ i ].pers.statscounters.received += amounts[ i ];
           donated = qtrue;
           value -= amounts[ i ];
           if( value < portion ) break;
@@ -5169,6 +5162,7 @@ void Cmd_Donate_f( gentity_t *ent ) {
 
   // transfer funds
   G_AddCreditToClient( ent->client, value - total, qtrue );
+  ent->client->pers.statscounters.shared += value - total;
 
   if( ent->client->pers.teamSelection == PTE_ALIENS )
   {

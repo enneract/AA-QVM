@@ -1437,10 +1437,12 @@ static void ClientGradualFunds( gentity_t *ent )
   {
   case PTE_ALIENS:
     G_AddCreditToClient( ent->client, FREEKILL_ALIEN, qtrue );
+    ent->client->pers.statscounters.earned += FREEKILL_ALIEN;
     break;
 
   case PTE_HUMANS:
     G_AddCreditToClient( ent->client, FREEKILL_HUMAN, qtrue );
+    ent->client->pers.statscounters.earned += FREEKILL_HUMAN;
     break;
   }
 

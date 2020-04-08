@@ -133,12 +133,21 @@ void G_OverflowCredits( gclient_t *doner, int credits )
 
       if( vic->client->ps.persistant[ PERS_CREDIT ] + credits > maxCredits )
       {
-        credits -= maxCredits - vic->client->ps.persistant[ PERS_CREDIT ];
-        vic->client->ps.persistant[ PERS_CREDIT ] = maxCredits;
+        int amount;
+
+        amount = maxCredits - vic->client->ps.persistant[ PERS_CREDIT ];
+        credits -= amount;
+        vic->client->ps.persistant[ PERS_CREDIT ] += amount;
+
+        doner->pers.statscounters.overflowed += amount;
+        vic->client->pers.statscounters.received += amount;
       }
       else
       {
         vic->client->ps.persistant[ PERS_CREDIT ] += credits;
+
+        doner->pers.statscounters.overflowed += credits;
+        vic->client->pers.statscounters.received += credits;
         return;
       }
     }
@@ -158,12 +167,21 @@ void G_OverflowCredits( gclient_t *doner, int credits )
 
       if( cl->ps.persistant[ PERS_CREDIT ] + credits > maxCredits )
       {
-        credits -= maxCredits - cl->ps.persistant[ PERS_CREDIT ];
-        cl->ps.persistant[ PERS_CREDIT ] = maxCredits;
+        int amount;
+
+        amount = maxCredits - cl->ps.persistant[ PERS_CREDIT ];
+        credits -= amount;
+        cl->ps.persistant[ PERS_CREDIT ] += amount;
+
+        doner->pers.statscounters.overflowed += amount;
+        cl->pers.statscounters.received += amount;
       }
       else
       {
         cl->ps.persistant[ PERS_CREDIT ] += credits;
+
+        doner->pers.statscounters.overflowed += credits;
+        cl->pers.statscounters.received += credits;
         return;
       }
     }
