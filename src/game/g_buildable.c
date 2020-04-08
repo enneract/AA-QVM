@@ -671,16 +671,24 @@ void ASpawn_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
   {
     if( attacker->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
     {
+      int reward;
+
       if( self->s.modelindex == BA_A_OVERMIND )
       {
-        G_AddCreditToClient( attacker->client, OVERMIND_VALUE, qtrue );
-        attacker->client->pers.statscounters.earned += OVERMIND_VALUE;
+        reward = OVERMIND_VALUE;
       }
       else if( self->s.modelindex == BA_A_SPAWN )
       {
-        G_AddCreditToClient( attacker->client, ASPAWN_VALUE, qtrue );
-        attacker->client->pers.statscounters.earned += ASPAWN_VALUE;
+        reward = ASPAWN_VALUE;
       }
+      else
+      {
+        reward = ALIEN_BUILDING_VALUE;
+      }
+
+      reward *= G_RewardFactor( self, attacker );
+      G_AddCreditToClient( attacker->client, reward, qtrue );
+      attacker->client->pers.statscounters.earned += reward;
     }
     else
     {
@@ -1066,7 +1074,15 @@ void AGeneric_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, i
 
   if( attacker && attacker->client )
   {
-    if( attacker->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
+    if( attacker->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
+    {
+      int reward;
+
+      reward = ALIEN_BUILDING_VALUE * G_RewardFactor( self, attacker );
+      G_AddCreditToClient( attacker->client, reward, qtrue );
+      attacker->client->pers.statscounters.earned += reward;
+    }
+    else if( attacker->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
     {
       G_TeamCommand( PTE_ALIENS,
         va( "print \"%s ^3DESTROYED^7 by teammate %s^7\n\"",
@@ -1593,7 +1609,15 @@ void AHovel_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
   if( attacker && attacker->client )
   {
-    if( attacker->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
+    if( attacker->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
+    {
+      int reward;
+
+      reward = ALIEN_BUILDING_VALUE * G_RewardFactor( self, attacker );
+      G_AddCreditToClient( attacker->client, reward, qtrue );
+      attacker->client->pers.statscounters.earned += reward;
+    }
+    else if( attacker->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
     {
       G_TeamCommand( PTE_ALIENS,
         va( "print \"%s ^3DESTROYED^7 by teammate %s^7\n\"",
@@ -2696,16 +2720,24 @@ void HSpawn_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
   {
     if( attacker->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
     {
+      int reward;
+
       if( self->s.modelindex == BA_H_REACTOR )
       {
-        G_AddCreditToClient( attacker->client, REACTOR_VALUE, qtrue );
-        attacker->client->pers.statscounters.earned += REACTOR_VALUE;
+        reward = REACTOR_VALUE;
       }
       else if( self->s.modelindex == BA_H_SPAWN )
       {
-        G_AddCreditToClient( attacker->client, HSPAWN_VALUE, qtrue );
-        attacker->client->pers.statscounters.earned += HSPAWN_VALUE;
+        reward = HSPAWN_VALUE;
       }
+      else
+      {
+        reward = HUMAN_BUILDING_VALUE;
+      }
+
+      reward *= G_RewardFactor( self, attacker );
+      G_AddCreditToClient( attacker->client, reward, qtrue );
+      attacker->client->pers.statscounters.earned += reward;
     }
     else
     {

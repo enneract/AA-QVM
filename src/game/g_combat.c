@@ -67,6 +67,30 @@ void LookAtKiller( gentity_t *self, gentity_t *inflictor, gentity_t *attacker )
   self->client->ps.stats[ STAT_VIEWLOCK ] = vectoyaw( dir );
 }
 
+/*
+============
+G_RewardFactor
+
+The multiplier for kill and destruction rewards
+============
+*/
+float G_RewardFactor( gentity_t *self, gentity_t *attacker )
+{
+  if( !attacker->client )
+    return 1.0f;
+
+  if( G_TimeTilSuddenDeath( ) > 0 )
+    return 1.0f;
+
+  if( attacker->client->nearBase )
+    return 1.0f - g_sdDefenderPenalty.value / 100.0f;
+
+  if( self->s.eType == ET_BUILDABLE )
+    return 1.0f + g_sdDestructionBonus.value / 100.0f;
+
+  return 1.0f;
+}
+
 // these are just for logging, the client prints its own messages
 char *modNames[ ] =
 {
@@ -126,6 +150,7 @@ char *modNames[ ] =
 player_die
 ==================
 */
+
 void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath )
 {
   gentity_t *ent;
@@ -472,6 +497,8 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
       //nice simple happy bouncy human land
       float classValue = BG_FindValueOfClass( self->client->ps.stats[ STAT_PCLASS ] );
 
+      classValue *= G_RewardFactor( self, attacker );
+
       for( i = 0; i < MAX_CLIENTS; i++ )
       {
         int amount;
@@ -506,6 +533,8 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
       float humanValue = BG_GetValueOfHuman( &self->client->ps );
       int   frags;
       int   unclaimedFrags = (int)humanValue;
+
+      humanValue *= G_RewardFactor( self, attacker );
 
       for( i = 0; i < MAX_CLIENTS; i++ )
       {

@@ -888,6 +888,7 @@ void ClientTimerActions( gentity_t *ent, int msec )
         ent->health = client->ps.stats[ STAT_MAX_HEALTH ];
     }
     
+    ent->client->nearBase = qfalse;
     
     if( ent->client->ps.stats[ STAT_HEALTH ] > 0 && ent->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
     {
@@ -897,16 +898,19 @@ void ClientTimerActions( gentity_t *ent, int msec )
       {
         ent->client->pers.statscounters.timeinbase++;
         level.alienStatsCounters.timeinbase++;
+        ent->client->nearBase = qtrue;
       }
       if( BG_ClassHasAbility( ent->client->ps.stats[ STAT_PCLASS ], SCA_WALLCLIMBER )  )
       {
         ent->client->pers.statscounters.dretchbasytime++;
         level.alienStatsCounters.dretchbasytime++;
-    if( ent->client->ps.stats[ STAT_STATE ] & SS_WALLCLIMBING  || ent->client->ps.stats[ STAT_STATE ] & SS_WALLCLIMBINGCEILING) 
-    {
-      ent->client->pers.statscounters.jetpackusewallwalkusetime++;
-      level.alienStatsCounters.jetpackusewallwalkusetime++;
-    }
+
+        if( ent->client->ps.stats[ STAT_STATE ] & SS_WALLCLIMBING
+            || ent->client->ps.stats[ STAT_STATE ] & SS_WALLCLIMBINGCEILING ) 
+        {
+          ent->client->pers.statscounters.jetpackusewallwalkusetime++;
+          level.alienStatsCounters.jetpackusewallwalkusetime++;
+        }
       }
     }
     else if( ent->client->ps.stats[ STAT_HEALTH ] > 0 && ent->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
@@ -917,6 +921,7 @@ void ClientTimerActions( gentity_t *ent, int msec )
       {
         ent->client->pers.statscounters.timeinbase++;
         level.humanStatsCounters.timeinbase++;
+        ent->client->nearBase = qtrue;
       }
       if( BG_InventoryContainsUpgrade( UP_JETPACK, client->ps.stats ) )
       {

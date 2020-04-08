@@ -619,6 +619,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define FREEKILL_ALIEN              EVOS(1)
 #define FREEKILL_HUMAN              LEVEL0_VALUE
 
+// Default values for buildings other than Reactors, Overminds and spawns.
+#define ALIEN_BUILDING_VALUE        55
+#define HUMAN_BUILDING_VALUE        EVOS(0.25f)
+
 #define DEFAULT_ALIEN_BUILDPOINTS   "130"
 #define DEFAULT_ALIEN_STAGE2_THRESH "20"
 #define DEFAULT_ALIEN_STAGE3_THRESH "40"

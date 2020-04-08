@@ -574,6 +574,7 @@ struct gclient_s
 
   adminRangeBoosts_t newRange;
 
+  qboolean            nearBase;
 };
 
 
@@ -1018,7 +1019,8 @@ qboolean  G_SelectiveRadiusDamage( vec3_t origin, gentity_t *attacker, float dam
 void      G_Knockback( gentity_t *targ, vec3_t dir, int knockback );
 void      body_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath );
 void      AddScore( gentity_t *ent, int score );
-
+float     G_RewardFactor( gentity_t *self, gentity_t *attacker );
+void      player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod );
 void      G_InitDamageLocations( void );
 
 // damage flags
@@ -1110,7 +1112,6 @@ void      SpawnCorpse( gentity_t *ent );
 void      respawn( gentity_t *ent );
 void      BeginIntermission( void );
 void      ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles );
-void      player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod );
 qboolean  SpotWouldTelefrag( gentity_t *spot );
 char     *G_NextNewbieName( gentity_t *ent );
 void      G_LogAutobahn( gentity_t *ent, const char *userinfo, int rating, qboolean onConnect );
@@ -1511,6 +1512,9 @@ extern  vmCvar_t  g_maxGhosts;
 extern  vmCvar_t  g_specNoclip;
 extern  vmCvar_t  g_practise;
 extern  vmCvar_t  g_tyrantNerf;
+
+extern  vmCvar_t  g_sdDefenderPenalty;
+extern  vmCvar_t  g_sdDestructionBonus;
 
 void      trap_Printf( const char *fmt );
 void      trap_Error( const char *fmt );
