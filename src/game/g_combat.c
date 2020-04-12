@@ -544,7 +544,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
       //horribly complex nasty alien land
       float humanValue = BG_GetValueOfHuman( &self->client->ps ), factor;
       int   frags;
-      int   unclaimedFrags = (int)humanValue;
+      int   unclaimedFrags;
 
       factor = G_RewardFactor( self, attacker );
       if( g_debugRewards.integer )
@@ -552,6 +552,8 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
       humanValue *= factor;
       if( g_debugRewards.integer )
         Com_Printf( "%d", (int)humanValue );
+
+      unclaimedFrags = humanValue;
 
       for( i = 0; i < MAX_CLIENTS; i++ )
       {
