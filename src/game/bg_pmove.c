@@ -1723,6 +1723,7 @@ static void PM_GroundClimbTrace( void )
   int       rTtANGrTsTt;
   float     ldDOTtCs, d;
   vec3_t    abc;
+  vec3_t    normalDelta;
 
   //TA: If we're on the ceiling then grapplePoint is a rotation normal.. otherwise its a surface normal.
   //    would have been nice if Carmack had left a few random variables in the ps struct for mod makers
@@ -1804,6 +1805,15 @@ static void PM_GroundClimbTrace( void )
     if( trace.fraction < 1.0f && !( trace.surfaceFlags & ( SURF_SKY | SURF_SLICK ) ) &&
         !( trace.entityNum != ENTITYNUM_WORLD && i != 4 ) )
     {
+      // enneract: Not all ceilings are perfectly flat. Some patch meshes might
+      // end up with normals *very* close to ceilingNormal and this messes up
+      // the code pretty hard. "Straighten" the normal if it's the case.
+      VectorSubtract( trace.plane.normal, ceilingNormal, normalDelta );
+      if( VectorLength( normalDelta ) < 1e-6f )
+      {
+        VectorCopy( ceilingNormal, trace.plane.normal );
+      }
+
       if( i == 2 || i == 3 )
       {
         if( i == 2 )
