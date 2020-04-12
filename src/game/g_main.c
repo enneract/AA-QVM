@@ -249,6 +249,7 @@ vmCvar_t  g_specNoclip;
 vmCvar_t  g_practise;
 vmCvar_t  g_tyrantNerf;
 
+vmCvar_t  g_debugRewards;
 vmCvar_t  g_sdDefenderPenalty;
 vmCvar_t  g_sdDestructionBonus;
 
@@ -480,6 +481,7 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_practise, "g_practise", "0", CVAR_ARCHIVE, 0, qfalse },
   { &g_tyrantNerf, "g_tyrantNerf", "0", CVAR_ARCHIVE, 0, qfalse },
 
+  { &g_debugRewards, "g_debugRewards", "0", CVAR_ARCHIVE, 0, qfalse },
   { &g_sdDefenderPenalty, "g_sdDefenderPenalty", "0", CVAR_ARCHIVE, 0, qtrue },
   { &g_sdDestructionBonus, "g_sdDestructionBonus", "0", CVAR_ARCHIVE, 0, qtrue },
 };

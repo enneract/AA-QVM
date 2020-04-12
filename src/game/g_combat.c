@@ -496,8 +496,13 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
     {
       //nice simple happy bouncy human land
       float classValue = BG_FindValueOfClass( self->client->ps.stats[ STAT_PCLASS ] );
+      float factor = G_RewardFactor( self, attacker );
 
-      classValue *= G_RewardFactor( self, attacker );
+      if( g_debugRewards.integer )
+        Com_Printf( "DebugRewards: %d x %.2f = ", (int)classValue, factor );
+      classValue *= factor;
+      if( g_debugRewards.integer )
+        Com_Printf( "%d", (int)classValue );
 
       for( i = 0; i < MAX_CLIENTS; i++ )
       {
@@ -525,16 +530,28 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
         amount = classValue * percentDamage; 
         G_AddCreditToClient( player->client, amount, qtrue );
         player->client->pers.statscounters.earned += amount;
+
+        if( g_debugRewards.integer )
+          Com_Printf( ", %d credit(s) to #%d for %.1f%% of damage", amount,
+                      (int)( player - g_entities ), 100 * percentDamage );
       }
+
+      if( g_debugRewards.integer )
+        Com_Printf( "\n" );
     }
     else if( self->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
     {
       //horribly complex nasty alien land
-      float humanValue = BG_GetValueOfHuman( &self->client->ps );
+      float humanValue = BG_GetValueOfHuman( &self->client->ps ), factor;
       int   frags;
       int   unclaimedFrags = (int)humanValue;
 
-      humanValue *= G_RewardFactor( self, attacker );
+      factor = G_RewardFactor( self, attacker );
+      if( g_debugRewards.integer )
+        Com_Printf( "DebugRewards: %d x %.2f = ", (int)humanValue, factor );
+      humanValue *= factor;
+      if( g_debugRewards.integer )
+        Com_Printf( "%d", (int)humanValue );
 
       for( i = 0; i < MAX_CLIENTS; i++ )
       {
@@ -568,6 +585,11 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
           //add kills
           G_AddCreditToClient( player->client, frags, qtrue );
           player->client->pers.statscounters.earned += frags;
+
+          if( g_debugRewards.integer )
+            Com_Printf( ", %d/%d evo(s) to #%d for %.1f%% of damage", frags,
+                        (int)EVO_TO_CREDS_RATE, (int)( player - g_entities ),
+                        100 * percentDamage );
 
           //can't revist this account later
           self->credits[ i ] = 0;
@@ -611,11 +633,18 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
             G_AddCreditToClient( player->client, 1, qtrue );
             player->client->pers.statscounters.earned += 1;
 
+            if( g_debugRewards.integer )
+              Com_Printf( ", 1/%d to #%d (unclaimed)", (int)EVO_TO_CREDS_RATE,
+                          (int)( player - g_entities ) );
+
             //can't revist this account again
             self->credits[ topClient ] = 0;
           }
         }
       }
+
+      if( g_debugRewards.integer )
+        Com_Printf( "\n" );
     }
   }
 
