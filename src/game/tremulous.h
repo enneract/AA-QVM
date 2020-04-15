@@ -44,10 +44,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ADM(d)                      ((int)((float)d*ALIEN_WDMG_MODIFIER))
 
 #define ABUILDER_BUILD_REPEAT       500
-#define ABUILDER_CLAW_DMG           ADM(20)
-#define ABUILDER_CLAW_RANGE         64.0f
-#define ABUILDER_CLAW_WIDTH         4.0f
-#define ABUILDER_CLAW_REPEAT        1000
+#define ABUILDER_CLAW_DMG           ADM(15)
+#define ABUILDER_CLAW_RANGE         96.0f
+#define ABUILDER_CLAW_WIDTH         12.0f
+#define ABUILDER_CLAW_REPEAT        700
 #define ABUILDER_CLAW_K_SCALE       1.0f
 #define ABUILDER_BASE_DELAY         17000
 #define ABUILDER_ADV_DELAY          12000
