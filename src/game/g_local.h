@@ -365,6 +365,7 @@ typedef struct
   int AllstatstimeLastViewed;
   int spreebleeds;
   int earned;
+  int fed;
   int shared;
   int overflowed;
   int received;

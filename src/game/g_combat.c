@@ -530,6 +530,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
         amount = classValue * percentDamage; 
         G_AddCreditToClient( player->client, amount, qtrue );
         player->client->pers.statscounters.earned += amount;
+        self->client->pers.statscounters.fed += amount;
 
         if( g_debugRewards.integer )
           Com_Printf( ", %d credit(s) to #%d for %.1f%% of damage", amount,
@@ -587,6 +588,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
           //add kills
           G_AddCreditToClient( player->client, frags, qtrue );
           player->client->pers.statscounters.earned += frags;
+          self->client->pers.statscounters.fed += frags;
 
           if( g_debugRewards.integer )
             Com_Printf( ", %d/%d evo(s) to #%d for %.1f%% of damage", frags,
@@ -634,6 +636,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
             //add kills
             G_AddCreditToClient( player->client, 1, qtrue );
             player->client->pers.statscounters.earned += 1;
+            self->client->pers.statscounters.fed += 1;
 
             if( g_debugRewards.integer )
               Com_Printf( ", 1/%d to #%d (unclaimed)", (int)EVO_TO_CREDS_RATE,
