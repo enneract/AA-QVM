@@ -4102,7 +4102,7 @@ char *G_statsString( statsCounters_t *sc, pTeam_t *pt )
     if( sc->hitslocational )
       percentHeadshots = (int)(100 * (float) sc->headshots / ((float) (sc->hitslocational) ) );
     
-    s = va( "^3Kills:^7 %3i ^3StructKills:^7 %3i ^3Assists:^7 %3i^7 ^3Poisons:^7 %3i ^3Headshots:^7 %3i (%3i)\n^3Deaths:^7 %3i ^3Feeds:^7 %3i ^3Suicides:^7 %3i ^3TKs:^7 %3i ^3Avg Lifespan:^7 %4d:%02d\n^3Damage to:^7 ^3Enemies:^7 %5i ^3Structs:^7 %5i ^3Friendlies:^7 %3i \n^3Structs Built:^7 %3i ^3Time Near Base:^7 %3i ^3Time wallwalking:^7 %3i\n^3Earned:^7 %6.3f ^3Fed:^7 %6.3f ^3Shared:^7 %6.3f ^3Overflowed:^7 %6.3f ^3Recvd:^7 %6.3f\n",
+    s = va( "^3Kills:^7 %3i ^3StructKills:^7 %3i ^3Assists:^7 %3i^7 ^3Poisons:^7 %3i ^3Headshots:^7 %3i (%3i)\n^3Deaths:^7 %3i ^3Feeds:^7 %3i ^3Suicides:^7 %3i ^3TKs:^7 %3i ^3Avg Lifespan:^7 %4d:%02d\n^3Damage to:^7 ^3Enemies:^7 %5i ^3Structs:^7 %5i ^3Friendlies:^7 %3i \n^3Structs Built:^7 %3i ^3Time Near Base:^7 %3i ^3Time wallwalking:^7 %3i\n^3Earned:^7 %6.3f ^3Fed:^7 %6d ^3Shared:^7 %6.3f ^3Overflowed:^7 %6.3f ^3Recvd:^7 %6.3f\n",
      sc->kills,
      sc->structskilled,
      sc->assists,
@@ -4122,7 +4122,7 @@ char *G_statsString( statsCounters_t *sc, pTeam_t *pt )
      percentNearBase,
      percentJetpackWallwalk,
      sc->earned / EVO_TO_CREDS_RATE,
-     sc->fed / EVO_TO_CREDS_RATE,
+     sc->fed,
      sc->shared / EVO_TO_CREDS_RATE,
      sc->overflowed / EVO_TO_CREDS_RATE,
      sc->received / EVO_TO_CREDS_RATE
@@ -4132,7 +4132,7 @@ char *G_statsString( statsCounters_t *sc, pTeam_t *pt )
   {
     if( sc->timealive )
      percentJetpackWallwalk = (int)(100 *  (float) sc->jetpackusewallwalkusetime / ((float) ( sc->timealive ) ) );
-    s = va( "^3Kills:^7 %3i ^3StructKills:^7 %3i ^3Assists:^7 %3i \n^3Deaths:^7 %3i ^3Feeds:^7 %3i ^3Suicides:^7 %3i ^3TKs:^7 %3i ^3Avg Lifespan:^7 %4d:%02d\n^3Damage to:^7 ^3Enemies:^7 %5i ^3Structs:^7 %5i ^3Friendlies:^7 %3i \n^3Structs Built:^7 %3i ^3Repairs:^7 %4i ^3Time Near Base:^7 %3i ^3Time Jetpacking:^7 %3i\n^3Earned:^7 %6d ^3Fed:^7 %6d ^3Shared:^7 %6d ^3Overflowed:^7 %6d ^3Recvd:^7 %6d\n",
+    s = va( "^3Kills:^7 %3i ^3StructKills:^7 %3i ^3Assists:^7 %3i \n^3Deaths:^7 %3i ^3Feeds:^7 %3i ^3Suicides:^7 %3i ^3TKs:^7 %3i ^3Avg Lifespan:^7 %4d:%02d\n^3Damage to:^7 ^3Enemies:^7 %5i ^3Structs:^7 %5i ^3Friendlies:^7 %3i \n^3Structs Built:^7 %3i ^3Repairs:^7 %4i ^3Time Near Base:^7 %3i ^3Time Jetpacking:^7 %3i\n^3Earned:^7 %6d ^3Fed:^7 %6.3f ^3Shared:^7 %6d ^3Overflowed:^7 %6d ^3Recvd:^7 %6d\n",
      sc->kills,
      sc->structskilled,
      sc->assists,
@@ -4150,7 +4150,7 @@ char *G_statsString( statsCounters_t *sc, pTeam_t *pt )
      percentNearBase,
      percentJetpackWallwalk,
      sc->earned,
-     sc->fed,
+     sc->fed / EVO_TO_CREDS_RATE,
      sc->shared,
      sc->overflowed,
      sc->received
@@ -4171,7 +4171,7 @@ void Cmd_AllStats_f( gentity_t *ent )
   int i;
   int NextViewTime;
   int NumResults = 0;
-  float divisor = 0.0f;
+  float earnedDivisor = 0.0f, fedDivisor = 0.0f;
   char Teamcolor = 'c';
   gentity_t *other;
 
@@ -4195,7 +4195,7 @@ void Cmd_AllStats_f( gentity_t *ent )
     return;
   }
 
-  ADMP("^cK^B=^7Kills ^cA^B=^7Assists ^cSK^B=^7StructKills\n^cD^B=^7Deaths ^cF^B=^7Feeds ^cS^B=^7Suicides ^cTK^B=^7Teamkills\n^cDD^B=^7Damage done ^cTDD^B=^7Team Damage done\n^cSB^B=^7Structs Built\n^cEA^B=^7Funds Earned (Humans x100) ^cFE^B=^7Funds Earned by Enemies\n\n" );
+  ADMP("^cK^B=^7Kills ^cA^B=^7Assists ^cSK^B=^7StructKills\n^cD^B=^7Deaths ^cF^B=^7Feeds ^cS^B=^7Suicides ^cTK^B=^7Teamkills\n^cDD^B=^7Damage done ^cTDD^B=^7Team Damage done\n^cSB^B=^7Structs Built\n^cEA^B=^7Funds Earned (Credits x100) ^cFE^B=^7Funds Earned by Enemies\n\n" );
   //display a header describing the data
   ADMP( "^c #|  K   A  SK|  D   F   S  TK|   DD   TDD| SB|  EA   FE| Name\n" );
 
@@ -4219,12 +4219,14 @@ void Cmd_AllStats_f( gentity_t *ent )
     if( other->client->pers.teamSelection == PTE_ALIENS )
     {
       Teamcolor = 'F';
-      divisor = EVO_TO_CREDS_RATE;
+      earnedDivisor = EVO_TO_CREDS_RATE;
+      fedDivisor = 100.0f;
     }
     else if( other->client->pers.teamSelection == PTE_HUMANS )
     {
       Teamcolor = 't';
-      divisor = 100.0f;
+      earnedDivisor = 100.0f;
+      fedDivisor = EVO_TO_CREDS_RATE;
     }
 
     ADMP( va( "^%c%2i^c|^%c%3i %3i %3i^c|^%c%3i %3i %3i %3i^c|^%c%5i %5i^c|^%c%3i^c|^%c%4i %4i^c|^7 %s\n",
@@ -4243,8 +4245,8 @@ void Cmd_AllStats_f( gentity_t *ent )
       Teamcolor,
       other->client->pers.statscounters.structsbuilt,
       Teamcolor,
-      (int)floor( other->client->pers.statscounters.earned / divisor ),
-      (int)floor( other->client->pers.statscounters.fed / divisor ),
+      (int)floor( other->client->pers.statscounters.earned / earnedDivisor ),
+      (int)floor( other->client->pers.statscounters.fed / fedDivisor ),
       other->client->pers.netname ) );
   }
 
