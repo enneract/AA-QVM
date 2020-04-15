@@ -856,9 +856,17 @@ void ClientTimerActions( gentity_t *ent, int msec )
         boostEntity = &g_entities[ entityList[ i ] ];
 
         if( boostEntity->client && boostEntity->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS &&
-            boostEntity->client->ps.stats[ STAT_PCLASS ] == PCL_ALIEN_LEVEL1_UPG )
+            boostEntity->client->ps.stats[ STAT_PCLASS ] == PCL_ALIEN_LEVEL1_UPG &&
+            boostEntity->health > 0 )
         {
           modifier = LEVEL1_REGEN_MOD;
+
+          if( ent != boostEntity && ent->health < client->ps.stats[ STAT_MAX_HEALTH ] )
+          {
+            G_AddCreditToClient( boostEntity->client, LEVEL1_REGEN_REWARD, qtrue );
+            boostEntity->client->pers.statscounters.earned += LEVEL1_REGEN_REWARD;
+          }
+
           break;
         }
         else if( boostEntity->s.eType == ET_BUILDABLE &&

@@ -77,9 +77,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define LEVEL1_PCLOUD_RANGE         200.0f
 #define LEVEL1_PCLOUD_REPEAT        2000
 #define LEVEL1_PCLOUD_TIME          10000
-#define LEVEL1_PCLOUD_BOOST_TIME    5000
-#define LEVEL1_REGEN_RANGE          200.0f
-#define LEVEL1_REGEN_MOD            2.0f
+#define LEVEL1_PCLOUD_BOOST_TIME    15000
+#define LEVEL1_REGEN_RANGE          300.0f
+#define LEVEL1_REGEN_MOD            3.0f
+#define LEVEL1_REGEN_REWARD         EVOS(0.005f)
 
 #define LEVEL2_CLAW_DMG             ADM(40)
 #define LEVEL2_CLAW_RANGE           96.0f
@@ -165,13 +166,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define LEVEL0_COST                 EVOS(0)
 
 #define LEVEL1_SPEED                1.25f
-#define LEVEL1_VALUE                AVM(225)
+#define LEVEL1_VALUE                AVM(450)
 #define LEVEL1_HEALTH               AHM(75)
 #define LEVEL1_REGEN                2
 #define LEVEL1_COST                 EVOS(1)
 
 #define LEVEL1_UPG_SPEED            1.25f
-#define LEVEL1_UPG_VALUE            AVM(275)
+#define LEVEL1_UPG_VALUE            AVM(550)
 #define LEVEL1_UPG_HEALTH           AHM(100)
 #define LEVEL1_UPG_REGEN            3
 #define LEVEL1_UPG_COST             EVOS(1)
