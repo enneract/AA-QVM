@@ -80,6 +80,10 @@ void G_ForceWeaponChange( gentity_t *ent, weapon_t weapon )
   // force this here to prevent flamer effect from continuing
   ent->client->ps.generic1 = WPM_NOTFIRING;
 
+  // Reset the Lucifer Cannon charge
+  if( ent->client->ps.weapon == WP_LUCIFER_CANNON )
+    ent->client->ps.stats[ STAT_MISC ] = 0;
+
   ent->client->ps.weapon = ent->client->ps.persistant[ PERS_NEWWEAPON ];
 }
 
