@@ -3148,7 +3148,7 @@ CG_DrawVote
 */
 static void CG_DrawVote( void )
 {
-  char    *s;
+  char    *s, *s2;
   int     sec;
   vec4_t  white = { 1.0f, 1.0f, 1.0f, 1.0f };
   char    yeskey[ 32 ], nokey[ 32 ];
@@ -3169,9 +3169,10 @@ static void CG_DrawVote( void )
     sec = 0;
   Q_strncpyz( yeskey, CG_KeyBinding( "vote yes" ), sizeof( yeskey ) ); 
   Q_strncpyz( nokey, CG_KeyBinding( "vote no" ), sizeof( nokey ) ); 
-  s = va( "VOTE(%i): \"%s\"  [%s]Yes:%i [%s]No:%i", sec, cgs.voteString,
-    yeskey, cgs.voteYes, nokey, cgs.voteNo );
+  s = va( "^9Vote called! ^7- ^C%s^7", cgs.voteString );
+  s2 = va( "^9Status ^7- ^7[^2%s^7]^ZYes: %i ^7- ^7[^1%s^7]^ANo: %i^7 - ^9%i^7 seconds remaining,", yeskey, cgs.voteYes, nokey, cgs.voteNo, sec );
   CG_Text_Paint( 8, 340, 0.3f, white, s, 0, 0, ITEM_TEXTSTYLE_NORMAL );
+  CG_Text_Paint( 8, 360, 0.3f, white, s2, 0, 0, ITEM_TEXTSTYLE_NORMAL );
 }
 
 /*

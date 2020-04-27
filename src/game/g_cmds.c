@@ -1845,7 +1845,7 @@ void Cmd_CallVote_f( gentity_t *ent )
     if( G_MapExists( g_nextMap.string ) )
     {
       trap_SendServerCommand( ent - g_entities, va( "print \"callvote: "
-        "the next map is already set to '%s^7'\n\"", g_nextMap.string ) );
+        "the next map is already set to ^7'%s^7'\n\"", g_nextMap.string ) );
       return;
     }
 
@@ -1873,7 +1873,7 @@ void Cmd_CallVote_f( gentity_t *ent )
     Com_sprintf( level.voteString, sizeof( level.voteString ),
       "set g_nextMap %s", arg2 );
     Com_sprintf( level.voteDisplayString,
-        sizeof( level.voteDisplayString ), "Set the next map to '%s^7'", arg2 );
+        sizeof( level.voteDisplayString ), "Set the next map to ^7'%s^7'", arg2 );
     level.votePassThreshold = g_mapVotesPercent.integer;
   }
   else if( !Q_stricmp( arg1, "draw" ) )
@@ -2067,11 +2067,11 @@ void Cmd_CallVote_f( gentity_t *ent )
   
   if( level.votePassThreshold!=50 )
   {
-    Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( "^7 (Needs > %d percent)", level.votePassThreshold ) );
+    Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( "^7 (Needs > ^A%d^7 percent)", level.votePassThreshold ) );
   }
   
   if ( reason[0]!='\0' )
-    Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( " Reason: '%s^7'", reason ) );
+    Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( "^7 - reason: ^7'%s^7'", reason ) );
   
   G_admin_adminlog_log( ent, "vote", NULL, 0, qtrue );
 
@@ -2083,7 +2083,7 @@ void Cmd_CallVote_f( gentity_t *ent )
   
   G_LogPrintf("Vote: %s^7 called a vote: %s^7\n", ent->client->pers.netname, level.voteDisplayString );
   
-  Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( " Called by: '%s^7'", ent->client->pers.netname ) );
+  Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( "^7 - called by: %s^7", ent->client->pers.netname ) );
 
   ent->client->pers.voteCount++;
 
@@ -2530,7 +2530,7 @@ void Cmd_CallTeamVote_f( gentity_t *ent )
   G_admin_adminlog_log( ent, "teamvote", arg1, 0, qtrue );
   
   if ( reason[0]!='\0' )
-    Q_strcat( level.teamVoteDisplayString[ cs_offset ], sizeof( level.teamVoteDisplayString[ cs_offset ] ), va( " Reason: '%s'^7", reason ) );
+    Q_strcat( level.teamVoteDisplayString[ cs_offset ], sizeof( level.teamVoteDisplayString[ cs_offset ] ), va( "^7 - reason: ^7'%s^7'", reason ) );
 
   for( i = 0 ; i < level.maxclients ; i++ )
   {
@@ -2559,7 +2559,7 @@ void Cmd_CallTeamVote_f( gentity_t *ent )
   else if(team==PTE_HUMANS)
     G_LogPrintf("Teamvote: %s^7 called a teamvote (humans): %s^7\n", ent->client->pers.netname, level.teamVoteDisplayString[ cs_offset ] );
   
-  Q_strcat( level.teamVoteDisplayString[ cs_offset ], sizeof( level.teamVoteDisplayString[ cs_offset ] ), va( " Called by: '%s^7'", ent->client->pers.netname ) );
+  Q_strcat( level.teamVoteDisplayString[ cs_offset ], sizeof( level.teamVoteDisplayString[ cs_offset ] ), va( "^7 - called by: ^7'%s^7'", ent->client->pers.netname ) );
 
   // start the voting, the caller autoamtically votes yes
   level.teamVoteTime[ cs_offset ] = level.time;
