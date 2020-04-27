@@ -1944,7 +1944,7 @@ void Cmd_CallVote_f( gentity_t *ent )
     if( level.time - level.startTime <
         ( g_timelimit.integer - g_extendVotesTime.integer / 2 ) * 60000 )
     {
-      trap_SendServerCommand( ent-g_entities, va( "print \"callvote: Extend votes only allowed with less than %d minutes remaining\n\"", g_extendVotesTime.integer / 2 ) );
+      trap_SendServerCommand( ent-g_entities, va( "print \"callvote: Extend votes only allowed with less than %d minutes remaining\n\"", g_extendVotesTime.integer ) );
       return;
     }
     level.extend_vote_count++;
