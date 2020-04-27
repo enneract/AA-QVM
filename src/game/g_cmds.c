@@ -2075,8 +2075,11 @@ void Cmd_CallVote_f( gentity_t *ent )
   
   G_admin_adminlog_log( ent, "vote", NULL, 0, qtrue );
 
-  trap_SendServerCommand( -1, va( "print \"%s" S_COLOR_WHITE
+  trap_SendServerCommand( -1, va( "print \"^3/callvote:^7 %s" S_COLOR_WHITE
          " called a vote: %s" S_COLOR_WHITE "\n\"", ent->client->pers.netname, level.voteDisplayString ) );
+
+  trap_SendServerCommand( -1, va( "cp \"%s" S_COLOR_WHITE
+         " called a vote:\n%s" S_COLOR_WHITE "\"", ent->client->pers.netname, level.voteDisplayString ) );
   
   G_LogPrintf("Vote: %s^7 called a vote: %s^7\n", ent->client->pers.netname, level.voteDisplayString );
   
@@ -2158,8 +2161,6 @@ void Cmd_Vote_f( gentity_t *ent )
     return;
   }
 
-  trap_SendServerCommand( ent-g_entities, "print \"Vote cast\n\"" );
-
   ent->client->ps.eFlags |= EF_VOTED;
 
   trap_Argv( 1, msg, sizeof( msg ) );
@@ -2168,11 +2169,13 @@ void Cmd_Vote_f( gentity_t *ent )
   {
     level.voteYes++;
     trap_SetConfigstring( CS_VOTE_YES, va( "%i", level.voteYes ) );
+    trap_SendServerCommand( ent-g_entities, "print \"^3/vote: ^7vote cast: ^ZYes\n\"" );
   }
   else
   {
     level.voteNo++;
     trap_SetConfigstring( CS_VOTE_NO, va( "%i", level.voteNo ) );
+    trap_SendServerCommand( ent-g_entities, "print \"^3/vote: ^7vote cast: ^ANo\n\"" );
   }
 
   // a majority will be determined in G_CheckVote, which will also account
@@ -2536,8 +2539,11 @@ void Cmd_CallTeamVote_f( gentity_t *ent )
 
     if( level.clients[ i ].ps.stats[ STAT_PTEAM ] == team )
     {
-      trap_SendServerCommand( i, va("print \"%s " S_COLOR_WHITE
-            "called a team vote: %s^7 \n\"", ent->client->pers.netname, level.teamVoteDisplayString[ cs_offset ] ) );
+      trap_SendServerCommand( i, va("print \"^3/callteamvote:^7 %s " S_COLOR_WHITE
+            "called a ^5team ^7vote: %s^7 \n\"", ent->client->pers.netname, level.teamVoteDisplayString[ cs_offset ] ) );
+      
+      trap_SendServerCommand( i, va("cp \"%s " S_COLOR_WHITE
+            "called a ^5team ^7vote:\n%s^7 \n\"", ent->client->pers.netname, level.teamVoteDisplayString[ cs_offset ] ) );
     }
     else if( G_admin_permission( &g_entities[ i ], ADMF_ADMINCHAT ) && 
              ( ( !Q_stricmp( arg1, "kick" ) || !Q_stricmp( arg1, "denybuild" ) ) || 
@@ -2607,8 +2613,6 @@ void Cmd_TeamVote_f( gentity_t *ent )
     return;
   }
 
-  trap_SendServerCommand( ent-g_entities, "print \"Team vote cast\n\"" );
-
   ent->client->ps.eFlags |= EF_TEAMVOTED;
 
   trap_Argv( 1, msg, sizeof( msg ) );
@@ -2617,11 +2621,13 @@ void Cmd_TeamVote_f( gentity_t *ent )
   {
     level.teamVoteYes[ cs_offset ]++;
     trap_SetConfigstring( CS_TEAMVOTE_YES + cs_offset, va( "%i", level.teamVoteYes[ cs_offset ] ) );
+    trap_SendServerCommand( ent-g_entities, "print \"^3/teamvote: ^7vote cast: ^ZYes\n\"" );
   }
   else
   {
     level.teamVoteNo[ cs_offset ]++;
     trap_SetConfigstring( CS_TEAMVOTE_NO + cs_offset, va( "%i", level.teamVoteNo[ cs_offset ] ) );
+    trap_SendServerCommand( ent-g_entities, "print \"^3/teamvote: ^7vote cast: ^ANo\n\"" );
   }
 
   // a majority will be determined in TeamCheckVote, which will also account
