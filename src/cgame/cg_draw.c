@@ -3171,8 +3171,8 @@ static void CG_DrawVote( void )
   Q_strncpyz( nokey, CG_KeyBinding( "vote no" ), sizeof( nokey ) ); 
   s = va( "^9Vote called! ^7- ^C%s^7", cgs.voteString );
   s2 = va( "^9Status ^7- ^7[^2%s^7]^ZYes: %i ^7- ^7[^1%s^7]^ANo: %i^7 - ^9%i^7 seconds remaining,", yeskey, cgs.voteYes, nokey, cgs.voteNo, sec );
-  CG_Text_Paint( 8, 340, 0.3f, white, s, 0, 0, ITEM_TEXTSTYLE_NORMAL );
-  CG_Text_Paint( 8, 360, 0.3f, white, s2, 0, 0, ITEM_TEXTSTYLE_NORMAL );
+  CG_Text_Paint( 8, 320, 0.3f, white, s, 0, 0, ITEM_TEXTSTYLE_NORMAL );
+  CG_Text_Paint( 8, 340, 0.3f, white, s2, 0, 0, ITEM_TEXTSTYLE_NORMAL );
 }
 
 /*
@@ -3182,7 +3182,7 @@ CG_DrawTeamVote
 */
 static void CG_DrawTeamVote( void )
 {
-  char    *s;
+  char    *s, *s2;
   int     sec, cs_offset;
   vec4_t  white = { 1.0f, 1.0f, 1.0f, 1.0f };
   char    yeskey[ 32 ], nokey[ 32 ];
@@ -3215,6 +3215,12 @@ static void CG_DrawTeamVote( void )
           cgs.teamVoteString[ cs_offset ],
           yeskey, cgs.teamVoteYes[cs_offset],
           nokey, cgs.teamVoteNo[ cs_offset ] );
+
+  s = va( "^5Team vote called! ^7- ^C%s^7", cgs.teamVoteString[ cs_offset ] );
+  s2 = va( "^9Status ^7- ^7[^2%s^7]^ZYes: %i ^7- ^7[^1%s^7]^ANo: %i^7 - ^9%i^7 seconds remaining,", 
+          yeskey, cgs.teamVoteYes[ cs_offset ], nokey, cgs.teamVoteNo[ cs_offset ], sec );
+  CG_Text_Paint( 8, 360, 0.3f, white, s, 0, 0, ITEM_TEXTSTYLE_NORMAL );
+  CG_Text_Paint( 8, 380, 0.3f, white, s2, 0, 0, ITEM_TEXTSTYLE_NORMAL );
 
   CG_Text_Paint( 8, 360, 0.3f, white, s, 0, 0, ITEM_TEXTSTYLE_NORMAL );
 }
