@@ -1778,6 +1778,7 @@ void          CG_ExecuteNewServerCommands( int latestSequence );
 void          CG_ParseServerinfo( void );
 void          CG_SetConfigValues( void );
 void          CG_ShaderStateChanged(void);
+void          CG_ConfigStringModified( int );
 
 //
 // cg_playerstate.c

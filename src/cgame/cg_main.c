@@ -2062,6 +2062,22 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum )
 
   trap_S_ClearLoopingSounds( qtrue );
 
+  // load any existing votes
+  CG_ConfigStringModified( CS_VOTE_TIME );
+  CG_ConfigStringModified( CS_VOTE_STRING );
+  CG_ConfigStringModified( CS_VOTE_YES );
+  CG_ConfigStringModified( CS_VOTE_NO );
+
+  CG_ConfigStringModified( CS_TEAMVOTE_TIME );
+  CG_ConfigStringModified( CS_TEAMVOTE_STRING );
+  CG_ConfigStringModified( CS_TEAMVOTE_YES );
+  CG_ConfigStringModified( CS_TEAMVOTE_NO );
+
+  CG_ConfigStringModified( CS_TEAMVOTE_TIME + 1 );
+  CG_ConfigStringModified( CS_TEAMVOTE_STRING + 1 );
+  CG_ConfigStringModified( CS_TEAMVOTE_YES + 1 );
+  CG_ConfigStringModified( CS_TEAMVOTE_NO + 1 );
+
   trap_Cvar_Set( "ui_loading", "0" );
 }
 

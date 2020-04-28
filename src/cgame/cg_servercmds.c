@@ -247,20 +247,30 @@ static void CG_AnnounceHumanStageTransistion( stage_t from, stage_t to )
 
 /*
 ================
+CG_ConfigStringModifiedSvcmd
+
+================
+*/
+static void CG_ConfigStringModifiedSvcmd( void )
+                    
+{
+  int         num;
+  num = atoi( CG_Argv( 1 ) );
+  // get the gamestate from the client system, which will have the
+  // new configstring already integrated
+  trap_GetGameState( &cgs.gameState ); // enneract: not needed when calling from CG_Init
+  CG_ConfigStringModified( num );
+}
+
+/*
+================
 CG_ConfigStringModified
 
 ================
 */
-static void CG_ConfigStringModified( void )
+void CG_ConfigStringModified( int num )
 {
   const char  *str;
-  int         num;
-
-  num = atoi( CG_Argv( 1 ) );
-
-  // get the gamestate from the client system, which will have the
-  // new configstring already integrated
-  trap_GetGameState( &cgs.gameState );
 
   // look up the individual string that was modified
   str = CG_ConfigString( num );
@@ -848,7 +858,7 @@ static void CG_ServerCommand( void )
 
   if( !strcmp( cmd, "cs" ) )
   {
-    CG_ConfigStringModified( );
+    CG_ConfigStringModifiedSvcmd( );
     return;
   }
 
