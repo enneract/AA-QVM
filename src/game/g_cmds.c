@@ -1146,15 +1146,15 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText )
       case SAY_ADMINS:
         if( G_admin_permission( ent, ADMF_ADMINCHAT ) ) //Differentiate between inter-admin chatter and user-admin alerts
         {
-          G_LogPrintf( "say_admins: ^7[^nADMIN^7]%s^7: %s^7\n", ( ent ) ? ent->client->pers.netname : "console", chatText );
-          Com_sprintf( name, sizeof( name ), "%s^7[^nADMIN^7]%s^7: ", prefix, ( ent ) ? ent->client->pers.netname : "console" );
-          color = COLOR_WILD_WATERMELON;
+          G_LogPrintf( "say_admins: ^7[^6ADMIN^7]%s^7: %s^7\n", ( ent ) ? ent->client->pers.netname : "console", chatText );
+          Com_sprintf( name, sizeof( name ), "%s^7[^6ADMIN^7]%s^7: ", prefix, ( ent ) ? ent->client->pers.netname : "console" );
+          color = COLOR_MAGENTA;
         }
         else
         {
           G_LogPrintf( "say_admins: ^7[^ZPLAYER^7]%s^7: %s^7\n", ent->client->pers.netname, chatText );
           Com_sprintf( name, sizeof( name ), "%s^7[^ZPLAYER^7]%s^7: ", prefix, ( ent ) ? ent->client->pers.netname : "console" );
-          color = COLOR_WILD_WATERMELON;
+          color = COLOR_MAGENTA;
         }
         break;
 
@@ -1167,8 +1167,8 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText )
         }
         else if( G_admin_permission( ent, ADMF_ADMINCHAT ) ) 
         {
-          G_LogPrintf( "say_haadmins: ^7[^ALOWER ADMIN^7]^7%s^7: %s^7\n", ( ent ) ? ent->client->pers.netname : "console", chatText );
-          Com_sprintf( name, sizeof( name ), "%s^7[^nLOWER ADMIN^7]^7%s^7: ", prefix, ( ent ) ? ent->client->pers.netname : "console" );
+          G_LogPrintf( "say_haadmins: ^7[^6LOWER ADMIN^7]^7%s^7: %s^7\n", ( ent ) ? ent->client->pers.netname : "console", chatText );
+          Com_sprintf( name, sizeof( name ), "%s^7[^6LOWER ADMIN^7]^7%s^7: ", prefix, ( ent ) ? ent->client->pers.netname : "console" );
           color = COLOR_AMERICAN_ROSE;
         }
         else
