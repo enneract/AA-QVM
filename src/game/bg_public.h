@@ -292,8 +292,6 @@ typedef enum
 #define EF_MOVER_STOP       0x00001000    // will push otherwise
 #define EF_TALK             0x00002000    // draw a talk balloon
 #define EF_CONNECTION       0x00004000    // draw a connection trouble sprite
-#define EF_VOTED            0x00008000    // already cast a vote
-#define EF_TEAMVOTED        0x00010000    // already cast a vote
 #define EF_BLOBLOCKED       0x00020000    // TA: caught by a trapper
 #define EF_REAL_LIGHT       0x00040000    // TA: light sprites according to ambient light
 #define EF_DBUILDER         0x00080000    // designated builder protection

@@ -1825,7 +1825,7 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
   client->pers.teamState.state = TEAM_ACTIVE;
 
   // toggle the teleport bit so the client knows to not lerp
-  flags = ent->client->ps.eFlags & ( EF_TELEPORT_BIT | EF_VOTED | EF_TEAMVOTED );
+  flags = ent->client->ps.eFlags & EF_TELEPORT_BIT;
   flags ^= EF_TELEPORT_BIT;
   G_UnlaggedClear( ent );
 
@@ -2089,6 +2089,23 @@ void ClientDisconnect( int clientNum )
 
   if( !ent->client )
     return;
+
+  // discard this player's vote
+  if( level.voteTime && level.votedHow[ clientNum ] )
+  {
+     if( level.votedHow[ clientNum ] > 0 )
+     {
+       level.voteYes--;
+       trap_SetConfigstring( CS_VOTE_YES, va( "%i", level.voteYes ) );
+     }
+     else
+     {
+       level.voteNo--;
+       trap_SetConfigstring( CS_VOTE_NO, va( "%i", level.voteNo ) );
+     }
+
+     level.votedHow[ clientNum ] = 0;
+  }
 
   // look through the bhist and readjust it if the referenced ent has left
   for( ptr = level.buildHistory; ptr; ptr = ptr->next )

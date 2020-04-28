@@ -713,6 +713,7 @@ typedef struct
   int               voteYes;
   int               voteNo;
   int               numVotingClients;             // set by CalculateRanks
+  int               votedHow[MAX_CLIENTS];       // 0 is "hasn't voted", 1 is "voted yes", -1 is voted "no"
 
   // team voting state
   char              teamVoteString[ 2 ][ MAX_STRING_CHARS ];
@@ -721,6 +722,7 @@ typedef struct
   int               teamVoteYes[ 2 ];
   int               teamVoteNo[ 2 ];
   int               numteamVotingClients[ 2 ];    // set by CalculateRanks
+  int               teamVotedHow[ 2 ][ MAX_CLIENTS ];
 
   // spawn variables
   qboolean          spawning;                     // the G_Spawn*() functions are valid

@@ -604,7 +604,9 @@ void G_LeaveTeam( gentity_t *self )
 {
   pTeam_t   team = self->client->pers.teamSelection;
   gentity_t *ent;
-  int       i;
+  int       i, clientNum;
+
+  clientNum = self->client->ps.clientNum;
 
   if( team == PTE_ALIENS )
     G_RemoveFromSpawnQueue( &level.alienSpawnQueue, self->client->ps.clientNum );
@@ -644,6 +646,24 @@ void G_LeaveTeam( gentity_t *self )
           ent->client->lastPoisonClient == self )
         ent->client->ps.stats[ STAT_STATE ] &= ~SS_POISONED;
     }
+  }
+
+  if( level.teamVoteTime[ team ] && level.teamVotedHow[ team ][ clientNum ] )
+  {
+     int cs_offset = (team == PTE_ALIENS ? 1 : 0);
+
+     if( level.teamVotedHow[ team ][ clientNum ] > 0 )
+     {
+       level.teamVoteYes[ team ]--;
+       trap_SetConfigstring( CS_TEAMVOTE_YES + cs_offset, va( "%i", level.teamVoteYes[ team ] ) );
+     }
+     else
+     {
+       level.teamVoteNo[ team ]--;
+       trap_SetConfigstring( CS_TEAMVOTE_NO + cs_offset, va( "%i", level.teamVoteNo[ team ] ) );
+     }
+
+     level.teamVotedHow[ team ][ clientNum ] = 0;
   }
 }
 
@@ -2086,8 +2106,7 @@ void Cmd_CallVote_f( gentity_t *ent )
   level.voteTime = level.time;
   level.voteNo = 0;
 
-  for( i = 0 ; i < level.maxclients ; i++ )
-    level.clients[i].ps.eFlags &= ~EF_VOTED;
+  memset( level.votedHow, 0, sizeof( level.votedHow ) );
 
   if( !Q_stricmp( arg1, "poll" ) )
   {
@@ -2095,8 +2114,8 @@ void Cmd_CallVote_f( gentity_t *ent )
   }
   else
   {
-   level.voteYes = 1;
-   ent->client->ps.eFlags |= EF_VOTED;
+    level.votedHow[ ent - g_entities ] = 1;
+    level.voteYes = 1;
   }
 
   trap_SetConfigstring( CS_VOTE_TIME, va( "%i", level.voteTime ) );
@@ -2137,38 +2156,36 @@ void Cmd_Vote_f( gentity_t *ent )
       if( ent->client->pers.teamSelection == PTE_ALIENS )
         cs_offset = 1;
     
-      if( level.teamVoteTime[ cs_offset ] )
+      if( level.teamVoteTime[ cs_offset ] &&
+          !level.teamVotedHow[ cs_offset ][ g_entities - ent ] )
       {
-         if( !(ent->client->ps.eFlags & EF_TEAMVOTED ) )
-        {
-          Cmd_TeamVote_f(ent); 
-          return;
-        }
+        Cmd_TeamVote_f(ent); 
+        return;
       }
     }
     trap_SendServerCommand( ent-g_entities, "print \"No vote in progress\n\"" );
     return;
   }
 
-  if( ent->client->ps.eFlags & EF_VOTED )
+  if( level.votedHow[ ent - g_entities ] )
   {
     trap_SendServerCommand( ent-g_entities, "print \"Vote already cast\n\"" );
     return;
   }
-
-  ent->client->ps.eFlags |= EF_VOTED;
 
   trap_Argv( 1, msg, sizeof( msg ) );
 
   if( msg[ 0 ] == 'y' || msg[ 1 ] == 'Y' || msg[ 1 ] == '1' )
   {
     level.voteYes++;
+	level.votedHow[ ent - g_entities ] = 1;
     trap_SetConfigstring( CS_VOTE_YES, va( "%i", level.voteYes ) );
     trap_SendServerCommand( ent-g_entities, "print \"^3/vote: ^7vote cast: ^ZYes\n\"" );
   }
   else
   {
     level.voteNo++;
+	level.votedHow[ ent - g_entities ] = -1;
     trap_SetConfigstring( CS_VOTE_NO, va( "%i", level.voteNo ) );
     trap_SendServerCommand( ent-g_entities, "print \"^3/vote: ^7vote cast: ^ANo\n\"" );
   }
@@ -2560,11 +2577,7 @@ void Cmd_CallTeamVote_f( gentity_t *ent )
   level.teamVoteTime[ cs_offset ] = level.time;
   level.teamVoteNo[ cs_offset ] = 0;
 
-  for( i = 0 ; i < level.maxclients ; i++ )
-  {
-    if( level.clients[ i ].ps.stats[ STAT_PTEAM ] == team )
-      level.clients[ i ].ps.eFlags &= ~EF_TEAMVOTED;
-  }
+  memset( level.teamVotedHow[ cs_offset ], 0, sizeof( level.teamVotedHow[ 0 ] ));
 
   if( !Q_stricmp( arg1, "poll" ) )
   {
@@ -2572,8 +2585,8 @@ void Cmd_CallTeamVote_f( gentity_t *ent )
   }
   else
   {
-   level.teamVoteYes[ cs_offset ] = 1;
-   ent->client->ps.eFlags |= EF_TEAMVOTED;
+    level.teamVotedHow[ cs_offset ][ ent - g_entities ] = 1;
+    level.teamVoteYes[ cs_offset ] = 1;
   }
 
   trap_SetConfigstring( CS_TEAMVOTE_TIME + cs_offset, va( "%i", level.teamVoteTime[ cs_offset ] ) );
@@ -2602,24 +2615,24 @@ void Cmd_TeamVote_f( gentity_t *ent )
     return;
   }
 
-  if( ent->client->ps.eFlags & EF_TEAMVOTED )
+  if( level.teamVotedHow[ cs_offset ][ ent - g_entities ] )
   {
     trap_SendServerCommand( ent-g_entities, "print \"Team vote already cast\n\"" );
     return;
   }
 
-  ent->client->ps.eFlags |= EF_TEAMVOTED;
-
   trap_Argv( 1, msg, sizeof( msg ) );
 
   if( msg[ 0 ] == 'y' || msg[ 1 ] == 'Y' || msg[ 1 ] == '1' )
   {
+    level.teamVotedHow[ cs_offset ][ ent - g_entities ] = 1;
     level.teamVoteYes[ cs_offset ]++;
     trap_SetConfigstring( CS_TEAMVOTE_YES + cs_offset, va( "%i", level.teamVoteYes[ cs_offset ] ) );
     trap_SendServerCommand( ent-g_entities, "print \"^3/teamvote: ^7vote cast: ^ZYes\n\"" );
   }
   else
   {
+    level.teamVotedHow[ cs_offset ][ ent - g_entities ] = -1;
     level.teamVoteNo[ cs_offset ]++;
     trap_SetConfigstring( CS_TEAMVOTE_NO + cs_offset, va( "%i", level.teamVoteNo[ cs_offset ] ) );
     trap_SendServerCommand( ent-g_entities, "print \"^3/teamvote: ^7vote cast: ^ANo\n\"" );
