@@ -84,8 +84,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ADMF_TEAMCHAT_CMD        "TEAMCHATCMD"
 #define ADMF_ACTIVITY            "ACTIVITY"
 
-#define ADMF_SCHACHT             "SCHACHT"
-
 #define ADMF_IMMUTABLE           "IMMUTABLE"
 #define ADMF_INCOGNITO           "INCOGNITO"
 #define ADMF_SEESINCOGNITO       "SEESINCOGNITO"
@@ -110,6 +108,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ADMF_FAKE_NO_VOTE        ".FAKENOVOTE"
 #define ADMF_NO_ALIENS           ".NOALIENS"
 #define ADMF_NO_HUMANS           ".NOHUMANS"
+
+#define ADMF_SCHACHT             ".SCHACHT"
 
 #define MAX_ADMIN_LISTITEMS 20
 #define MAX_ADMIN_SHOWBANS 10
