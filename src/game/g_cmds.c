@@ -1698,7 +1698,7 @@ void Cmd_CallVote_f( gentity_t *ent )
       Q_strncpyz( name, level.clients[ clientNum ].pers.netname,
         sizeof( name ) );
       Q_CleanStr( name );
-      if ( G_admin_permission ( &g_entities[ clientNum ], ADMF_IMMUNITY ) )
+      if ( G_admin_permission ( &g_entities[ clientNum ], ADMF_IMMUNITY ) && g_entities[ clientNum ].client->pers.adminLevel >= ent->client->pers.adminLevel )
       {
     char reasonprint[ MAX_STRING_CHARS ] = "";
 
@@ -1721,7 +1721,7 @@ void Cmd_CallVote_f( gentity_t *ent )
   {
     char n1[ MAX_NAME_LENGTH ];
 
-    if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) )
+    if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) && g_entities[ clientNum ].client->pers.adminLevel >= ent->client->pers.adminLevel )
     {
       trap_SendServerCommand( ent-g_entities,
         "print \"callvote: admin is immune from vote kick\n\"" );
@@ -1745,7 +1745,7 @@ void Cmd_CallVote_f( gentity_t *ent )
   }
   else if( !Q_stricmp( arg1, "spec" ) )
   {
-    if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) )
+    if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) && g_entities[ clientNum ].client->pers.adminLevel >= ent->client->pers.adminLevel )
     {
           trap_SendServerCommand( ent-g_entities, "print \"callvote: admin is immune from vote spec\n\"" );
           return;
@@ -1763,7 +1763,7 @@ void Cmd_CallVote_f( gentity_t *ent )
       return;
     }
 
-    if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) )
+    if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) && g_entities[ clientNum ].client->pers.adminLevel >= ent->client->pers.adminLevel )
     {
       trap_SendServerCommand( ent-g_entities,
         "print \"callvote: admin is immune from vote mute\n\"" );
@@ -2359,7 +2359,7 @@ void Cmd_CallTeamVote_f( gentity_t *ent )
       Q_strncpyz( name, level.clients[ clientNum ].pers.netname,
         sizeof( name ) );
       Q_CleanStr( name );
-      if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) )
+      if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) && g_entities[ clientNum ].client->pers.adminLevel >= ent->client->pers.adminLevel )
       {
         char reasonprint[ MAX_STRING_CHARS ] = {0};
 
@@ -2382,7 +2382,7 @@ void Cmd_CallTeamVote_f( gentity_t *ent )
   {
     char n1[ MAX_NAME_LENGTH ];
 
-    if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) )
+    if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) && g_entities[ clientNum ].client->pers.adminLevel >= ent->client->pers.adminLevel )
     {
       trap_SendServerCommand( ent-g_entities,
         "print \"callteamvote: admin is immune from vote kick\n\"" );
@@ -2418,7 +2418,7 @@ void Cmd_CallTeamVote_f( gentity_t *ent )
       return;
     }
 
-    if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) )
+    if( G_admin_permission( &g_entities[ clientNum ], ADMF_IMMUNITY ) && g_entities[ clientNum ].client->pers.adminLevel >= ent->client->pers.adminLevel )
     {
       trap_SendServerCommand( ent-g_entities,
         "print \"callteamvote: admin is immune from denybuild\n\"" );
