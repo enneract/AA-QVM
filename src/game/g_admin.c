@@ -4206,9 +4206,20 @@ void G_admin_maplog_result( char *flag )
 qboolean G_admin_maplog( gentity_t *ent, int skiparg )
 {
   char maplog[ MAX_CVAR_VALUE_STRING ];
-  char *ptr;
+  char *ptr, *curTime;
   int count = 0;
+  int     mins, seconds, tens;
+  int     msec;
 
+  msec = level.time - level.startTime;
+
+  seconds = msec / 1000;
+  mins = seconds / 60;
+  seconds -= mins * 60;
+  tens = seconds / 10;
+  seconds -= tens * 10;
+
+  curTime = va( "%3i^7:^3%d%d", mins, tens, seconds );
   Q_strncpyz( maplog, g_adminMapLog.string, sizeof( maplog ) );
 
   ADMBP_begin( );
@@ -4269,7 +4280,7 @@ qboolean G_admin_maplog( gentity_t *ent, int skiparg )
            result = "^6admin loaded devmap";
            break;
          default:
-           result = "";
+           result = "^7unknown end cause";
            break;
        }
        ptr += 2;
@@ -4292,14 +4303,14 @@ qboolean G_admin_maplog( gentity_t *ent, int skiparg )
      else if( count == 0 )
      {
        result = "^3current map";
-       clock = "  -:--";
+       clock = curTime;
      }
  
      ADMBP( va( "%s%20s %-6s %s^7\n",
        ( count == 0 ) ? "^3" : "^7",
        ptr,
        ( clock ) ? clock : "",
-       ( result ) ? result : "" ) );
+       ( result ) ? result : "^7unknown end cause" ) );
 
     ptr = end;
     count++;
