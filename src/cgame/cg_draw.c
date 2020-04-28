@@ -3221,8 +3221,6 @@ static void CG_DrawTeamVote( void )
           yeskey, cgs.teamVoteYes[ cs_offset ], nokey, cgs.teamVoteNo[ cs_offset ], sec );
   CG_Text_Paint( 8, 360, 0.3f, white, s, 0, 0, ITEM_TEXTSTYLE_NORMAL );
   CG_Text_Paint( 8, 380, 0.3f, white, s2, 0, 0, ITEM_TEXTSTYLE_NORMAL );
-
-  CG_Text_Paint( 8, 360, 0.3f, white, s, 0, 0, ITEM_TEXTSTYLE_NORMAL );
 }
 
 
