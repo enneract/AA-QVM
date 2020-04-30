@@ -2525,7 +2525,8 @@ CheckVote
 void CheckVote( void )
 {
   int votePassThreshold=level.votePassThreshold;
-  int voteYesPercent;
+  int voteYesPercent, turnout;
+  char *turnoutCol;
 
   if( level.voteExecuteTime && level.voteExecuteTime < level.time )
   {
@@ -2569,23 +2570,46 @@ void CheckVote( void )
   else
     voteYesPercent = 0; 
   
+  turnout = 100 * ( level.voteYes + level.voteNo ) / level.numConnectedClients;
+
+  if( turnout <= 10)
+  {
+    turnoutCol = "^1";
+  }
+  else if( turnout > 10 && turnout <= 33)
+  {
+    turnoutCol = "^A";
+  }
+  else if( turnout > 33 && turnout <= 66)
+  {
+    turnoutCol = "^C";
+  }
+  else if( turnout > 66 && turnout <= 90)
+  {
+    turnoutCol = "^Z";
+  }
+  else
+  {
+    turnoutCol = "^2";
+  }
+
   if( ( level.time - level.voteTime >= VOTE_TIME ) || 
       ( level.voteYes + level.voteNo == level.numConnectedClients ) )
   {
     if( voteYesPercent> votePassThreshold || level.voteNo == 0 )
     {
       // execute the command, then remove the vote
-      trap_SendServerCommand( -1, va("print \"Vote ^Zpassed ^7(^ZYes: ^7%d | ^ANo: ^7%d)\n\"", 
-            level.voteYes, level.voteNo ) );
-      G_LogPrintf( "Vote: Vote passed (%d-%d)\n", level.voteYes, level.voteNo );
+      trap_SendServerCommand( -1, va("print \"Vote ^Zpassed ^7(^ZYes^7: %d | ^ANo^7: %d | ^dTurnout^7: %s%i%%^7)\n\"", 
+            level.voteYes, level.voteNo, turnoutCol, turnout ) );
+      G_LogPrintf( "Vote: Vote passed (%d - %d), turnout: %i%%\n", level.voteYes, level.voteNo, turnout );
       level.voteExecuteTime = level.time + 3000;
     }
     else
     {
       // same behavior as a timeout
-      trap_SendServerCommand( -1, va("print \"Vote ^Afailed ^7(^ZYes: ^7%d | ^ANo: ^7%d)\n\"",
-            level.voteYes, level.voteNo ) );
-      G_LogPrintf( "Vote: Vote failed (%d - %d)\n", level.voteYes, level.voteNo );
+      trap_SendServerCommand( -1, va("print \"Vote ^Afailed ^7(^ZYes^7: %d | ^ANo^7: %d | ^dTurnout^7: %s%i%%^7)\n\"",
+            level.voteYes, level.voteNo, turnoutCol, turnout ) );
+      G_LogPrintf( "Vote: Vote failed (%d - %d), turnout: %i%%\n", level.voteYes, level.voteNo, turnout );
     }
   }
   else
@@ -2594,18 +2618,18 @@ void CheckVote( void )
                                  ( (double) votePassThreshold/100.0 ) ) )
     {
       // execute the command, then remove the vote
-      trap_SendServerCommand( -1, va("print \"Vote ^Zpassed ^7(^ZYes: ^7%d | ^ANo: ^7%d)\n\"",
-            level.voteYes, level.voteNo ) );
-      G_LogPrintf( "Vote: Vote passed (%d - %d)\n", level.voteYes, level.voteNo );
+      trap_SendServerCommand( -1, va("print \"Vote ^Afailed ^7(^ZYes^7: %d | ^ANo^7: %d | ^dTurnout^7: %s%i%%^7)\n\"",
+            level.voteYes, level.voteNo, turnoutCol, turnout ) );
+      G_LogPrintf( "Vote: Vote passed (%d - %d), turnout: %i%%\n", level.voteYes, level.voteNo, turnout );
       level.voteExecuteTime = level.time + 3000;
     }
     else if( level.voteNo > (int)( (double) level.numConnectedClients * 
                                      ( (double) ( 100.0-votePassThreshold )/ 100.0 ) ) )
     {
       // same behavior as a timeout
-      trap_SendServerCommand( -1, va("print \"Vote ^Afailed ^7(^ZYes: ^7%d | ^ANo: ^7%d)\n\"",
-            level.voteYes, level.voteNo ) );
-      G_LogPrintf("Vote failed\n");
+      trap_SendServerCommand( -1, va("print \"Vote ^Afailed ^7(^ZYes^7: %d | ^ANo^7: %d | ^dTurnout^7: %s%i%%^7)\n\"",
+            level.voteYes, level.voteNo, turnoutCol, turnout ) );
+      G_LogPrintf( "Vote: Vote failed (%d - %d), turnout: %i%%\n", level.voteYes, level.voteNo, turnout );
     }
     else
     {
