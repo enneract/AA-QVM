@@ -2618,7 +2618,7 @@ void CheckVote( void )
                                  ( (double) votePassThreshold/100.0 ) ) )
     {
       // execute the command, then remove the vote
-      trap_SendServerCommand( -1, va("print \"Vote ^Afailed ^7(^ZYes^7: %d | ^ANo^7: %d | ^dTurnout^7: %s%i%%^7)\n\"",
+      trap_SendServerCommand( -1, va("print \"Vote ^Zpassed ^7(^ZYes^7: %d | ^ANo^7: %d | ^dTurnout^7: %s%i%%^7)\n\"",
             level.voteYes, level.voteNo, turnoutCol, turnout ) );
       G_LogPrintf( "Vote: Vote passed (%d - %d), turnout: %i%%\n", level.voteYes, level.voteNo, turnout );
       level.voteExecuteTime = level.time + 3000;
