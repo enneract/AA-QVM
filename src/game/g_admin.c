@@ -2087,10 +2087,51 @@ qboolean G_admin_readconfig( gentity_t *ent, int skiparg )
 qboolean G_admin_time( gentity_t *ent, int skiparg )
 {
   qtime_t qt;
+  int     mins, seconds;
+  int     msec;
+  char    *pluralM, *pluralS;
+
+  msec = level.time - level.startTime;
+
+  seconds = msec / 1000;
+  mins = seconds / 60;
+  seconds -= mins * 60;
 
   trap_RealTime( &qt );
-  ADMP( va( "^3!time: ^7local time is %02i:%02i:%02i\n",
+  ADMP( va( "^3!time: ^7local time is ^3%02i:%02i:%02i^7\n",
     qt.tm_hour, qt.tm_min, qt.tm_sec ) );
+
+  pluralM = "s";
+  pluralS = "s";
+
+  if( mins == 1 ){ pluralM = ""; }
+  if( seconds == 1 ){ pluralS = ""; }
+
+  if( mins == 0 )
+  {
+    ADMP( va( "^3!time: ^7this match has been going on for ^3%i ^7seconds.\n", seconds ) );
+  }
+  else
+  {
+    ADMP( va( "^3!time: ^7this match has been going on for ^3%i ^7minute%s and ^3%i ^7second%s\n", mins, pluralM, seconds, pluralS ) );
+  }
+
+  if( g_suddenDeathTime.integer > 0 && !g_suddenDeath.integer )
+  {
+    ADMP( va( "^3!time: ^7sudden death will be at ^3%i:00^7, in about ^3%i ^7minutes\n", 
+      g_suddenDeathTime.integer, G_TimeTilSuddenDeath( ) / 60000 ) );
+  }
+  else if( g_suddenDeathTime.integer && g_suddenDeath.integer )
+  {
+    ADMP( va( "^3!time: ^7sudden death started at ^3%i:00^7\n", 
+      g_suddenDeathTime.integer ) );
+  }
+
+  if( g_timelimit.integer > 0)
+  {
+    ADMP( va( "^3!time: ^7timelimit is at ^3%i:00^7\n", 
+      g_timelimit.integer ) );
+  }
     
   return qtrue;
 }
@@ -4219,7 +4260,7 @@ qboolean G_admin_maplog( gentity_t *ent, int skiparg )
   tens = seconds / 10;
   seconds -= tens * 10;
 
-  curTime = va( "%3i^7:^3%d%d", mins, tens, seconds );
+  curTime = va( "%3i^7:^3%i%i", mins, tens, seconds );
   Q_strncpyz( maplog, g_adminMapLog.string, sizeof( maplog ) );
 
   ADMBP_begin( );
