@@ -6111,7 +6111,8 @@ qboolean G_admin_register(gentity_t *ent, int skiparg ){
   
   if( !Q_stricmp( ent->client->pers.guid, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ) )
   {
-    ADMP( va( "^3!register: ^7 You cannot register for name protection until you update your client. Please replace your client executable with the one at http://trem.tjw.org/backport/ and reconnect. Updating your client will also allow you to have faster map downloads.\n" ) );
+    trap_SendServerCommand( ent->client->ps.clientNum, va(
+      "print \"%s\n\"", g_outdatedClientMessage.string ) );
     return qfalse;
   }
 
