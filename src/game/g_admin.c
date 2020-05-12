@@ -111,6 +111,7 @@ g_admin_schachts_t g_admin_schachts[ ] =
     {"range", "don't know what you're on about, %s^7.", NULL},
     {"practise", "get gud, %s^7.", NULL},
     {"switch", "%s^7, ^3!switch^7 functionality not invented yet.", NULL},
+    {"spawn", "%s^7, ^7reproduce.", NULL},
   };
 
 g_admin_cmd_t g_admin_cmds[ ] = 
@@ -533,8 +534,12 @@ g_admin_cmd_t g_admin_cmds[ ] =
     {"practise", G_admin_practise, "practise",
       "enables practise mode",
       "[^3on|off^7]"
-    }
+    },
 
+    {"spawn", G_admin_spawn, "spawn",
+      "Spawn a buildable",
+      "^7name"
+    },
   };
 
 static int adminNumCmds = sizeof( g_admin_cmds ) / sizeof( g_admin_cmds[ 0 ] );
@@ -8866,4 +8871,48 @@ qboolean G_admin_practise( gentity_t *ent, int skiparg )
 
 	return qtrue;
 
+}
+
+qboolean G_admin_spawn( gentity_t *ent, int skiparg )
+{
+  char arg[ MAX_STRING_CHARS ];
+  buildable_t buildable;
+  vec3_t entityOrigin;
+  vec3_t forward, normal, angles;
+
+  if( G_SayArgc() < 2 )
+  {
+    ADMP( "^3!spawn: ^7usage: spawn ^7name\n" );
+    return qfalse;
+  }
+  
+  G_SayArgv( 1 + skiparg, arg, sizeof( arg ) );
+
+  buildable = BG_FindBuildNumForName( arg );
+  if( buildable <= BA_NONE || buildable >= BA_NUM_BUILDABLES )
+  {
+    ADMP( "^3!spawn: ^7no such buildable\n" );
+    return qfalse;
+  }
+
+  if( !ent || !ent->client ) {
+    ADMP( "^3!spawn: ^7the console cannot use this command.\n" );
+    return qfalse;
+  }
+
+  if( BG_FindTrajectoryForBuildable( buildable ) == TR_BUOYANCY )
+    VectorSet( normal, 0.0f, 0.0f, -1.0f );
+  else
+    VectorSet( normal, 0.0f, 0.0f, 1.0f );
+
+  VectorSet( angles, 0.0f, 90.0f, 0.0f );
+
+  AngleVectors( ent->client->ps.viewangles, forward, NULL, NULL );
+  VectorNormalize( forward );
+  VectorMA( ent->client->ps.origin, 100.0f, forward, entityOrigin );
+  ADMP( va( "^3!spawn: ^7%s at ^3%.0f %.0f %.0f\n", arg, entityOrigin[0], entityOrigin[1], entityOrigin[2] ) );
+  AP( va( "print \"^3!spawn: ^7buildable ^3%s^7 spawned by %s^7 at location ^3%.0f %.0f %.0f^7\n", 
+    BG_FindHumanNameForBuildable( buildable ), G_admin_adminPrintName( ent ), entityOrigin[0], entityOrigin[1], entityOrigin[2] ) );
+  G_InstantBuild( buildable, entityOrigin, angles, normal, angles );
+  return qtrue;
 }
