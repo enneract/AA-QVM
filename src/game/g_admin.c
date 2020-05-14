@@ -6106,10 +6106,12 @@ qboolean G_admin_spec999( gentity_t *ent, int skiparg )
 
 qboolean G_admin_register(gentity_t *ent, int skiparg ){
   int level = 0;
+  char name[ MAX_NAME_LENGTH ];
 
   if( !ent ) return qtrue;
 
   level = G_admin_level(ent);
+  memcpy( name, ent->client->pers.netname, sizeof( name ) );
 
   if( level == 0 )
    level = 1;
@@ -6121,7 +6123,7 @@ qboolean G_admin_register(gentity_t *ent, int skiparg ){
     return qfalse;
   }
 
-  if( !Q_stricmp( Q_CleanStr( ent->client->pers.netname ), "UnnamedPlayer" ) )
+  if( !Q_stricmp( Q_CleanStr( name ), "UnnamedPlayer" ) )
   {
     ADMP( va( "^3!register:^7 You cannot register 'UnnamedPlayer'.\n" ) );
     return qfalse;
