@@ -3160,7 +3160,7 @@ static void CG_DrawVote( void )
   if( cgs.voteModified )
   {
     cgs.voteModified = qfalse;
-    trap_S_StartLocalSound( cgs.media.talkSound, CHAN_LOCAL_SOUND );
+    trap_S_StartLocalSound( cgs.media.voteNow, CHAN_LOCAL_SOUND );
   }
 
   sec = ( VOTE_TIME - ( cg.time - cgs.voteTime ) ) / 1000;
@@ -3201,7 +3201,7 @@ static void CG_DrawTeamVote( void )
   if ( cgs.teamVoteModified[ cs_offset ] )
   {
     cgs.teamVoteModified[ cs_offset ] = qfalse;
-    trap_S_StartLocalSound( cgs.media.talkSound, CHAN_LOCAL_SOUND );
+    trap_S_StartLocalSound( cgs.media.voteNow, CHAN_LOCAL_SOUND );
   }
 
   sec = ( VOTE_TIME - ( cg.time - cgs.teamVoteTime[ cs_offset ] ) ) / 1000;

@@ -902,6 +902,8 @@ static void CG_RegisterSounds( void )
 
   cgs.media.disconnectSound       = trap_S_RegisterSound( "sound/misc/disconnect.wav", qfalse );
 
+  cgs.media.voteNow  = trap_S_RegisterSound( "sound/bunker/votebing.wav", qtrue );
+
   for( i = 0; i < 4; i++ )
   {
     Com_sprintf( name, sizeof( name ), "sound/player/footsteps/step%i.wav", i + 1 );
