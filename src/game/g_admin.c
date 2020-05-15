@@ -7898,7 +7898,7 @@ qboolean G_admin_hstage( gentity_t *ent, int skiparg )
     return qfalse;
   }
 
-  if( lvl != 1 | lvl != 2 | lvl != 3)
+  if( ( lvl != 1 ) | ( lvl != 2 ) | ( lvl != 3 ) )
   {
     ADMP( "^3!hstage: ^7invalid stage!\n" );
     return qfalse;
@@ -7933,7 +7933,7 @@ qboolean G_admin_astage( gentity_t *ent, int skiparg )
     return qfalse;
   }
 
-  if( lvl != 1 | lvl != 2 | lvl != 3)
+  if( ( lvl != 1 ) | ( lvl != 2 ) | ( lvl != 3 ) )
   {
     ADMP( "^3!astage: ^7invalid stage!\n" );
     return qfalse;
