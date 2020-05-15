@@ -7894,27 +7894,24 @@ qboolean G_admin_hstage( gentity_t *ent, int skiparg )
 
   if( G_SayArgc() < minargc )
   {
-    ADMP( "^3!hstage: ^7usage: !hstage [#]\n" );
-    return qfalse;
-  }
-
-  if( ( lvl != 1 ) | ( lvl != 2 ) | ( lvl != 3 ) )
-  {
-    ADMP( "^3!hstage: ^7invalid stage!\n" );
+    ADMP( "^3!hstage: ^7usage: !hstage ^3#\n" );
     return qfalse;
   }
 
   G_SayArgv( 1 + skiparg, lvl_chr, sizeof( lvl_chr ) );
 
-  lvl = atoi(lvl_chr);
+  lvl = atoi( lvl_chr );
 
-  lvl -= 1;
-  trap_SendConsoleCommand( EXEC_APPEND, va( "g_humanStage %i", lvl ) );
-  lvl += 1;
+  if( lvl < 1 || lvl > 3 )
+  {
+    ADMP( "^3!hstage: ^7invalid stage!\n" );
+    return qfalse;
+  }
 
-  AP( va( "print \"^3!hstage: ^7%s gave humans stage ^2%i^7\n\"",
-    ( ent ) ? G_admin_adminPrintName( ent ) : "console",
-    lvl ) );
+  trap_SendConsoleCommand( EXEC_APPEND, va( "g_humanStage %i", lvl - 1 ) );
+
+  AP( va( "print \"^3!hstage: ^7%s^7 gave humans stage ^3%i^7\n\"",
+    ( ent ) ? G_admin_adminPrintName( ent ) : "console", lvl ) );
 
   return qtrue;
 }
@@ -7929,27 +7926,24 @@ qboolean G_admin_astage( gentity_t *ent, int skiparg )
 
   if( G_SayArgc() < minargc )
   {
-    ADMP( "^3!astage: ^7usage: !astage [#]\n" );
-    return qfalse;
-  }
-
-  if( ( lvl != 1 ) | ( lvl != 2 ) | ( lvl != 3 ) )
-  {
-    ADMP( "^3!astage: ^7invalid stage!\n" );
+    ADMP( "^3!astage: ^7usage: !astage ^3#\n" );
     return qfalse;
   }
 
   G_SayArgv( 1 + skiparg, lvl_chr, sizeof( lvl_chr ) );
 
-  lvl = atoi(lvl_chr);
+  lvl = atoi( lvl_chr );
 
-  lvl -= 1;
-  trap_SendConsoleCommand( EXEC_APPEND, va( "g_alienStage %i", lvl ) );
-  lvl += 1;
+  if( lvl < 1 || lvl > 3 )
+  {
+    ADMP( "^3!astage: ^7invalid stage!\n" );
+    return qfalse;
+  }
 
-  AP( va( "print \"^3!astage: ^7%s gave aliens stage ^2%i^7\n\"",
-    ( ent ) ? G_admin_adminPrintName( ent ) : "console",
-    lvl ) );
+  trap_SendConsoleCommand( EXEC_APPEND, va( "g_alienStage %i", lvl - 1 ) );
+
+  AP( va( "print \"^3!astage: ^7%s^7 gave aliens stage ^3%i^7\n\"",
+    ( ent ) ? G_admin_adminPrintName( ent ) : "console", lvl ) );
 
   return qtrue;
 }
