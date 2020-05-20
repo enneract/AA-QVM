@@ -5343,9 +5343,7 @@ qboolean G_admin_showbans( gentity_t *ent, int skiparg )
   int t;
   char duration[ 32 ];
   char sduration[ 32 ];
-  char suspended[ 64 ] = { "" };
-  char name_fmt[ 32 ] = { "%s" };
-  char banner_fmt[ 32 ] = { "%s" };
+  char status[ 64 ] = { "" };
   int max_name = 1, max_banner = 1;
   int secs;
   int start = 0;
@@ -5355,7 +5353,6 @@ qboolean G_admin_showbans( gentity_t *ent, int skiparg )
   int j;
   char n1[ MAX_NAME_LENGTH * 2 ] = {""};
   char n2[ MAX_NAME_LENGTH * 2 ] = {""};
-  int bannerslevel = 0;
   qboolean numeric = qtrue;
   char *ip_match = NULL;
   int ip_match_len = 0;
@@ -5522,45 +5519,47 @@ qboolean G_admin_showbans( gentity_t *ent, int skiparg )
       date[ j + 1 ] = '\0';
       made++;
     }
-
-    if( g_admin_bans[ i ]->expires != 0
-        && ( g_admin_bans[ i ]->expires - t ) < 1 )
+    
+    if( g_admin_bans[ i ]->expires == 0 ) // is it permanent?
     {
-      Com_sprintf( duration, sizeof( duration ), "^1*EXPIRED*^7" );
-    } else {
+      Com_sprintf( duration, sizeof( duration ), "^1PERMANENT" );
+    }
+    else // otherwise just show how much time is left
+    {
       secs = ( g_admin_bans[ i ]->expires - t );
       G_admin_duration( secs, duration, sizeof( duration ) );
     }
 
-    suspended[ 0 ] = '\0';
-    if( g_admin_bans[ i ]->suspend > t )
+    if( g_admin_bans[ i ]->expires != 0
+        && ( g_admin_bans[ i ]->expires - t ) < 1 ) // are they unbanned?
     {
-      G_admin_duration( g_admin_bans[ i ]->suspend - t, sduration, sizeof( sduration ) );
-      Com_sprintf( suspended, sizeof( suspended ), "^3*SUSPENDED*^7 for %s^7",
-        sduration );
+      Com_sprintf( status, sizeof( status ), "^7(^2expired or unbanned^7)" );
     }
 
-    G_DecolorString( g_admin_bans[ i ]->name, n1 );
-    Com_sprintf( name_fmt, sizeof( name_fmt ), "%%%is",
-      (int)( max_name + strlen( g_admin_bans[ i ]->name ) - strlen( n1 ) ) );
-    Com_sprintf( n1, sizeof( n1 ), name_fmt, g_admin_bans[ i ]->name ); 
-
-    G_DecolorString( g_admin_bans[ i ]->banner, n2 );
-    Com_sprintf( banner_fmt, sizeof( banner_fmt ), "%%%is",
-      (int)( max_banner + strlen( g_admin_bans[ i ]->banner ) - strlen( n2 ) ) );
-    Com_sprintf( n2, sizeof( n2 ), banner_fmt, g_admin_bans[ i ]->banner );
-    bannerslevel = g_admin_bans[ i ]->bannerlevel;
-
-    ADMBP( va( "%4i %s^7 %-15s %-8s %-10s\n     |  %-15s^7 Level:%2i\n     |  %s\n     \\__ %s\n",
-             ( i + 1 ),
-             n1,
-             g_admin_bans[ i ]->ip,
-             date,
-             duration,
-             n2,
-             bannerslevel,
-             suspended,
-             g_admin_bans[ i ]->reason ) );
+    if( ( g_admin_bans[ i ]->suspend > t ) 
+        && ( !g_admin_bans[ i ]->expires 
+          || g_admin_bans[ i ]->expires - t > 0 ) )
+    {
+      G_admin_duration( g_admin_bans[ i ]->suspend - t, sduration, sizeof( sduration ) );
+      Com_sprintf( status, sizeof( status ), "^7(^3suspended^7 for ^3%s^7)", sduration );
+    }
+  
+    ADMBP( va( 
+      "%4i ^3------------------------------\n"
+      "    ^7Name:     ^7%s^7\n"
+      "    ^7IP:       ^3%s^7\n"
+      "    ^7Admin:    ^7%s^7 (^3%i^7)\n" // admin & level
+      "    ^7Reason:   ^3%s^7\n"
+      "    ^7Date:     ^3%s^7\n"
+      "    ^7Duration: ^3%s %s^7\n", // duration & status (if available)
+      ( i + 1 ),
+      g_admin_bans[ i ]->name,
+      g_admin_bans[ i ]->ip,
+      g_admin_bans[ i ]->banner, g_admin_bans[ i ]->bannerlevel,
+      g_admin_bans[ i ]->reason,
+      date,
+      duration, status
+    ) );
 
     show_count++;
   }
