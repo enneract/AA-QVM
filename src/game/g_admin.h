@@ -161,7 +161,9 @@ typedef struct g_admin_ban
   char reason[ MAX_ADMIN_BAN_REASON ];
   char made[ 18 ]; // big enough for strftime() %c
   int expires;
+  int length;
   int suspend;
+  char suspendby[ MAX_NAME_LENGTH ];
   char banner[ MAX_NAME_LENGTH ];
   int  bannerlevel;
 }

@@ -863,9 +863,13 @@ void admin_writeconfig( void )
     admin_writeconfig_string( g_admin_bans[ i ]->made, f );
     trap_FS_Write( "expires = ", 10, f );
     admin_writeconfig_int( g_admin_bans[ i ]->expires, f );
+    trap_FS_Write( "length  = ", 10, f );
+    admin_writeconfig_int( g_admin_bans[ i ]->length, f );
     if( g_admin_bans[ i ]->suspend > t ) {
       trap_FS_Write( "suspend = ", 10, f );
       admin_writeconfig_int( g_admin_bans[ i ]->suspend, f );
+      trap_FS_Write( "suspendby = ", 12, f );
+      admin_writeconfig_string( g_admin_bans[ i ]->suspendby, f );
     }
     trap_FS_Write( "banner  = ", 10, f );
     admin_writeconfig_string( g_admin_bans[ i ]->banner, f );
@@ -1959,9 +1963,17 @@ qboolean G_admin_readconfig( gentity_t *ent, int skiparg )
       {
         admin_readconfig_int( &cnf, &b->expires );
       }
+      else if( !Q_stricmp( t, "length" ) )
+      {
+        admin_readconfig_int( &cnf, &b->length );
+      }
       else if( !Q_stricmp( t, "suspend" ) )
       {
         admin_readconfig_int( &cnf, &b->suspend );
+      }
+      else if( !Q_stricmp( t, "suspendby" ) )
+      {
+        admin_readconfig_string( &cnf, b->suspendby, sizeof( b->suspendby ) );
       }
       else if( !Q_stricmp( t, "banner" ) )
       {
@@ -2036,7 +2048,9 @@ qboolean G_admin_readconfig( gentity_t *ent, int skiparg )
       *b->ip = '\0';
       *b->made = '\0';
       b->expires = 0;
+      b->length = 0;
       b->suspend = 0;
+      *b->suspendby = '\0';
       *b->reason = '\0';
       b->bannerlevel = 0;
       ban_open = qtrue;
@@ -2834,6 +2848,7 @@ static qboolean admin_create_ban( gentity_t *ent,
   Q_strncpyz( b->guid, guid, sizeof( b->guid ) );
   Q_strncpyz( b->ip, ip, sizeof( b->ip ) );
   b->suspend = 0;
+  Q_strncpyz( b->suspendby, "", sizeof( b->suspendby ) );
 
   //strftime( b->made, sizeof( b->made ), "%m/%d/%y %H:%M:%S", lt );
   Q_strncpyz( b->made, va( "%02i/%02i/%02i %02i:%02i:%02i",
@@ -2849,9 +2864,16 @@ static qboolean admin_create_ban( gentity_t *ent,
     b->bannerlevel = 0;
 
   if( !seconds )
+  {
     b->expires = 0;
+    b->length = 0;
+  }
   else
+  {
     b->expires = t + seconds;
+    b->length = seconds;
+  }
+
   if( !*reason )
     Q_strncpyz( b->reason, "banned by admin", sizeof( b->reason ) );
   else
@@ -3315,6 +3337,7 @@ qboolean G_admin_adjustban( gentity_t *ent, int skiparg )
     }
 
     g_admin_bans[ bnum - 1 ]->expires = expires;
+    g_admin_bans[ bnum - 1 ]->length = length;
     G_admin_duration( ( expires ) ? expires - time : -1,
       duration, sizeof( duration ) );
   }
@@ -3522,16 +3545,18 @@ qboolean G_admin_suspendban( gentity_t *ent, int skiparg )
   }
 
   g_admin_bans[ bnum - 1 ]->suspend = expires;
+  Q_strncpyz( g_admin_bans[ bnum - 1 ]->suspendby, G_admin_get_adminname( ent ), sizeof( g_admin_bans[ bnum - 1 ]->suspendby ) );
+
   if ( length > 0 )
   {
     G_admin_duration( length , duration, sizeof( duration ) );
-    AP( va( "print \"^3!suspendban: ^7ban #%d suspended for %s\n\"",
-      bnum, duration ) );
+    AP( va( "print \"^3!suspendban: ^7ban ^3#%d^7 for %s^7 suspended for ^3%s^7 by %s^7\n\"",
+      bnum, g_admin_bans[ bnum - 1 ]->name, duration, ( ent ) ? G_admin_adminPrintName( ent ) : "console" ) );
   }
   else
   {
-    AP( va( "print \"^3!suspendban: ^7ban #%d suspension removed\n\"",
-      bnum ) );
+    AP( va( "print \"^3!suspendban: ^7ban ^3#%d^7 for %s^7 suspension removed by %s^7\n\"",
+      bnum, g_admin_bans[ bnum - 1 ]->name, ( ent ) ? G_admin_adminPrintName( ent ) : "console" ) );
   }
 
   if( !g_admin.string[ 0 ] )
@@ -5341,6 +5366,7 @@ qboolean G_admin_showbans( gentity_t *ent, int skiparg )
 {
   int i, found = 0;
   int t;
+  char length[ 32 ];
   char duration[ 32 ];
   char sduration[ 32 ];
   char status[ 64 ] = { "" };
@@ -5520,29 +5546,40 @@ qboolean G_admin_showbans( gentity_t *ent, int skiparg )
       made++;
     }
     
-    if( g_admin_bans[ i ]->expires == 0 ) // is it permanent?
+    status[0] = '\0'; 
+    duration[0] = '\0';
+    secs = ( g_admin_bans[ i ]->expires - t );
+
+    if( g_admin_bans[ i ]->expires == 0  // is it permanent?
+        && secs < 1 )
     {
-      Com_sprintf( duration, sizeof( duration ), "^1PERMANENT" );
+      Com_sprintf( length, sizeof( length ), "^1PERMANENT" );
     }
     else // otherwise just show how much time is left
     {
-      secs = ( g_admin_bans[ i ]->expires - t );
-      G_admin_duration( secs, duration, sizeof( duration ) );
+      G_admin_duration( g_admin_bans[ i ]->length, length, sizeof( length ) );
+      if( secs > 1 )
+      {
+        G_admin_duration( secs, duration, sizeof( duration ) );
+        Com_sprintf( duration, sizeof( duration ), " ^7(^3%s^7 remaining)", duration );
+      }
     }
 
     if( g_admin_bans[ i ]->expires != 0
         && ( g_admin_bans[ i ]->expires - t ) < 1 ) // are they unbanned?
     {
-      Com_sprintf( status, sizeof( status ), "^7(^2expired or unbanned^7)" );
+      Com_sprintf( status, sizeof( status ), " ^7(^2expired or unbanned^7)" );
     }
-
+    
     if( ( g_admin_bans[ i ]->suspend > t ) 
         && ( !g_admin_bans[ i ]->expires 
           || g_admin_bans[ i ]->expires - t > 0 ) )
     {
       G_admin_duration( g_admin_bans[ i ]->suspend - t, sduration, sizeof( sduration ) );
-      Com_sprintf( status, sizeof( status ), "^7(^3suspended^7 for ^3%s^7)", sduration );
+      Com_sprintf( status, sizeof( status ), " ^7(^3suspended^7 for ^3%s^7 by %s^7)", sduration, g_admin_bans[ i ]->suspendby );
     }
+
+
   
     ADMBP( va( 
       "%4i ^3------------------------------\n"
@@ -5551,14 +5588,14 @@ qboolean G_admin_showbans( gentity_t *ent, int skiparg )
       "    ^7Admin:    ^7%s^7 (^3%i^7)\n" // admin & level
       "    ^7Reason:   ^3%s^7\n"
       "    ^7Date:     ^3%s^7\n"
-      "    ^7Duration: ^3%s %s^7\n", // duration & status (if available)
+      "    ^7Duration: ^3%s%s%s^7\n", // ban length, time remaining & ban status (if applicable)
       ( i + 1 ),
       g_admin_bans[ i ]->name,
       g_admin_bans[ i ]->ip,
       g_admin_bans[ i ]->banner, g_admin_bans[ i ]->bannerlevel,
       g_admin_bans[ i ]->reason,
       date,
-      duration, status
+      length, duration, status
     ) );
 
     show_count++;
