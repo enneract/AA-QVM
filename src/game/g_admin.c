@@ -1490,7 +1490,7 @@ qboolean G_admin_ban_check( char *userinfo, char *reason, int rlen )
         Com_sprintf(
           reason,
           rlen,
-          "You have been banned by %s^7 reason: %s^7 expires: %s       %s",
+          "You have been banned by %s^7, reason: %s^7, expires: %s       %s",
           g_admin_bans[ i ]->banner,
           g_admin_bans[ i ]->reason,
           duration,
@@ -2932,13 +2932,14 @@ qboolean G_admin_kick( gentity_t *ent, int skiparg )
   if( g_admin.string[ 0 ] )
     admin_writeconfig();
 
- trap_SendServerCommand( pids[ 0 ],
-  va( "disconnect \"You have been kicked.\n%s^7\nreason:\n%s\n%s\"",
-    ( ent ) ? va( "admin:\n%s", G_admin_adminPrintName( ent ) ) : "admin\nconsole",
-    ( *reason ) ? reason : "kicked by admin", notice ) );
-  
-  trap_DropClient( pids[ 0 ], va( "kicked%s^7, reason: %s",
-    ( ent ) ? va( " by %s", G_admin_adminPrintName( ent ) ) : " by console",
+  trap_SendServerCommand( pids[ 0 ],
+    va( "disconnect \"You have been kicked.\n%s^7\nreason:\n%s\n%s\"",
+      ( ent ) ? va( "admin:\n%s", G_admin_adminPrintName( ent ) ) : "admin\nconsole",
+      ( *reason ) ? reason : "kicked by admin", notice ) );
+
+  AP( va( "print \"^3!kick: ^7%s ^7was kicked by %s^7, reason: %s\n\"",
+    vic->client->pers.netname,
+    ( ent ) ? G_admin_adminPrintName( ent ) : "console",
     ( *reason ) ? reason : "kicked by admin" ) );
 
   return qtrue;
@@ -3145,11 +3146,12 @@ qboolean G_admin_ban( gentity_t *ent, int skiparg )
       duration,
       ( *reason ) ? reason : "banned by admin", notice ) );
 
-  trap_DropClient(  g_admin_namelog[ logmatch ]->slot,
-    va( "banned by %s^7, duration: %s, reason: %s",
-      ( ent ) ? G_admin_adminPrintName( ent ) : "console",
-      duration,
-      ( *reason ) ? reason : "banned by admin" ) );
+  AP( va( "print \"^3!ban: ^7%s ^7was banned by %s^7, duration: %s, reason: %s\n\"",
+    g_admin_namelog[ logmatch ]->name[ 0 ],
+    ( ent ) ? G_admin_adminPrintName( ent ) : "console",
+    duration,
+    ( *reason ) ? reason : "banned by admin" ) );
+
   return qtrue;
 }
 
