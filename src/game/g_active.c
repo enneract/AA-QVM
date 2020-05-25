@@ -947,12 +947,12 @@ void ClientTimerActions( gentity_t *ent, int msec )
     {
       G_Damage( ent, NULL, NULL, NULL, NULL,
         BG_FindRegenRateForClass( client->ps.stats[ STAT_PCLASS ] ),
-        DAMAGE_NO_ARMOR, MOD_SUICIDE );
+        DAMAGE_NO_ARMOR, MOD_TARGET_LASER );
     }
     else if( client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS &&
       level.surrenderTeam == PTE_HUMANS )
     {
-      G_Damage( ent, NULL, NULL, NULL, NULL, 5, DAMAGE_NO_ARMOR, MOD_SUICIDE );
+      G_Damage( ent, NULL, NULL, NULL, NULL, 5, DAMAGE_NO_ARMOR, MOD_TARGET_LASER );
     }
 
     //my new jetpack code
