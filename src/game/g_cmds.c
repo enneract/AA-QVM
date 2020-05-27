@@ -1441,6 +1441,19 @@ static void Cmd_Say_f( gentity_t *ent )
     }
   }
 
+  if( !Q_stricmpn( args, "say /callvote", 13 ) ||
+      !Q_stricmpn( args, "say_team /callvote", 18 ) )
+  {
+    Cmd_CallVote_f( ent );
+    return;
+  }
+
+  if( !Q_stricmpn( args, "say /callteamvote", 17 ) ||
+      !Q_stricmpn( args, "say_team /callteamvote", 22 ) )
+  {
+    Cmd_CallTeamVote_f( ent );
+    return;
+  }
 
   if( trap_Argc( ) < 2 )
     return;
@@ -1523,6 +1536,7 @@ Cmd_CallVote_f
 void Cmd_CallVote_f( gentity_t *ent )
 {
   int   i;
+  int   skipargs = 0;
   char  arg1[ MAX_STRING_TOKENS ];
   char  arg2[ MAX_STRING_TOKENS ];
   int   clientNum = -1;
@@ -1530,9 +1544,15 @@ void Cmd_CallVote_f( gentity_t *ent )
   char *arg1plus;
   char *arg2plus;
   char  message[ MAX_STRING_CHARS ];
-  char targetname[ MAX_NAME_LENGTH] = "";
-  char reason[ MAX_STRING_CHARS ] = "";
+  char  targetname[ MAX_NAME_LENGTH] = "";
+  char  reason[ MAX_STRING_CHARS ] = "";
   char *ptr = NULL;
+  char  cmd[ 12 ];
+
+  G_SayArgv( 0, cmd, sizeof( cmd ) );
+
+  if( !Q_stricmp( cmd, "say" ) || !Q_stricmp( cmd, "say_team" ) )
+    skipargs = 1;
 
   arg1plus = G_SayConcatArgs( 1 );
   arg2plus = G_SayConcatArgs( 2 );
@@ -1609,8 +1629,8 @@ void Cmd_CallVote_f( gentity_t *ent )
   }
 
   // make sure it is a valid command to vote on
-  trap_Argv( 1, arg1, sizeof( arg1 ) );
-  trap_Argv( 2, arg2, sizeof( arg2 ) );
+  G_SayArgv( 1 + skipargs, arg1, sizeof( arg1 ) );
+  G_SayArgv( 2 + skipargs, arg2, sizeof( arg2 ) );
 
   if( strchr( arg1plus, ';' ) )
   {
@@ -2202,17 +2222,24 @@ Cmd_CallTeamVote_f
 void Cmd_CallTeamVote_f( gentity_t *ent )
 {
   int   i, team, cs_offset = 0;
+  int   skipargs = 0;
   char  arg1[ MAX_STRING_TOKENS ];
   char  arg2[ MAX_STRING_TOKENS ];
   int   clientNum = -1;
   char  name[ MAX_NETNAME ];
   char  message[ MAX_STRING_CHARS ];
-  char targetname[ MAX_NAME_LENGTH] = "";
-  char reason[ MAX_STRING_CHARS ] = "";
+  char  targetname[ MAX_NAME_LENGTH] = "";
+  char  reason[ MAX_STRING_CHARS ] = "";
   char *arg1plus;
   char *arg2plus;
   char *ptr = NULL;
-  int numVoters = 0;
+  int   numVoters = 0;
+  char  cmd[ 12 ];
+
+  G_SayArgv( 0, cmd, sizeof( cmd ) );
+
+  if( !Q_stricmp( cmd, "say" ) || !Q_stricmp( cmd, "say_team" ) )
+    skipargs = 1;
 
   arg1plus = G_SayConcatArgs( 1 );
   arg2plus = G_SayConcatArgs( 2 );
@@ -2276,8 +2303,8 @@ void Cmd_CallTeamVote_f( gentity_t *ent )
   }
 
   // make sure it is a valid command to vote on
-  trap_Argv( 1, arg1, sizeof( arg1 ) );
-  trap_Argv( 2, arg2, sizeof( arg2 ) );
+  G_SayArgv( 1 + skipargs, arg1, sizeof( arg1 ) );
+  G_SayArgv( 2 + skipargs, arg2, sizeof( arg2 ) );
 
   if( strchr( arg1plus, ';' ) )
   {

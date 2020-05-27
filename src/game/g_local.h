@@ -882,6 +882,8 @@ void      G_ChangeTeam( gentity_t *ent, pTeam_t newTeam );
 void      G_SanitiseString( char *in, char *out, int len );
 void      G_PrivateMessage( gentity_t *ent );
 char      *G_statsString( statsCounters_t *sc, pTeam_t *pt );
+void      Cmd_CallVote_f( gentity_t *ent );
+void      Cmd_CallTeamVote_f( gentity_t *ent );
 void      Cmd_Share_f( gentity_t *ent );
 void      Cmd_Donate_f( gentity_t *ent );
 void      Cmd_TeamVote_f( gentity_t *ent ); 
