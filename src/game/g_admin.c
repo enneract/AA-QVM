@@ -1095,6 +1095,13 @@ char* G_admin_adminPrintName( gentity_t *ent )
     return out;
   }
   
+  if( G_admin_permission( ent, ADMF_ADMINSUPERSTEALTH )
+      || g_adminSuperStealth.integer )
+  {
+    out = "^9someone";
+    return out;
+  }
+  
   if( G_admin_permission( ent, ADMF_ADMINSTEALTH ) )
   {
      out = ent->client->pers.adminName;
@@ -2578,6 +2585,7 @@ static AdminFlagListEntry_t adminFlagList[] =
   { ADMF_SEESFULLLISTPLAYERS,  "sees all info in !listplayers" },
   { ADMF_SPEC_ALLCHAT,         "can see team chat as spectator" },
   { ADMF_ADMINSTEALTH,         "uses admin stealth" },
+  { ADMF_ADMINSUPERSTEALTH,    "uses admin 'super' stealth" },
   { ADMF_TEAMCHANGEFREE,       "keeps credits on team switch" },
   { ADMF_TEAMCHAT_CMD,         "can run commands from team chat" },
   { ADMF_UNACCOUNTABLE,        "does not need to specify reason for kick/ban" },

@@ -1450,6 +1450,7 @@ extern  vmCvar_t  g_adminTempBan;
 extern  vmCvar_t  g_adminMaxBan;
 extern  vmCvar_t  g_adminTempSpec;
 extern  vmCvar_t  g_adminMapLog;
+extern  vmCvar_t  g_adminSuperStealth;
 extern  vmCvar_t  g_minLevelToJoinTeam;
 extern  vmCvar_t  g_minDeconLevel;
 extern  vmCvar_t  g_minDeconAffectsMark;
