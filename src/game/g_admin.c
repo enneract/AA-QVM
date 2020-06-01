@@ -5075,7 +5075,9 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
       {
 
         // don't gather aka or level info if the admin is incognito
-        if( ent && G_admin_permission( &g_entities[ i ], ADMF_INCOGNITO ) && !G_admin_permission(ent, ADMF_SEESINCOGNITO) )
+        if( ent && G_admin_permission( &g_entities[ i ], ADMF_INCOGNITO ) 
+                && !G_admin_permission(ent, ADMF_SEESINCOGNITO) 
+                && ( &g_entities[ i ] != ent ) )
         {
           break;
         }
