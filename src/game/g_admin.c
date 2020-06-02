@@ -5016,7 +5016,10 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
     }
 
     guidless[ 0 ] = '\0';
-    if( !Q_stricmp( p->pers.guid, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ) || G_admin_permission( &g_entities[ i ], ADMF_INCOGNITO ) )
+    if( !Q_stricmp( p->pers.guid, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ) 
+        || ( G_admin_permission( &g_entities[ i ], ADMF_INCOGNITO )
+             && !admin_higher( ent, &g_entities[ i ] )
+             && !G_admin_permission( ent, ADMF_SEESINCOGNITO ) ) )
     {
       Q_strncpyz( guidless, "G", sizeof( guidless ) );
     }
