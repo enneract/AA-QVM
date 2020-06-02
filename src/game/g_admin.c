@@ -6554,14 +6554,12 @@ qboolean G_admin_namelog( gentity_t *ent, int skiparg )
 
     for( j = 0; j < 8; j++ )
     {
-      if( G_admin_permission_guid( g_admin_namelog[ i ]->guid, ADMF_INCOGNITO )
+      if( ent && G_admin_permission_guid( g_admin_namelog[ i ]->guid, ADMF_INCOGNITO )
           && !admin_higher_guid( ent->client->pers.guid, g_admin_namelog[ i ]->guid ) 
           && !G_admin_permission( ent, ADMF_SEESINCOGNITO ) )
-      {
         guid_stub[ j ] = 'X';
-      } else {
+      else
         guid_stub[ j ] = g_admin_namelog[ i ]->guid[ j + 24 ];
-      }
     }
     guid_stub[ j ] = '\0';
 
