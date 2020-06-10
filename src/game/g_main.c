@@ -2795,7 +2795,15 @@ void CheckCountdown( void )
   if( timeleft > 0 )
     trap_SendServerCommand( -1, va( "cp \"^1Warmup Time:^7\n^%i----- ^7%i ^%i-----\"", timeleft % 7, timeleft, timeleft % 7 ) );
   else if( timeleft == 0 ) 
+  {
     trap_SendServerCommand( -1, "cp \"^2----- GO! -----^7\"" );
+    
+    if( g_suddenDeathTime.integer > 0 )
+      trap_SendServerCommand( -1, va( "print \"^7Sudden Death will be at ^3%02i:00^7\n", g_suddenDeathTime.integer ) );
+    
+    if( g_timelimit.integer > 0 )
+      trap_SendServerCommand( -1, va( "print \"^7The timelimit is at ^3%02i:00^7\n", g_timelimit.integer ) );
+  }
 }
 
 
