@@ -5565,8 +5565,7 @@ qboolean G_admin_showbans( gentity_t *ent, int skiparg )
     duration[0] = '\0';
     secs = ( g_admin_bans[ i ]->expires - t );
 
-    if( g_admin_bans[ i ]->expires == 0  // is it permanent?
-        && secs < 1 )
+    if( g_admin_bans[ i ]->length == 0 ) // is it permanent?
     {
       Com_sprintf( length, sizeof( length ), "^1PERMANENT" );
     }
