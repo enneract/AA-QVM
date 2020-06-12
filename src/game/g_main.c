@@ -1997,7 +1997,7 @@ void QDECL G_AdminsPrintf( const char *fmt, ... )
     if( G_admin_permission( tempent, ADMF_ADMINCHAT ) &&
         !tempent->client->pers.ignoreAdminWarnings ) 
     {
-       trap_SendServerCommand(tempent-g_entities,va( "print \"^6[Admins]^7 %s\"", string) ); 
+       trap_SendServerCommand(tempent-g_entities,va( "print \"^7[^fADMIN ALERT^7] %s\"", string) ); 
     }
   }
   
@@ -2028,7 +2028,7 @@ void QDECL G_WarningsPrintf( char *flag, const char *fmt, ... )
     tempent = &g_entities[ j ];
     if( G_admin_permission( tempent, flag ) ) 
     {
-       trap_SendServerCommand(tempent-g_entities,va( "print \"^6[Warnings]^7 %s\"", string) ); 
+       trap_SendServerCommand(tempent-g_entities,va( "print \"^7[^DWARNINGS^7: ^d%s^7] %s\"", flag, string) ); 
     }
   }
   
