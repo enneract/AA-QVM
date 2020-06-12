@@ -2588,7 +2588,7 @@ void Cmd_CallTeamVote_f( gentity_t *ent )
              ( ( !Q_stricmp( arg1, "kick" ) || !Q_stricmp( arg1, "denybuild" ) ) || 
              level.clients[ i ].pers.teamSelection == PTE_NONE ) )
     {
-      trap_SendServerCommand( i, va("print \"^6[Admins]^7 %s " S_COLOR_WHITE
+      trap_SendServerCommand( i, va("print \"^7[^fADMIN ALERT^7] %s " S_COLOR_WHITE
             "called a team vote: %s^7 \n\"", ent->client->pers.netname, level.teamVoteDisplayString[ cs_offset ] ) );
     }
   }
@@ -5871,7 +5871,7 @@ void G_CP( gentity_t *ent )
     {
       if( G_admin_permission( &g_entities[ i ], ADMF_ADMINCHAT ) )
       {
-        trap_SendServerCommand( i, va("print \"^6[Admins]^7 CP to other team%s: %s \n\"", prefixes, text ) );
+        trap_SendServerCommand( i, va("print \"^7[^fADMIN ALERT^7] CP to other team%s: %s \n\"", prefixes, text ) );
       }
       continue;
     }
