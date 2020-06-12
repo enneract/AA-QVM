@@ -740,7 +740,7 @@ qboolean  ConsoleCommand( void )
   {
     if( Q_stricmp( cmd, "say" ) == 0 )
     {
-      trap_SendServerCommand( -1, va( "print \"server: %s\n\"", ConcatArgs( 1 ) ) );
+      trap_SendServerCommand( -1, va( "print \"console: ^2%s\n\"", ConcatArgs( 1 ) ) );
       return qtrue;
     }
     else if( !Q_stricmp( cmd, "chat" ) )
