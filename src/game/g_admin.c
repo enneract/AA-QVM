@@ -7395,7 +7395,7 @@ qboolean G_admin_revert( gentity_t *ent, int skiparg )
         article = "an";
       else
         article = "a";
-      AP( va( "print \"%s^7 reverted %s^7'%s %s of %s %s\n\"", 
+      AP( va( "print \"^3!revert: ^7%s^7 reverted %s^7'%s %s of %s %s\n\"", 
           G_admin_adminPrintName( ent ),
           name, strchr( "Ss", name[ strlen( name ) - 1 ] ) ? "" : "s",
           action, article, bname ) ); 
