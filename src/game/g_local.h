@@ -1457,6 +1457,7 @@ extern  vmCvar_t  g_minDeconAffectsMark;
 extern  vmCvar_t  g_forceAutoSelect;
 extern  vmCvar_t  g_minLevelToSpecMM1;
 extern  vmCvar_t  g_banNotice;
+extern  vmCvar_t  g_preventRagequit;
 
 extern  vmCvar_t  g_devmapKillerHP;
 extern  vmCvar_t  g_killerHP;

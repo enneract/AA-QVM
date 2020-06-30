@@ -805,7 +805,18 @@ void Cmd_Team_f( gentity_t *ent )
   }
   
   if( !Q_stricmpn( s, "spec", 4 ) )
+  {
+    if( g_preventRagequit.integer > 0 
+        && ( ( ent->client->pers.teamSelection == PTE_HUMANS && level.numHumanSpawns == 0 )
+        || ( ent->client->pers.teamSelection == PTE_ALIENS && level.numAlienSpawns == 0 ) ) )
+    {
+      AP( va("print \"^3!specme: ^7%s^7 must gather their party before venturing forth from this place. "
+                     "^3(ragequit not allowed!)\n\"", ent->client->pers.netname ) );
+      return;
+    }
     team = PTE_NONE;
+  }
+
   else if( !force && ent->client->pers.teamSelection == PTE_NONE &&
            g_maxGameClients.integer && level.numPlayingClients >=
            g_maxGameClients.integer )

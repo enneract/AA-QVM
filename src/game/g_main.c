@@ -181,6 +181,7 @@ vmCvar_t  g_minLevelToJoinTeam;
 vmCvar_t  g_minDeconLevel;
 vmCvar_t  g_minDeconAffectsMark;
 vmCvar_t  g_forceAutoSelect;
+vmCvar_t  g_preventRagequit;
 
 vmCvar_t  g_privateMessages;
 vmCvar_t  g_fullIgnore;
@@ -428,6 +429,7 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_minDeconAffectsMark, "g_minDeconAffectsMark", "0", CVAR_ARCHIVE, 0, qfalse},
   { &g_forceAutoSelect, "g_forceAutoSelect", "0", CVAR_ARCHIVE, 0, qtrue }, 
   { &g_adminExpireTime, "g_adminExpireTime", "0", CVAR_ARCHIVE, 0, qfalse  },
+  { &g_preventRagequit, "g_preventRagequit", "0", CVAR_ARCHIVE, 0, qtrue }, 
   
   { &g_privateMessages, "g_privateMessages", "1", CVAR_ARCHIVE, 0, qfalse  },
   { &g_fullIgnore, "g_fullIgnore", "1", CVAR_ARCHIVE, 0, qtrue  },

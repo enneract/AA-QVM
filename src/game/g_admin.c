@@ -6797,6 +6797,15 @@ qboolean G_admin_putmespec( gentity_t *ent, int skiparg )
     ADMP("!specme: disabled when game is paused\n");
     return qfalse;
   }
+
+  if( g_preventRagequit.integer > 0 
+      && ( ( ent->client->pers.teamSelection == PTE_HUMANS && level.numHumanSpawns == 0 )
+      || ( ent->client->pers.teamSelection == PTE_ALIENS && level.numAlienSpawns == 0 ) ) )
+  {
+    AP( va("print \"^3!specme: ^7%s^7 must gather their party before venturing forth from this place. "
+                    "^3(ragequit not allowed!)\n\"", ent->client->pers.netname ) );
+    return qfalse;
+  }
   
   if(ent->client->pers.teamSelection == PTE_NONE)
     return qfalse;
