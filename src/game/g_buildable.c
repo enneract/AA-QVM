@@ -2165,18 +2165,18 @@ void HMedistat_Think( gentity_t *self )
     if( self->active )
       G_SetIdleBuildableAnim( self, BANIM_IDLE2 );
 
-    //check if a previous occupier is still here
+    // memespider: medistation now gives out medikits to people already on full health no matter what
     num = trap_EntitiesInBox( mins, maxs, entityList, MAX_GENTITIES );
     for( i = 0; i < num; i++ )
     {
       player = &g_entities[ entityList[ i ] ];
 
-      if( player->client && player->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
+      if( player->client && player->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS && player->client->ps.pm_type != PM_DEAD )
       {
-        if( player->health < player->client->ps.stats[ STAT_MAX_HEALTH ] &&
-            player->client->ps.pm_type != PM_DEAD &&
-            self->enemy == player )
+        if( player->health < player->client->ps.stats[ STAT_MAX_HEALTH ] && self->enemy == player )
           occupied = qtrue;
+        else if( player->health == player->client->ps.stats[ STAT_MAX_HEALTH ] && !BG_InventoryContainsUpgrade( UP_MEDKIT, player->client->ps.stats ) )
+          BG_AddUpgradeToInventory( UP_MEDKIT, player->client->ps.stats );
       }
     }
 
