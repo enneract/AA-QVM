@@ -246,7 +246,7 @@ void G_AddCreditToClient( gclient_t *client, short credit, qboolean cap )
   if( client->pers.credit < 0 )
     client->pers.credit = 0;
 
-  // keep PERS_CREDIT in sync if not following 
+  // keep PERS_CREDIT in sync if not following
   if( client->sess.spectatorState != SPECTATOR_FOLLOW )
     client->ps.persistant[ PERS_CREDIT ] = client->pers.credit;
 }
@@ -1146,7 +1146,7 @@ void ClientUserinfoChanged( int clientNum, qboolean forceName )
   {
     trap_SendServerCommand( ent - g_entities,
         "disconnect \"illegal or malformed userinfo\n\"" );
-    trap_DropClient( ent - g_entities, 
+    trap_DropClient( ent - g_entities,
         "dropped: illegal or malformed userinfo");
   }
 
@@ -1184,7 +1184,7 @@ void ClientUserinfoChanged( int clientNum, qboolean forceName )
       ClientCleanName( va( "%s", client->pers.netname ), oldname, sizeof( oldname ), qfalse );
     else
       ClientCleanName( va( "%s", client->pers.netname ), oldname, sizeof( oldname ), qtrue );
- 
+
     if( g_newbieNumbering.integer )
     {
       if( !strcmp( newname, "UnnamedPlayer" ) )
@@ -1265,7 +1265,7 @@ void ClientUserinfoChanged( int clientNum, qboolean forceName )
           " renamed to %s^7\n\"", oldname, client->pers.netname ) );
       if( g_decolourLogfiles.integer)
       {
-        char    decoloured[ MAX_STRING_CHARS ] = "";   
+        char    decoloured[ MAX_STRING_CHARS ] = "";
         if( g_decolourLogfiles.integer == 1 )
     {
       Com_sprintf( decoloured, sizeof(decoloured), " (\"%s^7\" -> \"%s^7\")", oldname, client->pers.netname );
@@ -1593,12 +1593,12 @@ const char *ClientConnect( int clientNum, qboolean firstTime )
 
   // get and distribute relevent paramters
   ClientUserinfoChanged( clientNum, qfalse );
-  
+
   G_admin_set_adminname( ent );
-  
+
   if( g_decolourLogfiles.integer )
   {
-   char    decoloured[ MAX_STRING_CHARS ] = "";   
+   char    decoloured[ MAX_STRING_CHARS ] = "";
    if( g_decolourLogfiles.integer == 1 )
    {
      Com_sprintf( decoloured, sizeof(decoloured), " (\"%s^7\")", client->pers.netname );
@@ -1617,9 +1617,9 @@ const char *ClientConnect( int clientNum, qboolean firstTime )
     G_LogPrintf( "ClientConnect: %i [%s] (%s) \"%s^7\"\n", clientNum,
       client->pers.ip, client->pers.guid, client->pers.netname );
   }
-  
+
   if( client->pers.adminLevel )
-  { 
+  {
      G_LogPrintf( "ClientAuth: %i [%s] \"%s^7\" authenticated to admin level %i using GUID %s (%s^7)\n", clientNum, client->pers.ip, client->pers.netname, client->pers.adminLevel, client->pers.guid, client->pers.adminName );
   }
 
@@ -1705,12 +1705,16 @@ void ClientBegin( int clientNum )
     if( G_admin_permission( ent, ADMF_NO_CHAT ) )
       client->pers.muted = qtrue;
 
+    // auto
+    if( G_admin_permission( ent, ADMF_KARMA ) )
+        client->pers.hasBadKarma = qtrue;
+
     // name can change between ClientConnect() and ClientBegin()
     G_admin_namelog_update( client, qfalse );
 
     if( g_scrimMode.integer == 1 )
     {
-    ADMP( "^5Scrim mode is enabled. Teams are locked and you can only use spectator chat.\n" );  
+    ADMP( "^5Scrim mode is enabled. Teams are locked and you can only use spectator chat.\n" );
     }
 
     // request the clients PTR code
@@ -1775,7 +1779,7 @@ void ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles
     client->sess.sessionTeam = TEAM_SPECTATOR;
     client->sess.spectatorState = SPECTATOR_LOCKED;
   }
-  
+
   //if client is dead and following teammate, stop following before spawning
   if(ent->client->sess.spectatorClient!=-1)
   {
@@ -2116,7 +2120,7 @@ void ClientDisconnect( int clientNum )
       Q_strncpyz( ptr->name, ent->client->pers.netname, MAX_NETNAME );
     }
   }
-  
+
   if ( ent->client->sess.invisible != qtrue )
     G_admin_namelog_update( ent->client, qtrue );
   G_LeaveTeam( ent );
