@@ -495,6 +495,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MEDKIT_STARTUP_TIME         4000
 #define MEDKIT_STARTUP_SPEED        5
 
+#define LIGHTARMOUR_NL_AVERAGE      0.5  //used for marauder's zapschachtmeisterProcess
+#define HELMET_NL_AVERAGE           0.2
+#define BSUIT_NL_AVERAGE            0.8
+
 
 /*
  * HUMAN buildables
