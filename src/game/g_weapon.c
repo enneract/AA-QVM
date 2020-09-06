@@ -891,7 +891,7 @@ qboolean CheckVenomAttack( gentity_t *ent )
         traceEnt->s.modelindex != BA_H_TESLAGEN )
       return qfalse;
 
-    //hackery
+    //an expert hacker's hackery
     damage *= 0.5f;
   }
 
@@ -1167,7 +1167,7 @@ G_CreateNewZap
 */
 static void G_CreateNewZap( gentity_t *creator, gentity_t *target )
 {
-  int       i, j;
+  int       i, j, r;
   zap_t     *zap;
 
   for( i = 0; i < MAX_ZAPS; i++ )
@@ -1185,10 +1185,12 @@ static void G_CreateNewZap( gentity_t *creator, gentity_t *target )
 
       zap->targets[ 0 ] = target;
       zap->numTargets = 1;
+      zap->damageBuffer[ 0 ] = 0;
 
       for( j = 1; j < MAX_ZAP_TARGETS && zap->targets[ j - 1 ]; j++ )
       {
         zap->targets[ j ] = G_FindNewZapTarget( zap->targets[ j - 1 ] );
+        zap->damageBuffer[ j ] = 0;
 
         if( zap->targets[ j ] )
           zap->numTargets++;
@@ -1210,9 +1212,10 @@ G_UpdateZaps
 */
 void G_UpdateZaps( int msec )
 {
-  int   i, j;
+  int   i, j, k;
   zap_t *zap;
-  int   damage;
+  float trueDamage=0;
+  float damageFraction = 1;
 
   for( i = 0; i < MAX_ZAPS; i++ )
   {
@@ -1244,12 +1247,25 @@ void G_UpdateZaps( int msec )
 
       if( zap->numTargets )
       {
+        if( zap->damageUsed < LEVEL2_AREAZAP_DMG )
+        {
+          trueDamage = ( (float)msec / LEVEL2_AREAZAP_TIME ) * LEVEL2_AREAZAP_DMG;
+
+          //let's not have the damage numbers inflated by a high msec value, thank you very much
+          if (trueDamage + zap->damageUsed > LEVEL2_AREAZAP_DMG )
+          {
+            trueDamage = LEVEL2_AREAZAP_DMG - zap->damageUsed;
+          }
+          zap->damageUsed += trueDamage;
+        }
+
         for( j = 0; j < zap->numTargets; j++ )
         {
           gentity_t *source;
           gentity_t *target = zap->targets[ j ];
-          float     r = 1.0f / zap->numTargets;
-          float     damageFraction = 2 * r - 2 * j * r * r - r * r;
+          int       damage;
+          float     damageFalloffFac;
+          float     armourTotal = 0;
           vec3_t    forward;
 
           if( j == 0 )
@@ -1257,23 +1273,29 @@ void G_UpdateZaps( int msec )
           else
             source = zap->targets[ j - 1 ];
 
-          damage = ceil( ( (float)msec / LEVEL2_AREAZAP_TIME ) *
-              LEVEL2_AREAZAP_DMG * damageFraction );
+          if( BG_InventoryContainsUpgrade( UP_BATTLESUIT, target->client->ps.stats ) ) armourTotal = BSUIT_NL_AVERAGE;
+          else
+          {
+            if( BG_InventoryContainsUpgrade( UP_HELMET, target->client->ps.stats ) ) armourTotal += HELMET_NL_AVERAGE;
+            if( BG_InventoryContainsUpgrade( UP_LIGHTARMOUR, target->client->ps.stats ) ) armourTotal += LIGHTARMOUR_NL_AVERAGE;
+          }
+          armourTotal *= 1 - LEVEL2_AREAZAP_ARMOURPEN;
 
-          // don't let a high msec value inflate the total damage
-          if( damage + zap->damageUsed > LEVEL2_AREAZAP_DMG )
-            damage = LEVEL2_AREAZAP_DMG - zap->damageUsed;
+          zap->damageBuffer[ j ] += trueDamage * damageFraction * (1 - armourTotal);
+          damage = (int)( zap->damageBuffer[ j ] );
+          zap->damageBuffer[ j ] -= damage;
 
           VectorSubtract( target->s.origin, source->s.origin, forward );
           VectorNormalize( forward );
 
-          //do the damage
           if( damage )
-          {
-            G_Damage( target, source, zap->creator, forward, target->s.origin,
-                    damage, DAMAGE_NO_LOCDAMAGE, MOD_LEVEL2_ZAP );
-            zap->damageUsed += damage;
-          }
+            G_Damage( target, source, zap->creator, forward, target->s.origin, damage, DAMAGE_NO_MOD, MOD_LEVEL2_ZAP );
+
+          if(target->s.eType == ET_BUILDABLE )
+            damageFalloffFac = LEVEL2_AREAZAP_FALLOFF_BLD;
+          else
+            damageFalloffFac = LEVEL2_AREAZAP_FALLOFF;
+          damageFraction /= damageFalloffFac;
         }
       }
 
@@ -1380,8 +1402,7 @@ qboolean CheckPounceAttack( gentity_t *ent )
   if( !traceEnt->takedamage )
     return qfalse;
 
-  damage = (int)( ( (float)ent->client->pmext.pouncePayload
-    / (float)LEVEL3_POUNCE_SPEED ) * LEVEL3_POUNCE_DMG );
+  damage = ceil( ( (float)ent->client->pmext.pouncePayload / (float)LEVEL3_POUNCE_SPEED ) * LEVEL3_POUNCE_DMG );
 
   ent->client->pmext.pouncePayload = 0;
 
@@ -1549,7 +1570,6 @@ FireWeapon
 */
 void FireWeapon( gentity_t *ent )
 {
-
   adminRangeBoosts_t *newRange;
   newRange = &ent->client->newRange;
 
@@ -1650,4 +1670,3 @@ void FireWeapon( gentity_t *ent )
       break;
   }
 }
-
