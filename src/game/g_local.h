@@ -256,9 +256,9 @@ struct gentity_s
   int               suicideTime;                    // when the client will suicide
 
   int               lastDamageTime;
-  
+
   int               bdnumb;     // buildlog entry ID
-  
+
   // For nobuild!
   noBuild_t	    noBuild;
 };
@@ -441,6 +441,13 @@ typedef struct
   int                 lastTeamKillTime;      // level.time of last team kill
   int                 teamKillDemerits;      // number of team kill demerits accumulated
 
+  int                 lastBleedTime;         // if player bleeds too much they'll start taking damage too
+  int                 bleedDemerits;
+  int                 bleedBuffer;
+  qboolean            hasBadKarma;           // player has karma applied to them regardless of g_bleedKarma (admin command)
+
+  int                 campPenalty;           // tracks defender penalty
+
   vec3_t              lastDeathLocation;
   char                guid[ 33 ];
   char                ip[ 16 ];
@@ -570,12 +577,13 @@ struct gclient_s
   unlagged_t          unlaggedBackup;
   unlagged_t          unlaggedCalc;
   int                 unlaggedTime;
-  
+
   int               tkcredits[ MAX_CLIENTS ];
+  int               bleedingDone;
 
   adminRangeBoosts_t newRange;
 
-  qboolean            nearBase;
+  int                 damageOvertime;
 };
 
 
@@ -819,17 +827,17 @@ typedef struct
   buildHistory_t    *buildHistory;
   int               lastBuildID;
   int               lastTeamUnbalancedTime;
-  int               numTeamWarnings;  
+  int               numTeamWarnings;
   int               lastMsgTime;
   int               mapRotationVoteTime;
-  
+
   statsCounters_level alienStatsCounters;
   statsCounters_level humanStatsCounters;
-  
+
   qboolean	    noBuilding;
   float		    nbArea;
   float		    nbHeight;
-  
+
   nbMarkers_t	    nbMarkers[ MAX_GENTITIES ];
 } level_locals_t;
 
@@ -886,7 +894,7 @@ void      Cmd_CallVote_f( gentity_t *ent );
 void      Cmd_CallTeamVote_f( gentity_t *ent );
 void      Cmd_Share_f( gentity_t *ent );
 void      Cmd_Donate_f( gentity_t *ent );
-void      Cmd_TeamVote_f( gentity_t *ent ); 
+void      Cmd_TeamVote_f( gentity_t *ent );
 void      Cmd_Builder_f( gentity_t *ent );
 void      G_WordWrap( char *buffer, int maxwidth );
 void      G_CP( gentity_t *ent );
@@ -1034,6 +1042,7 @@ void      G_InitDamageLocations( void );
 #define DAMAGE_KNOCKBACK      0x00000004  // affect velocity, not just view angles
 #define DAMAGE_NO_PROTECTION  0x00000008  // armor, shields, invulnerability, and godmode have no effect
 #define DAMAGE_NO_LOCDAMAGE   0x00000010  // do not apply locational damage
+#define DAMAGE_NO_MOD         0x00000020  // do not use any modifiers (roughly equivalent to NO_ARMOR|NO_LOCDAMAGE)
 
 //
 // g_missile.c
@@ -1087,7 +1096,9 @@ typedef struct zap_s
   int           numTargets;
 
   int           timeToLive;
-  int           damageUsed;
+  float           damageUsed;
+  //memespider: prevent damage from being dealt too quickly if there's too many targets, store decimals in here
+  float         damageBuffer[ MAX_ZAP_TARGETS ];
 
   gentity_t     *effectChannel;
 } zap_t;
@@ -1511,6 +1522,7 @@ extern  vmCvar_t  g_Bubbles;
 extern  vmCvar_t  g_scrimMode;
 extern  vmCvar_t  g_gradualFreeFunds;
 extern  vmCvar_t  g_bleedingSpree;
+extern  vmCvar_t  g_bleedingKarma;
 extern  vmCvar_t  g_schachtmeisterClearThreshold;
 extern  vmCvar_t  g_schachtmeisterAutobahnThreshold;
 extern  vmCvar_t  g_schachtmeisterAutobahnMessage;
@@ -1519,9 +1531,12 @@ extern  vmCvar_t  g_maxGhosts;
 extern  vmCvar_t  g_specNoclip;
 extern  vmCvar_t  g_practise;
 extern  vmCvar_t  g_tyrantNerf;
+extern  vmCvar_t  g_basiBanter;
 
 extern  vmCvar_t  g_debugRewards;
-extern  vmCvar_t  g_sdDefenderPenalty;
+extern  vmCvar_t  g_sdDefenderMaxPenalty;
+extern  vmCvar_t  g_sdDefenderForgiveness;
+extern  vmCvar_t  g_sdDefenderPenaltyIncrement;
 extern  vmCvar_t  g_sdDestructionBonus;
 
 void      trap_Printf( const char *fmt );

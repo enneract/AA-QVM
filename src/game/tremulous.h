@@ -71,17 +71,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define LEVEL1_CLAW_K_SCALE         1.0f
 #define LEVEL1_CLAW_U_K_SCALE       1.0f
 #define LEVEL1_GRAB_RANGE           64.0f
-#define LEVEL1_GRAB_TIME            300
-#define LEVEL1_GRAB_U_TIME          450
+#define LEVEL1_GRAB_TIME            200
+#define LEVEL1_GRAB_U_TIME          200
 #define LEVEL1_PCLOUD_DMG           ADM(4)
 #define LEVEL1_PCLOUD_RANGE         200.0f
 #define LEVEL1_PCLOUD_REPEAT        2000
 #define LEVEL1_PCLOUD_TIME          10000
 #define LEVEL1_PCLOUD_BOOST_TIME    15000
 #define LEVEL1_REGEN_RANGE          300.0f
-#define LEVEL1_REGEN_MOD            3.0f
-#define LEVEL1_REGEN_REWARD         EVOS(0.005f)
+#define LEVEL1_REGEN_REWARD         EVOS(0.004f)
 
+#define LEVEL2_AIR_ACCEL            2.0f
 #define LEVEL2_CLAW_DMG             ADM(40)
 #define LEVEL2_CLAW_RANGE           96.0f
 #define LEVEL2_CLAW_WIDTH           12.0f
@@ -89,13 +89,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define LEVEL2_CLAW_K_SCALE         1.0f
 #define LEVEL2_CLAW_U_REPEAT        400
 #define LEVEL2_CLAW_U_K_SCALE       1.0f
-#define LEVEL2_AREAZAP_DMG          ADM(80)
+#define LEVEL2_AREAZAP_DMG          ADM(64)
 #define LEVEL2_AREAZAP_RANGE        200.0f
 #define LEVEL2_AREAZAP_WIDTH        15.0f
 #define LEVEL2_AREAZAP_REPEAT       1500
 #define LEVEL2_AREAZAP_TIME         1000
 #define LEVEL2_AREAZAP_MAX_TARGETS  3
+#define LEVEL2_AREAZAP_FALLOFF      2.0f
+#define LEVEL2_AREAZAP_FALLOFF_BLD  1.0f
+#define LEVEL2_AREAZAP_ARMOURPEN    0.2f    //memespider: metal is a great conductor
 #define LEVEL2_WALLJUMP_MAXSPEED    1000.0f
+#define LEVEL2_WALLJUMP_OVERCAPSCL  150.0f
+#define LEVEL2_WALLJUMP_OVERCAPEXP  2.0f
+#define LEVEL2_WALLJUMP_MAXNRM      0.42f
 
 #define LEVEL3_CLAW_DMG             ADM(80)
 #define LEVEL3_CLAW_RANGE           96.0f
@@ -469,7 +475,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define HELMET_PRICE                90
 #define HELMET_RANGE                1000.0f
-#define HELMET_POISON_PROTECTION    2 
+#define HELMET_POISON_PROTECTION    2
 
 #define MEDKIT_PRICE                0
 
@@ -494,6 +500,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MEDKIT_POISON_IMMUNITY_TIME 0
 #define MEDKIT_STARTUP_TIME         4000
 #define MEDKIT_STARTUP_SPEED        5
+
+#define LIGHTARMOUR_NL_AVERAGE      0.5  //used for marauder's zapschachtmeisterProcess
+#define HELMET_NL_AVERAGE           0.2
+#define BSUIT_NL_AVERAGE            0.8
 
 
 /*
