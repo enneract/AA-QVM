@@ -132,6 +132,12 @@ static void CG_Obituary( entityState_t *ent )
     case MOD_SWARM:
       message = "was hunted down by the swarm";
       break;
+    case MOD_KARMA:
+      message = "should have been a better teammate";
+      break;
+    case MOD_KARMA_P:
+      message = "couldn't stop the bleeding";
+      break;
     default:
       message = NULL;
       break;

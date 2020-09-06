@@ -69,6 +69,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  * SPECIALNAME - allows black text in name
  * .NOCHAT - mutes a player on connect
  * .NOVOTE - disallows voting by a player
+ * .KARMA - empathy damage will always be active for this player
  * ALLFLAGS - all flags (including command flags) apply to this player
  */
 
@@ -105,6 +106,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define ADMF_NO_BUILD            ".NOBUILD"
 #define ADMF_NO_CHAT             ".NOCHAT"
+#define ADMF_KARMA               ".KARMA"
 #define ADMF_NO_VOTE             ".NOVOTE"
 #define ADMF_FAKE_NO_VOTE        ".FAKENOVOTE"
 #define ADMF_NO_ALIENS           ".NOALIENS"
@@ -202,6 +204,7 @@ typedef struct g_admin_namelog
   int       denyAlienClasses;
   int       specExpires;
   int       voteCount;
+  qboolean  hasBadKarma;
   schachtmeisterJudgement_t smj;
 }
 g_admin_namelog_t;
@@ -301,6 +304,7 @@ qboolean G_admin_putmespec( gentity_t *ent, int skiparg );
 qboolean G_admin_warn( gentity_t *ent, int skiparg );
 qboolean G_admin_designate( gentity_t *ent, int skiparg );
 qboolean G_admin_cp( gentity_t *ent, int skiparg );
+qboolean G_admin_karma( gentity_t *ent, int skiparg );
 
 qboolean G_admin_slap( gentity_t *ent, int skiparg );
 qboolean G_admin_drop( gentity_t *ent, int skiparg );
