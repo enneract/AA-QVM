@@ -206,7 +206,7 @@ static void G_ClientShove( gentity_t *ent, gentity_t *victim )
   return;
 
   // alien mass is directly related to their health points
-  // human mass is 200, double for bsuit  
+  // human mass is 200, double for bsuit
   if( ent->client->pers.teamSelection == PTE_ALIENS )
   {
     entMass = BG_FindHealthForClass( ent->client->pers.classSelection );
@@ -274,7 +274,7 @@ void ClientImpacts( gentity_t *ent, pmove_t *pm )
 
     // see G_UnlaggedDetectCollisions(), this is the inverse of that.
     // if our movement is blocked by another player's real position,
-    // don't use the unlagged position for them because they are 
+    // don't use the unlagged position for them because they are
     // blocking or server-side Pmove() from reaching it
     if( other->client && other->client->unlaggedCalc.used )
       other->client->unlaggedCalc.used = qfalse;
@@ -437,7 +437,7 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd )
      {
        client->ps.pm_flags |= PMF_QUEUED;
      }
- 
+
 
     client->ps.stats[ STAT_STAMINA ] = 0;
     client->ps.stats[ STAT_MISC ] = 0;
@@ -472,7 +472,7 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd )
       client->pers.classSelection = PCL_NONE;
       client->ps.stats[ STAT_PCLASS ] = PCL_NONE;
     }
-    
+
     if( attack1 && client->pers.classSelection == PCL_NONE )
     {
       if( client->pers.teamSelection == PTE_NONE )
@@ -510,7 +510,7 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd )
     else if( client->pers.teamSelection == PTE_HUMANS )
       G_TriggerMenu( ent-g_entities, MN_H_SPAWN );
   }
-   
+
   if( attack3 )
   {
    G_ToggleFollow( ent );
@@ -590,7 +590,7 @@ void ClientTimerActions( gentity_t *ent, int msec )
   if( BG_InventoryContainsWeapon( WP_MASS_DRIVER, ent->client->ps.stats ) )
   {
     if( ( ucmd->buttons & BUTTON_ATTACK2 ) && !( ent->client->ps.eFlags & EF_ZOOM ) )
-      client->ps.eFlags |= EF_ZOOM;      
+      client->ps.eFlags |= EF_ZOOM;
     else if( !( ucmd->buttons & BUTTON_ATTACK2 ) && ( ent->client->ps.eFlags & EF_ZOOM ) )
       client->ps.eFlags &= ~EF_ZOOM;
   }
@@ -823,8 +823,8 @@ void ClientTimerActions( gentity_t *ent, int msec )
     //client is poisoned
     if( client->ps.stats[ STAT_STATE ] & SS_POISONED )
     {
-      int damage = ALIEN_POISON_DMG; 
-   
+      int damage = ALIEN_POISON_DMG;
+
       if( BG_InventoryContainsUpgrade( UP_BATTLESUIT, client->ps.stats ) )
         damage -= BSUIT_POISON_PROTECTION;
       if( BG_InventoryContainsUpgrade( UP_HELMET, client->ps.stats ) )
@@ -836,14 +836,13 @@ void ClientTimerActions( gentity_t *ent, int msec )
         0, damage, 0, MOD_POISON );
     }
 
-    //replenish alien health
-    if( client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS &&
-      level.surrenderTeam != PTE_ALIENS )
+    // replenish alien health
+    if( client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS && level.surrenderTeam != PTE_ALIENS )
     {
       int       entityList[ MAX_GENTITIES ];
       vec3_t    range = { LEVEL1_REGEN_RANGE, LEVEL1_REGEN_RANGE, LEVEL1_REGEN_RANGE };
       vec3_t    mins, maxs;
-      int       i, num;
+      int       i, j, num;
       gentity_t *boostEntity;
       float     modifier = 1.0f;
 
@@ -857,9 +856,27 @@ void ClientTimerActions( gentity_t *ent, int msec )
 
         if( boostEntity->client && boostEntity->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS &&
             boostEntity->client->ps.stats[ STAT_PCLASS ] == PCL_ALIEN_LEVEL1_UPG &&
-            boostEntity->health > 0 )
+            boostEntity->health > 0 && g_basiBanter.integer != 0)
         {
-          modifier = LEVEL1_REGEN_MOD;
+          switch(abs(g_basiBanter.integer))
+          {
+            case 1:
+              modifier = 1.5f;
+              break;
+
+            case 2:
+              modifier = 2.0f;
+              break;
+
+            case 3:
+              modifier = 3.0f;
+              break;
+
+            default:
+              modifier = 1.0f;
+              break;
+          }
+          if( ent == boostEntity && g_basiBanter.integer < 0 ) modifier = 1.0f; // no immortalisks tysm :)
 
           if( ent != boostEntity && ent->health < client->ps.stats[ STAT_MAX_HEALTH ] )
           {
@@ -867,14 +884,13 @@ void ClientTimerActions( gentity_t *ent, int msec )
             boostEntity->client->pers.statscounters.earned += LEVEL1_REGEN_REWARD;
           }
 
-          break;
+          if(modifier >= BOOSTER_REGEN_MOD) break;
         }
-        else if( boostEntity->s.eType == ET_BUILDABLE &&
-            boostEntity->s.modelindex == BA_A_BOOSTER &&
+        else if( boostEntity->s.eType == ET_BUILDABLE && boostEntity->s.modelindex == BA_A_BOOSTER &&
             boostEntity->spawned && boostEntity->health > 0 )
         {
           modifier = BOOSTER_REGEN_MOD;
-          break;
+          if( abs(g_basiBanter.integer) !=3 ) break;
         }
       }
 
@@ -895,53 +911,56 @@ void ClientTimerActions( gentity_t *ent, int msec )
       if( ent->health > client->ps.stats[ STAT_MAX_HEALTH ] )
         ent->health = client->ps.stats[ STAT_MAX_HEALTH ];
     }
-    
-    ent->client->nearBase = qfalse;
-    
-    if( ent->client->ps.stats[ STAT_HEALTH ] > 0 && ent->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
-    {
+
+    if( ent->client->ps.stats[ STAT_HEALTH ] > 0 && ent->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS ) {
       ent->client->pers.statscounters.timealive++;
       level.alienStatsCounters.timealive++;
       if( G_BuildableRange( ent->client->ps.origin, 900, BA_A_OVERMIND ) )
       {
         ent->client->pers.statscounters.timeinbase++;
         level.alienStatsCounters.timeinbase++;
-        ent->client->nearBase = qtrue;
+        //  negative values in client->pers.campPenalty represent how much time is left before defender penalty kicks in
+        //  this prevents defender penalty from slamming players that died trying to rush and just respawned
+        client->pers.campPenalty += client->pers.campPenalty < 0 ? 1 : g_sdDefenderPenaltyIncrement.integer;
       }
+      else client->pers.campPenalty -= client->pers.campPenalty < 0 ? 1 : g_sdDefenderPenaltyIncrement.integer;
+
       if( BG_ClassHasAbility( ent->client->ps.stats[ STAT_PCLASS ], SCA_WALLCLIMBER )  )
       {
         ent->client->pers.statscounters.dretchbasytime++;
         level.alienStatsCounters.dretchbasytime++;
 
         if( ent->client->ps.stats[ STAT_STATE ] & SS_WALLCLIMBING
-            || ent->client->ps.stats[ STAT_STATE ] & SS_WALLCLIMBINGCEILING ) 
+            || ent->client->ps.stats[ STAT_STATE ] & SS_WALLCLIMBINGCEILING )
         {
           ent->client->pers.statscounters.jetpackusewallwalkusetime++;
           level.alienStatsCounters.jetpackusewallwalkusetime++;
         }
       }
     }
-    else if( ent->client->ps.stats[ STAT_HEALTH ] > 0 && ent->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
-    {
+    else if( ent->client->ps.stats[ STAT_HEALTH ] > 0 && ent->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS ) {
       ent->client->pers.statscounters.timealive++;
       level.humanStatsCounters.timealive++;
       if( G_BuildableRange( ent->client->ps.origin, 900, BA_H_REACTOR ) )
       {
         ent->client->pers.statscounters.timeinbase++;
-        level.humanStatsCounters.timeinbase++;
-        ent->client->nearBase = qtrue;
+        level.alienStatsCounters.timeinbase++;
+        if(client->pers.campPenalty < g_sdDefenderMaxPenalty.integer)
+          client->pers.campPenalty += (client->pers.campPenalty < 0) ? 1 : g_sdDefenderPenaltyIncrement.integer;
       }
+      else client->pers.campPenalty -= (client->pers.campPenalty < 0) ? 1 : g_sdDefenderPenaltyIncrement.integer;
+
       if( BG_InventoryContainsUpgrade( UP_JETPACK, client->ps.stats ) )
       {
-    if( client->ps.pm_type == PM_JETPACK ) 
-    {
-      ent->client->pers.statscounters.jetpackusewallwalkusetime++;
-      level.humanStatsCounters.jetpackusewallwalkusetime++;
-    }
+        if( client->ps.pm_type == PM_JETPACK )
+        {
+          ent->client->pers.statscounters.jetpackusewallwalkusetime++;
+          level.humanStatsCounters.jetpackusewallwalkusetime++;
+        }
       }
     }
-   
-    // turn off life support when a team admits defeat 
+
+    // turn off life support when a team admits defeat
     if( client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS &&
       level.surrenderTeam == PTE_ALIENS )
     {
@@ -980,6 +999,14 @@ void ClientTimerActions( gentity_t *ent, int msec )
         }
       }
     }
+
+    // clear some rubbish regarding defender penalty
+    if( client->damageOvertime > 0 ){
+       client->pers.campPenalty -= (int)(client->damageOvertime / 15.0f);
+       client->damageOvertime = 0;
+    }
+    if( client->pers.campPenalty < -g_sdDefenderForgiveness.integer ) client->pers.campPenalty = -g_sdDefenderForgiveness.integer;
+    else if( client->pers.campPenalty > g_sdDefenderMaxPenalty.integer ) client->pers.campPenalty = g_sdDefenderMaxPenalty.integer;
   }
 
   while( client->time10000 >= 10000 )
@@ -999,6 +1026,12 @@ void ClientTimerActions( gentity_t *ent, int msec )
         client->ps.ammo = ammo;
         client->ps.clips = 0;
       }
+    }
+
+    //clear demerits off players that have not bled their team for a while
+    if( client->pers.bleedDemerits && level.time - client->pers.lastBleedTime  > 5000){
+      client->pers.bleedDemerits -= client->pers.hasBadKarma ? 4 : 6;
+      if(client->pers.bleedDemerits < 0) client->pers.bleedDemerits = 0;
     }
   }
 }
@@ -1143,8 +1176,8 @@ void SendPendingPredictableEvents( playerState_t *ps )
 ==============
  G_UnlaggedStore
 
- Called on every server frame.  Stores position data for the client at that 
- into client->unlaggedHist[] and the time into level.unlaggedTimes[].  
+ Called on every server frame.  Stores position data for the client at that
+ into client->unlaggedHist[] and the time into level.unlaggedTimes[].
  This data is used by G_UnlaggedCalc()
 ==============
 */
@@ -1153,24 +1186,24 @@ void G_UnlaggedStore( void )
   int i = 0;
   gentity_t *ent;
   unlagged_t *save;
-  
+
   if( !g_unlagged.integer )
     return;
-  level.unlaggedIndex++; 
+  level.unlaggedIndex++;
   if( level.unlaggedIndex >= MAX_UNLAGGED_MARKERS )
     level.unlaggedIndex = 0;
 
   level.unlaggedTimes[ level.unlaggedIndex ] = level.time;
- 
+
   for( i = 0; i < level.maxclients; i++ )
   {
     ent = &g_entities[ i ];
     save = &ent->client->unlaggedHist[ level.unlaggedIndex ];
-    save->used = qfalse; 
+    save->used = qfalse;
     if( !ent->r.linked || !( ent->r.contents & CONTENTS_BODY ) )
       continue;
     if( ent->client->pers.connected != CON_CONNECTED )
-      continue; 
+      continue;
     VectorCopy( ent->r.mins, save->mins );
     VectorCopy( ent->r.maxs, save->maxs );
     VectorCopy( ent->s.pos.trBase, save->origin );
@@ -1181,7 +1214,7 @@ void G_UnlaggedStore( void )
 /*
 ==============
  G_UnlaggedClear
- 
+
  Mark all unlaggedHist[] markers for this client invalid.  Useful for
  preventing teleporting and death.
 ==============
@@ -1213,7 +1246,7 @@ void G_UnlaggedCalc( int time, gentity_t *rewindEnt )
 
   if( !g_unlagged.integer )
     return;
- 
+
   // clear any calculated values from a previous run
   for( i = 0; i < level.maxclients; i++ )
   {
@@ -1246,7 +1279,7 @@ void G_UnlaggedCalc( int time, gentity_t *rewindEnt )
     frameMsec = level.unlaggedTimes[ stopIndex ] - level.unlaggedTimes[ startIndex ];
     lerp = ( float )( time - level.unlaggedTimes[ startIndex ] ) / ( float )frameMsec;
   }
-  
+
   for( i = 0; i < level.maxclients; i++ )
   {
     ent = &g_entities[ i ];
@@ -1287,10 +1320,10 @@ void G_UnlaggedOff( void )
 {
   int i = 0;
   gentity_t *ent;
-  
+
   if( !g_unlagged.integer )
     return;
-  
+
   for( i = 0; i < level.maxclients; i++ )
   {
     ent = &g_entities[ i ];
@@ -1323,13 +1356,13 @@ void G_UnlaggedOn( gentity_t *attacker, vec3_t muzzle, float range )
   int i = 0;
   gentity_t *ent;
   unlagged_t *calc;
-  
+
   if( !g_unlagged.integer )
     return;
 
   if( !attacker->client->pers.useUnlagged )
     return;
-  
+
   for( i = 0; i < level.maxclients; i++ )
   {
     ent = &g_entities[ i ];
@@ -1350,7 +1383,7 @@ void G_UnlaggedOn( gentity_t *attacker, vec3_t muzzle, float range )
       float maxRadius = ( r1 > r2 ) ? r1 : r2;
 
       if( Distance( muzzle, calc->origin ) > range + maxRadius )
-        continue; 
+        continue;
     }
 
     // create a backup of the real positions
@@ -1374,7 +1407,7 @@ void G_UnlaggedOn( gentity_t *attacker, vec3_t muzzle, float range )
  the current time, but only updates other player's positions up to the
  postition sent in the most recent snapshot.
 
- This allows player X to essentially "move through" the position of player Y 
+ This allows player X to essentially "move through" the position of player Y
  when player X's cmd is processed with Pmove() on the server.  This is because
  player Y was clipping player X's Pmove() on his client, but when the same
  cmd is processed with Pmove on the server it is not clipped.
@@ -1419,7 +1452,7 @@ static void G_UnlaggedDetectCollisions( gentity_t *ent )
   trap_Trace(&tr, ent->client->oldOrigin, ent->r.mins, ent->r.maxs,
     ent->client->ps.origin, ent->s.number,  MASK_PLAYERSOLID );
   if( tr.entityNum >= 0 && tr.entityNum < MAX_CLIENTS )
-    g_entities[ tr.entityNum ].client->unlaggedCalc.used = qfalse; 
+    g_entities[ tr.entityNum ].client->unlaggedCalc.used = qfalse;
 
   G_UnlaggedOff( );
 }
@@ -1432,7 +1465,7 @@ g_gradualFreeFunds values:
 0 - disabled
 1 - vanilla behavior
 2 - 1 and counters don't reset on death or evolution
-3 - 2 and funds are given even during SD 
+3 - 2 and funds are given even during SD
 ==============
 */
 static void ClientGradualFunds( gentity_t *ent )
@@ -1508,7 +1541,7 @@ void ClientThink_real( gentity_t *ent )
   }
 
   // ucmd->serverTime is a client predicted value, but it works for making a
-  // replacement for client->ps.ping when in SPECTATOR_FOLLOW 
+  // replacement for client->ps.ping when in SPECTATOR_FOLLOW
   client->pers.ping = level.time - ucmd->serverTime;
 
   // account for the one frame of delay on client side
@@ -1575,7 +1608,7 @@ void ClientThink_real( gentity_t *ent )
   if( !ClientInactivityTimer( client ) )
     return;
 
-  // calculate where ent is currently seeing all the other active clients 
+  // calculate where ent is currently seeing all the other active clients
   G_UnlaggedCalc( ent->client->unlaggedTime, ent );
 
   if( client->noclip )
@@ -1791,7 +1824,7 @@ void ClientThink_real( gentity_t *ent )
 
   // touch other objects
   ClientImpacts( ent, &pm );
-  
+
   // execute client events
   ClientEvents( ent, oldEventSequence );
 
@@ -1805,7 +1838,7 @@ void ClientThink_real( gentity_t *ent )
   // save results of triggers and client events
   if( ent->client->ps.eventSequence != oldEventSequence )
     ent->eventTime = level.time;
-  
+
   // Don't think anymore if dead
   if( client->ps.stats[ STAT_HEALTH ] <= 0 )
     return;
@@ -1913,7 +1946,7 @@ void ClientThink_real( gentity_t *ent )
 
   // perform once-a-second actions
   ClientTimerActions( ent, msec );
-  
+
   if( ent->suicideTime > 0 && ent->suicideTime < level.time )
   {
     ent->flags &= ~FL_GODMODE;
@@ -2005,8 +2038,8 @@ void SpectatorClientEndFrame( gentity_t *ent )
 
       if( cl->pers.connected == CON_CONNECTED )
       {
- 
-    if( cl -> sess.spectatorState != SPECTATOR_FOLLOW ) 
+
+    if( cl -> sess.spectatorState != SPECTATOR_FOLLOW )
     {
           flags = cl->ps.eFlags | ent->client->ps.eFlags;
           score = ent->client->ps.persistant[ PERS_SCORE ];
@@ -2061,7 +2094,7 @@ void ClientEndFrame( gentity_t *ent )
 
   pers = &ent->client->pers;
 
-  // save a copy of certain playerState values in case of SPECTATOR_FOLLOW 
+  // save a copy of certain playerState values in case of SPECTATOR_FOLLOW
   pers->score = ent->client->ps.persistant[ PERS_SCORE ];
   pers->credit = ent->client->ps.persistant[ PERS_CREDIT ];
 
@@ -2085,7 +2118,7 @@ void ClientEndFrame( gentity_t *ent )
     ent->s.eFlags &= ~EF_CONNECTION;
 
   ent->client->ps.stats[ STAT_HEALTH ] = ent->health; // FIXME: get rid of ent->health...
-  
+
   // respawn if dead
   if( ent->client->ps.stats[ STAT_HEALTH ] <= 0 && level.time >= ent->client->respawnTime )
     respawn( ent );
@@ -2100,5 +2133,3 @@ void ClientEndFrame( gentity_t *ent )
 
   SendPendingPredictableEvents( &ent->client->ps );
 }
-
-
