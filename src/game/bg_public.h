@@ -892,7 +892,9 @@ typedef enum
   MOD_ASPAWN,
   MOD_ATUBE,
   MOD_OVERMIND,
-  MOD_SLAP
+  MOD_SLAP,
+  MOD_KARMA,
+  MOD_KARMA_P
 } meansOfDeath_t;
 
 
@@ -1311,7 +1313,7 @@ qboolean BG_ClassIsAllowed( pClass_t class );
 qboolean BG_BuildableIsAllowed( buildable_t buildable );
 qboolean BG_UpgradeClassAvailable( playerState_t *ps );
 
-typedef struct 
+typedef struct
 {
   unsigned int hi;
   unsigned int lo;
@@ -1326,4 +1328,3 @@ void BG_ClientListParse( clientList_t *list, const char *s );
 #define FFF_HUMANS         1
 #define FFF_ALIENS         2
 #define FFF_BUILDABLES     4
-
