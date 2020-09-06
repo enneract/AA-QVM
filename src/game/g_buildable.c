@@ -694,15 +694,15 @@ void ASpawn_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
     {
       G_TeamCommand( PTE_ALIENS,
         va( "print \"%s ^3DESTROYED^7 by teammate %s^7\n\"",
-          BG_FindHumanNameForBuildable( self->s.modelindex ), 
+          BG_FindHumanNameForBuildable( self->s.modelindex ),
           attacker->client->pers.netname ) );
       G_LogOnlyPrintf("%s ^3DESTROYED^7 by teammate %s^7\n",
-          BG_FindHumanNameForBuildable( self->s.modelindex ), 
-          attacker->client->pers.netname ); 
+          BG_FindHumanNameForBuildable( self->s.modelindex ),
+          attacker->client->pers.netname );
     }
     G_LogPrintf( "Decon: %i %i %i: %s^7 destroyed %s by %s\n",
       attacker->client->ps.clientNum, self->s.modelindex, mod,
-      attacker->client->pers.netname, 
+      attacker->client->pers.netname,
       BG_FindNameForBuildable( self->s.modelindex ),
       modNames[ mod ] );
   }
@@ -727,8 +727,8 @@ void ASpawn_Think( gentity_t *self )
       if( ( ent = G_CheckSpawnPoint( self->s.number, self->s.origin,
               self->s.origin2, BA_A_SPAWN, NULL ) ) != NULL )
       {
-        // If the thing blocking the spawn is a buildable, kill it. 
-        // If it's part of the map, kill self. 
+        // If the thing blocking the spawn is a buildable, kill it.
+        // If it's part of the map, kill self.
         if( ent->s.eType == ET_BUILDABLE )
         {
           G_Damage( ent, NULL, NULL, NULL, NULL, 10000, 0, MOD_SUICIDE );
@@ -739,7 +739,7 @@ void ASpawn_Think( gentity_t *self )
           G_Damage( self, NULL, NULL, NULL, NULL, 10000, 0, MOD_SUICIDE );
           return;
         }
-        else if( g_antiSpawnBlock.integer && ent->client && 
+        else if( g_antiSpawnBlock.integer && ent->client &&
                  ent->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
         {
           //spawnblock protection
@@ -759,7 +759,7 @@ void ASpawn_Think( gentity_t *self )
             velocity[0] = crandom() * g_antiSpawnBlock.integer;
             velocity[1] = crandom() * g_antiSpawnBlock.integer;
             velocity[2] = g_antiSpawnBlock.integer;
-                
+
             VectorAdd( ent->client->ps.velocity, velocity, ent->client->ps.velocity );
             trap_SendServerCommand( ent-g_entities, "cp \"Don't spawn block!\"" );
           }
@@ -836,7 +836,7 @@ void AOvermind_Think( gentity_t *self )
     {
       enemy = &g_entities[ entityList[ i ] ];
 
-      if( enemy->flags & FL_NOTARGET || g_practise.integer ) 
+      if( enemy->flags & FL_NOTARGET || g_practise.integer )
         continue;
 
       if( enemy->client && enemy->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
@@ -1086,15 +1086,15 @@ void AGeneric_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, i
     {
       G_TeamCommand( PTE_ALIENS,
         va( "print \"%s ^3DESTROYED^7 by teammate %s^7\n\"",
-          BG_FindHumanNameForBuildable( self->s.modelindex ), 
+          BG_FindHumanNameForBuildable( self->s.modelindex ),
           attacker->client->pers.netname ) );
       G_LogOnlyPrintf("%s ^3DESTROYED^7 by teammate %s^7\n",
-          BG_FindHumanNameForBuildable( self->s.modelindex ), 
-          attacker->client->pers.netname ); 
+          BG_FindHumanNameForBuildable( self->s.modelindex ),
+          attacker->client->pers.netname );
     }
     G_LogPrintf( "Decon: %i %i %i: %s^7 destroyed %s by %s\n",
       attacker->client->ps.clientNum, self->s.modelindex, mod,
-      attacker->client->pers.netname, 
+      attacker->client->pers.netname,
       BG_FindNameForBuildable( self->s.modelindex ),
       modNames[ mod ] );
   }
@@ -1489,7 +1489,7 @@ void AHovel_Use( gentity_t *self, gentity_t *other, gentity_t *activator )
       activator->client->ps.stats[ STAT_STATE ] |= SS_HOVELING;
       activator->client->hovel = self;
       self->builder = activator;
-      
+
       // Cancel pending suicides
       activator->suicideTime = 0;
 
@@ -1621,15 +1621,15 @@ void AHovel_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
     {
       G_TeamCommand( PTE_ALIENS,
         va( "print \"%s ^3DESTROYED^7 by teammate %s^7\n\"",
-          BG_FindHumanNameForBuildable( self->s.modelindex ), 
+          BG_FindHumanNameForBuildable( self->s.modelindex ),
           attacker->client->pers.netname ) );
       G_LogOnlyPrintf("%s ^3DESTROYED^7 by teammate %s^7\n",
-          BG_FindHumanNameForBuildable( self->s.modelindex ), 
-          attacker->client->pers.netname ); 
+          BG_FindHumanNameForBuildable( self->s.modelindex ),
+          attacker->client->pers.netname );
     }
     G_LogPrintf( "Decon: %i %i %i: %s^7 destroyed %s by %s\n",
       attacker->client->ps.clientNum, self->s.modelindex, mod,
-      attacker->client->pers.netname, 
+      attacker->client->pers.netname,
       BG_FindNameForBuildable( self->s.modelindex ),
       modNames[ mod ] );
   }
@@ -2165,18 +2165,18 @@ void HMedistat_Think( gentity_t *self )
     if( self->active )
       G_SetIdleBuildableAnim( self, BANIM_IDLE2 );
 
-    //check if a previous occupier is still here
+    // memespider: medistation now gives out medikits to people already on full health no matter what
     num = trap_EntitiesInBox( mins, maxs, entityList, MAX_GENTITIES );
     for( i = 0; i < num; i++ )
     {
       player = &g_entities[ entityList[ i ] ];
 
-      if( player->client && player->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
+      if( player->client && player->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS && player->client->ps.pm_type != PM_DEAD )
       {
-        if( player->health < player->client->ps.stats[ STAT_MAX_HEALTH ] &&
-            player->client->ps.pm_type != PM_DEAD &&
-            self->enemy == player )
+        if( player->health < player->client->ps.stats[ STAT_MAX_HEALTH ] && self->enemy == player )
           occupied = qtrue;
+        else if( player->health == player->client->ps.stats[ STAT_MAX_HEALTH ] && !BG_InventoryContainsUpgrade( UP_MEDKIT, player->client->ps.stats ) )
+          BG_AddUpgradeToInventory( UP_MEDKIT, player->client->ps.stats );
       }
     }
 
@@ -2203,8 +2203,6 @@ void HMedistat_Think( gentity_t *self )
               self->active = qtrue;
             }
           }
-          else if( !BG_InventoryContainsUpgrade( UP_MEDKIT, player->client->ps.stats ) )
-            BG_AddUpgradeToInventory( UP_MEDKIT, player->client->ps.stats );
         }
       }
     }
@@ -2743,15 +2741,15 @@ void HSpawn_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
     {
       G_TeamCommand( PTE_HUMANS,
         va( "print \"%s ^3DESTROYED^7 by teammate %s^7\n\"",
-          BG_FindHumanNameForBuildable( self->s.modelindex ), 
+          BG_FindHumanNameForBuildable( self->s.modelindex ),
           attacker->client->pers.netname ) );
       G_LogOnlyPrintf("%s ^3DESTROYED^7 by teammate %s^7\n",
-          BG_FindHumanNameForBuildable( self->s.modelindex ), 
-          attacker->client->pers.netname ); 
+          BG_FindHumanNameForBuildable( self->s.modelindex ),
+          attacker->client->pers.netname );
     }
     G_LogPrintf( "Decon: %i %i %i: %s^7 destroyed %s by %s\n",
       attacker->client->ps.clientNum, self->s.modelindex, mod,
-      attacker->client->pers.netname, 
+      attacker->client->pers.netname,
       BG_FindNameForBuildable( self->s.modelindex ),
       modNames[ mod ] );
   }
@@ -2779,8 +2777,8 @@ void HSpawn_Think( gentity_t *self )
       if( ( ent = G_CheckSpawnPoint( self->s.number, self->s.origin,
               self->s.origin2, BA_H_SPAWN, NULL ) ) != NULL )
       {
-        // If the thing blocking the spawn is a buildable, kill it. 
-        // If it's part of the map, kill self. 
+        // If the thing blocking the spawn is a buildable, kill it.
+        // If it's part of the map, kill self.
         if( ent->s.eType == ET_BUILDABLE )
         {
           G_Damage( ent, NULL, NULL, NULL, NULL, 10000, 0, MOD_SUICIDE );
@@ -2791,7 +2789,7 @@ void HSpawn_Think( gentity_t *self )
           G_Damage( self, NULL, NULL, NULL, NULL, 10000, 0, MOD_SUICIDE );
           return;
         }
-        else if( g_antiSpawnBlock.integer && ent->client && 
+        else if( g_antiSpawnBlock.integer && ent->client &&
                  ent->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
         {
           //spawnblock protection
@@ -2811,7 +2809,7 @@ void HSpawn_Think( gentity_t *self )
             velocity[0] = crandom() * g_antiSpawnBlock.integer;
             velocity[1] = crandom() * g_antiSpawnBlock.integer;
             velocity[2] = g_antiSpawnBlock.integer;
-                
+
             VectorAdd( ent->client->ps.velocity, velocity, ent->client->ps.velocity );
             trap_SendServerCommand( ent-g_entities, "cp \"Don't spawn block!\"" );
           }
@@ -3445,25 +3443,25 @@ itemBuildError_t G_CanBuild( gentity_t *ent, buildable_t buildable, int distance
     reason = IBE_NORMAL;
 
   contents = trap_PointContents( entity_origin, -1 );
-  
+
   //check if we are near a nobuild marker, if so, can't build here...
   for( i = 0; i < MAX_GENTITIES; i++ )
   {
 	tmp = &g_entities[ i ];
-	
+
 	if( !tmp->noBuild.isNB )
 	continue;
-	
+
 	nbVect[0] = tmp->noBuild.Area;
 	nbVect[1] = tmp->noBuild.Area;
 	nbVect[2] = tmp->noBuild.Height;
-	  
+
     	VectorSubtract( origin, nbVect, nbmins );
   	VectorAdd( origin, nbVect, nbmaxs );
-	
+
 	if( trap_EntityContact( nbmins, nbmaxs, tmp ) )
 	reason = IBE_PERMISSION;
-	
+
   }
   if( ent->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
   {
@@ -3639,7 +3637,7 @@ itemBuildError_t G_CanBuild( gentity_t *ent, buildable_t buildable, int distance
 G_BuildingExists
 ==============
 */
-qboolean G_BuildingExists( int bclass ) 
+qboolean G_BuildingExists( int bclass )
 {
   int               i;
   gentity_t         *tempent;
@@ -3669,7 +3667,7 @@ static gentity_t *G_Build( gentity_t *builder, buildable_t buildable, vec3_t ori
   gentity_t *built;
   buildHistory_t *new;
   vec3_t    normal;
-    
+
   // initialise the buildhistory so other functions can use it
   if( builder && builder->client )
   {
@@ -3705,9 +3703,9 @@ static gentity_t *G_Build( gentity_t *builder, buildable_t buildable, vec3_t ori
     }
     else if( BG_FindTrajectoryForBuildable( buildable ) == TR_BUOYANCY )
       VectorSet( normal, 0.0f, 0.0f, -1.0f );
-    else 
+    else
       VectorSet( normal, 0.0f, 0.0f, 1.0f );
-  } 
+  }
   else
   {
     // in-game building by a player
@@ -3724,7 +3722,7 @@ static gentity_t *G_Build( gentity_t *builder, buildable_t buildable, vec3_t ori
   }
 
   // when building the initial layout, spawn the entity slightly off its
-  // target surface so that it can be "dropped" onto it 
+  // target surface so that it can be "dropped" onto it
   if( !builder->client )
     VectorMA( origin, 1.0f, normal, origin );
 
@@ -3874,7 +3872,7 @@ static gentity_t *G_Build( gentity_t *builder, buildable_t buildable, vec3_t ori
     built->builtBy = -1;
 
   G_SetOrigin( built, origin );
-  
+
   // gently nudge the buildable onto the surface :)
   VectorScale( normal, -50.0f, built->s.pos.trDelta );
 
@@ -3918,12 +3916,12 @@ static gentity_t *G_Build( gentity_t *builder, buildable_t buildable, vec3_t ori
     G_SetBuildableAnim( built, BANIM_CONSTRUCT1, qtrue );
 
   trap_LinkEntity( built );
-  
-  
-  if( builder->client ) 
+
+
+  if( builder->client )
   {
      builder->client->pers.statscounters.structsbuilt++;
-     if( builder->client->pers.teamSelection == PTE_ALIENS ) 
+     if( builder->client->pers.teamSelection == PTE_ALIENS )
      {
        level.alienStatsCounters.structsbuilt++;
      }
@@ -3936,12 +3934,12 @@ static gentity_t *G_Build( gentity_t *builder, buildable_t buildable, vec3_t ori
   if( builder->client ) {
     G_TeamCommand( builder->client->pers.teamSelection,
       va( "print \"%s is ^2being built^7 by %s^7\n\"",
-        BG_FindHumanNameForBuildable( built->s.modelindex ), 
+        BG_FindHumanNameForBuildable( built->s.modelindex ),
         builder->client->pers.netname ) );
     G_LogPrintf("Build: %i %i 0: %s^7 is ^2building^7 %s\n",
       builder->client->ps.clientNum,
       built->s.modelindex,
-      builder->client->pers.netname, 
+      builder->client->pers.netname,
       BG_FindNameForBuildable( built->s.modelindex ) );
   }
 
@@ -3959,7 +3957,7 @@ static gentity_t *G_Build( gentity_t *builder, buildable_t buildable, vec3_t ori
     VectorCopy( built->s.angles2, new->angles2 );
     new->fate = BF_BUILT;
   }
-  
+
    if( builder && builder->client )
      built->bdnumb = new->ID;
    else
@@ -3972,7 +3970,7 @@ static void G_SpawnMarker( vec3_t origin )
 {
 	gentity_t *nb;
 	int i;
-  
+
   	// Make the marker...
 	nb = G_Spawn( );
 	nb->s.modelindex = 0; //Coder humor is win
@@ -3982,19 +3980,19 @@ static void G_SpawnMarker( vec3_t origin )
 	nb->noBuild.Area = level.nbArea;
 	nb->noBuild.Height = level.nbHeight;
 	trap_LinkEntity( nb );
-	
+
 	// Log markers made...
 	for( i = 0; i < MAX_GENTITIES; i++ )
 	{
 		if( level.nbMarkers[ i ].Marker != NULL )
 		continue;
-		
+
 		level.nbMarkers[ i ].Marker = nb;
 		VectorCopy( origin, level.nbMarkers[ i ].Origin );
 		SnapVector( level.nbMarkers[ i ].Origin );
 		break;
 	}
-	
+
   	// End nobuild mode...
 	level.noBuilding = qfalse;
 	level.nbArea = 0.0f;
@@ -4021,7 +4019,7 @@ qboolean G_BuildIfValid( gentity_t *ent, buildable_t buildable )
       	vec3_t    mins;
   	BG_FindBBoxForBuildable( buildable, mins, NULL );
   	origin[2] += mins[2];
-	
+
       	G_SpawnMarker( origin );
 	return qtrue;
       }
@@ -4210,24 +4208,24 @@ void G_SpawnBuildable( gentity_t *ent, buildable_t buildable )
  /*
  ============
  G_CheckDBProtection
- 
+
  Count how many designated builders are in both teams and
  if none found in some team, cancel protection for all
  structures of that team
  ============
  */
- 
+
  void G_CheckDBProtection( void )
  {
    int alienDBs = 0, humanDBs = 0, i;
    gentity_t *ent;
- 
+
    // count designated builders
    for( i = 0, ent = g_entities + i; i < level.maxclients; i++, ent++)
    {
      if( !ent->client || ( ent->client->pers.connected != CON_CONNECTED ) )
        continue;
- 
+
      if( ent->client->pers.designatedBuilder)
      {
        if( ent->client->pers.teamSelection == PTE_HUMANS )
@@ -4240,17 +4238,17 @@ void G_SpawnBuildable( gentity_t *ent, buildable_t buildable )
        }
      }
    }
- 
+
    // both teams have designate builders, we're done
    if( alienDBs > 0 && humanDBs > 0 )
      return;
- 
+
    // cancel protection if needed
    for( i = 1, ent = g_entities + i; i < level.num_entities; i++, ent++)
    {
      if( ent->s.eType != ET_BUILDABLE)
        continue;
- 
+
      if( ( !alienDBs && ent->biteam == BIT_ALIENS ) ||
        ( !humanDBs && ent->biteam == BIT_HUMANS ) )
      {
@@ -4258,7 +4256,7 @@ void G_SpawnBuildable( gentity_t *ent, buildable_t buildable )
      }
    }
  }
- 
+
 /*
 ============
 G_LayoutSave
@@ -4326,7 +4324,7 @@ int G_LayoutList( const char *map, char *list, int len )
   int  count = 0;
   char *filePtr;
 
-  Q_strcat( layouts, sizeof( layouts ), "*BUILTIN* " );  
+  Q_strcat( layouts, sizeof( layouts ), "*BUILTIN* " );
   numFiles = trap_FS_GetFileList( va( "layouts/%s", map ), ".dat",
     fileList, sizeof( fileList ) );
   filePtr = fileList;
@@ -4335,7 +4333,7 @@ int G_LayoutList( const char *map, char *list, int len )
     fileLen = strlen( filePtr );
     listLen = strlen( layouts );
     if( fileLen < 5 )
-      continue; 
+      continue;
 
     // list is full, stop trying to add to it
     if( ( listLen + fileLen ) >= sizeof( layouts ) )
@@ -4371,7 +4369,7 @@ void G_LayoutSelect( void )
   char fileName[ MAX_OSPATH ];
   char layouts[ MAX_CVAR_VALUE_STRING ];
   char layouts2[ MAX_CVAR_VALUE_STRING ];
-  char *l; 
+  char *l;
   char map[ MAX_QPATH ];
   char *s;
   int cnt = 0;
@@ -4380,10 +4378,10 @@ void G_LayoutSelect( void )
   Q_strncpyz( layouts, g_layouts.string, sizeof( layouts ) );
   trap_Cvar_VariableStringBuffer( "mapname", map, sizeof( map ) );
 
-  // one time use cvar 
+  // one time use cvar
   trap_Cvar_Set( "g_layouts", "" );
- 
-  // pick an included layout at random if no list has been provided 
+
+  // pick an included layout at random if no list has been provided
   if( !layouts[ 0 ] && g_layoutAuto.integer )
   {
     G_LayoutList( map, layouts, sizeof( layouts ) );
@@ -4406,7 +4404,7 @@ void G_LayoutSelect( void )
       s = COM_ParseExt( &l, qfalse );
       continue;
     }
-    
+
     Com_sprintf( fileName, sizeof( fileName ), "layouts/%s/%s.dat", map, s );
     if( trap_FS_FOpenFile( fileName, NULL, FS_READ ) > 0 )
     {
@@ -4438,14 +4436,14 @@ void G_LayoutSelect( void )
       break;
     s = COM_ParseExt( &l, qfalse );
   }
-  G_Printf("using layout \"%s\" from list ( %s)\n", level.layout, layouts ); 
+  G_Printf("using layout \"%s\" from list ( %s)\n", level.layout, layouts );
 }
 
 static void G_LayoutBuildItem( buildable_t buildable, vec3_t origin,
   vec3_t angles, vec3_t origin2, vec3_t angles2 )
 {
   gentity_t *builder;
-  
+
   builder = G_Spawn( );
   builder->client = 0;
   VectorCopy( origin, builder->s.pos.trBase );
@@ -4459,7 +4457,7 @@ static void G_LayoutBuildItem( buildable_t buildable, vec3_t origin,
 ============
 G_InstantBuild
 
-This function is extremely similar to the few functions that place a 
+This function is extremely similar to the few functions that place a
 buildable on map load. It exists because G_LayoutBuildItem takes a couple
 of frames to finish spawning it, so it's not truly instant
 Do not call this function immediately after the map loads - that's what
@@ -4471,7 +4469,7 @@ gentity_t *G_InstantBuild( buildable_t buildable, vec3_t origin, vec3_t angles, 
   gentity_t *builder, *built;
   trace_t   tr;
   vec3_t    dest;
-  
+
   builder = G_Spawn( );
   builder->client = 0;
   VectorCopy( origin, builder->s.pos.trBase );
@@ -4560,7 +4558,7 @@ void G_SpawnRevertedBuildable( buildHistory_t *bh, qboolean mark )
 ============
 G_CommitRevertedBuildable
 
-Check if there's anyone occupying me, and if not, become solid and operate as 
+Check if there's anyone occupying me, and if not, become solid and operate as
 normal. Else, try to get rid of them.
 ============
 */
@@ -4711,7 +4709,7 @@ void G_LayoutLoad( void )
 
   if( !level.layout[ 0 ] || !Q_stricmp( level.layout, "*BUILTIN*" ) )
     return;
- 
+
   trap_Cvar_VariableStringBuffer( "mapname", map, sizeof( map ) );
   len = trap_FS_FOpenFile( va( "layouts/%s/%s.dat", map, level.layout ),
     &f, FS_READ );
@@ -4730,13 +4728,13 @@ void G_LayoutLoad( void )
     {
       G_Printf( S_COLOR_RED "ERROR: line overflow in %s before \"%s\"\n",
        va( "layouts/%s/%s.dat", map, level.layout ), line );
-      return; 
+      return;
     }
     line[ i++ ] = *layout;
     line[ i ] = '\0';
     if( *layout == '\n' )
     {
-      i = 0; 
+      i = 0;
       sscanf( line, "%d %f %f %f %f %f %f %f %f %f %f %f %f\n",
         &buildable,
         &origin[ 0 ], &origin[ 1 ], &origin[ 2 ],
@@ -4775,12 +4773,12 @@ void G_BaseSelfDestruct( pTeam_t team )
 }
 
  int G_LogBuild( buildHistory_t *new )
- { 
+ {
    new->next = level.buildHistory;
    level.buildHistory = new;
    return G_CountBuildLog();
  }
- 
+
  int G_CountBuildLog( void )
  {
    buildHistory_t *ptr, *mark;
@@ -4809,11 +4807,11 @@ void G_BaseSelfDestruct( pTeam_t team )
    }
    return i;
  }
- 
+
  char *G_FindBuildLogName( int id )
  {
    buildHistory_t *ptr;
- 
+
    for( ptr = level.buildHistory; ptr && ptr->ID != id; ptr = ptr->next );
    if( ptr )
    {
@@ -4827,10 +4825,10 @@ void G_BaseSelfDestruct( pTeam_t team )
        return ptr->name;
      }
    }
- 
+
    return "<buildlog entry expired>";
  }
- 
+
 /*
 ============
 G_NobuildLoad
@@ -4868,14 +4866,14 @@ void G_NobuildLoad( void )
   {
     if( i >= sizeof( line ) - 1 )
     {
-      return; 
+      return;
     }
-    
+
     line[ i++ ] = *nobuild;
     line[ i ] = '\0';
     if( *nobuild == '\n' )
     {
-      i = 0; 
+      i = 0;
       sscanf( line, "%f %f %f %f %f\n",
         &origin[ 0 ], &origin[ 1 ], &origin[ 2 ], &area, &height  );
 
@@ -4888,19 +4886,19 @@ void G_NobuildLoad( void )
 	nb->noBuild.Area = area;
 	nb->noBuild.Height = height;
 	trap_LinkEntity( nb );
-	
+
 	// Log markers made...
 	for( i = 0; i < MAX_GENTITIES; i++ )
 	{
 		if( level.nbMarkers[ i ].Marker != NULL )
 		continue;
-		
+
 		level.nbMarkers[ i ].Marker = nb;
 		VectorCopy( origin, level.nbMarkers[ i ].Origin );
 		SnapVector( level.nbMarkers[ i ].Origin );
 		break;
 	}
-      
+
     }
     nobuild++;
   }
