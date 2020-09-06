@@ -132,6 +132,12 @@ static void CG_Obituary( entityState_t *ent )
     case MOD_SWARM:
       message = "was hunted down by the swarm";
       break;
+    case MOD_KARMA:
+      message = "should have been a better teammate";
+      break;
+    case MOD_KARMA_P:
+      message = "couldn't stop the bleeding";
+      break;
     default:
       message = NULL;
       break;
@@ -1000,7 +1006,7 @@ void CG_CheckEvents( centity_t *cent )
     cent->previousEvent = 1;
 
     cent->currentState.event = cent->currentState.eType - ET_EVENTS;
-    
+
     // Move the pointer to the entity that the
     // event was originally attached to
     if( cent->currentState.eFlags & EF_PLAYER_EVENT )
@@ -1026,9 +1032,8 @@ void CG_CheckEvents( centity_t *cent )
   CG_SetEntitySoundPosition( cent );
 
   CG_EntityEvent( cent, cent->lerpOrigin );
-  
+
   // If this was a reattached spilled event, restore the original event
   if( oldEvent != EV_NONE )
     cent->currentState.event = oldEvent;
 }
-
