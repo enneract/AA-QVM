@@ -255,7 +255,9 @@ vmCvar_t  g_practise;
 vmCvar_t  g_tyrantNerf;
 
 vmCvar_t  g_debugRewards;
-vmCvar_t  g_sdDefenderPenalty;
+vmCvar_t  g_sdDefenderMaxPenalty;
+vmCvar_t  g_sdDefenderForgiveness;
+vmCvar_t  g_sdDefenderPenaltyIncrement;
 vmCvar_t  g_sdDestructionBonus;
 
 vmCvar_t g_disablePollVotes;
@@ -494,7 +496,9 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_tyrantNerf, "g_tyrantNerf", "0", CVAR_ARCHIVE, 0, qfalse },
 
   { &g_debugRewards, "g_debugRewards", "0", CVAR_ARCHIVE, 0, qfalse },
-  { &g_sdDefenderPenalty, "g_sdDefenderPenalty", "0", CVAR_ARCHIVE, 0, qtrue },
+  { &g_sdDefenderMaxPenalty, "g_sdDefenderMaxPenalty", "45", CVAR_ARCHIVE, 0, qtrue },
+  { &g_sdDefenderForgiveness, "g_sdDefenderForgiveness", "7", CVAR_ARCHIVE, 0, qtrue },
+  { &g_sdDefenderPenaltyIncrement, "g_sdDefenderPenaltyIncrement", "3", CVAR_ARCHIVE, 0, qfalse },
   { &g_sdDestructionBonus, "g_sdDestructionBonus", "0", CVAR_ARCHIVE, 0, qtrue },
   { &g_disablePollVotes, "g_disablePollVotes", "0", CVAR_ARCHIVE, 0, qfalse }
 };

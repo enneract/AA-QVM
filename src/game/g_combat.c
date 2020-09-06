@@ -82,8 +82,8 @@ float G_RewardFactor( gentity_t *self, gentity_t *attacker )
   if( G_TimeTilSuddenDeath( ) > 0 )
     return 1.0f;
 
-  if( attacker->client->nearBase )
-    return 1.0f - g_sdDefenderPenalty.value / 100.0f;
+  if( attacker->client->pers.campPenalty > 0 )
+    return 1.0f - attacker->client->pers.campPenalty / 100.0f;
 
   if( self->s.eType == ET_BUILDABLE )
     return 1.0f + g_sdDestructionBonus.value / 100.0f;
@@ -1228,6 +1228,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
   int     knockback = 0;
   float damagemodifier=0.0;
   int takeNoOverkill;
+  int campForgiveness = (-1 * g_sdDefenderForgiveness.integer );
 
   if( !targ->takedamage )
     return;
@@ -1546,6 +1547,17 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
         {
           level.humanStatsCounters.dmgdone+=takeNoOverkill;
         }
+      }
+
+      if( attacker->client )
+      {
+        gclient_t *aclient;
+
+        aclient = attacker->client;
+
+        if (  (aclient->ps.stats[ STAT_PTEAM ] == PTE_ALIENS && !(G_BuildableRange( aclient->ps.origin, 1100, BA_A_OVERMIND ) )) ||
+          (aclient->ps.stats[ STAT_PTEAM ] == PTE_HUMANS && !(G_BuildableRange( aclient->ps.origin, 1100, BA_H_REACTOR ) ))  )
+            attacker->client->damageOvertime += take;       //memespider: dealing damage while far away from base hastens the decrease of anticamp penalty
       }
     }
 
