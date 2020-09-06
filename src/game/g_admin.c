@@ -729,11 +729,14 @@ static qboolean admin_higher_guid( char *admin_guid, char *victim_guid )
   int i;
   int alevel = 0;
   qboolean perm = qfalse;
+  char aguid[ 33 ];
 
   for( i = 0; i < MAX_ADMIN_ADMINS && g_admin_admins[ i ]; i++ )
   {
     if( !Q_stricmp( admin_guid, g_admin_admins[ i ]->guid ) )
     {
+
+      Q_strncpyz( aguid, g_admin_admins[i]->guid, sizeof( aguid ) );
       alevel = g_admin_admins[ i ]->level;
       break;
     }
