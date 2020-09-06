@@ -441,6 +441,8 @@ typedef struct
   int                 lastTeamKillTime;      // level.time of last team kill
   int                 teamKillDemerits;      // number of team kill demerits accumulated
 
+  int                 campPenalty;           // tracks defender penalty
+
   vec3_t              lastDeathLocation;
   char                guid[ 33 ];
   char                ip[ 16 ];
@@ -575,7 +577,7 @@ struct gclient_s
 
   adminRangeBoosts_t newRange;
 
-  qboolean            nearBase;
+  int                 damageOvertime;
 };
 
 
@@ -1521,7 +1523,9 @@ extern  vmCvar_t  g_practise;
 extern  vmCvar_t  g_tyrantNerf;
 
 extern  vmCvar_t  g_debugRewards;
-extern  vmCvar_t  g_sdDefenderPenalty;
+extern  vmCvar_t  g_sdDefenderMaxPenalty;
+extern  vmCvar_t  g_sdDefenderForgiveness;
+extern  vmCvar_t  g_sdDefenderPenaltyIncrement;
 extern  vmCvar_t  g_sdDestructionBonus;
 
 void      trap_Printf( const char *fmt );
