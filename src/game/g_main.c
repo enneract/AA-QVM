@@ -242,6 +242,7 @@ vmCvar_t  g_Bubbles;
 vmCvar_t  g_scrimMode;
 vmCvar_t  g_gradualFreeFunds;
 vmCvar_t  g_bleedingSpree;
+vmCvar_t  g_bleedingKarma;
 vmCvar_t  g_schachtmeisterClearThreshold;
 vmCvar_t  g_schachtmeisterAutobahnThreshold;
 vmCvar_t  g_schachtmeisterAutobahnMessage;
@@ -475,6 +476,7 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_scrimMode, "g_scrimMode", "0", CVAR_ARCHIVE, 0, qfalse },
   { &g_gradualFreeFunds, "g_gradualFreeFunds", "2", CVAR_ARCHIVE, 0, qtrue  },
   { &g_bleedingSpree, "g_bleedingSpree", "0", CVAR_ARCHIVE, 0, qfalse  },
+  { &g_bleedingKarma, "g_bleedingKarma", "0", CVAR_ARCHIVE, 0, qtrue  },
   { &g_gradualFreeFunds, "g_gradualFreeFunds", "2", CVAR_ARCHIVE, 0, qtrue  },
   { &g_schachtmeisterClearThreshold, "g_schachtmeisterClearThreshold", "-10", CVAR_ARCHIVE, 0, qfalse },
   { &g_schachtmeisterAutobahnThreshold, "g_schachtmeisterAutobahnThreshold", "-30", CVAR_ARCHIVE, 0, qfalse },

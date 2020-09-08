@@ -57,6 +57,7 @@ g_admin_schachts_t g_admin_schachts[ ] =
     {"flaglist", "sorry, %s^7, i can't even shitpost country flags because this game doesn't support emoticons :(", NULL},
     {"help", "no one can help you now, %s^7.", NULL},
     {"invisible", "how about /disconnect, eh %s^7?", NULL},
+    {"karma", "^7%s wishes to preach about morality, yet has no soul^7.", NULL},
     {"kick", "ever tried using ^3!drop^7, %s^7?", NULL},
     {"l0", "the Overmind needs spawns, %s^7, do you have some?", NULL},
     {"l1", "the Overmind needs spawns, %s^7, do you have some?", NULL},
@@ -236,7 +237,12 @@ g_admin_cmd_t g_admin_cmds[ ] =
       "hides a player so they cannot be seen in playerlists",
       ""
     },
-    
+
+    {"karma", G_admin_karma, "karma",
+      "vastly increases a player's empathy",
+      "[^3name|slot#^7] (on|off)"
+    },
+
     {"kick", G_admin_kick, "kick",
       "kick a player with an optional reason",
       "[^3name|slot#^7] (^5reason^7)"
@@ -2599,6 +2605,7 @@ static AdminFlagListEntry_t adminFlagList[] =
   { ADMF_NO_BUILD,             "can not build" },
   { ADMF_NO_CHAT,              "can not talk" },
   { ADMF_NO_VOTE,              "can not call votes" },
+  { ADMF_KARMA,                "always receives recoil damage from friendly fire" },
   { ADMF_NOAUTOBAHN,           "ignored by the Autobahn system" }
 };
 static int adminNumFlags= sizeof( adminFlagList ) / sizeof( adminFlagList[ 0 ] );
@@ -4515,6 +4522,81 @@ qboolean G_admin_mute( gentity_t *ent, int skiparg )
   return qtrue;
 }
 
+// !karma by meme spider: mostly copypasted from !mute
+qboolean G_admin_karma( gentity_t *ent, int skiparg )
+{
+  int pids[ MAX_CLIENTS ];
+  char name[ MAX_NAME_LENGTH ], err[ MAX_STRING_CHARS ];
+  char command[ MAX_ADMIN_CMD_LEN ], *cmd;
+  gentity_t *vic;
+  char toggle[ 5 ];
+  qboolean isPunishment = qtrue;
+
+  G_SayArgv( skiparg, command, sizeof( command ) );
+  cmd = command;
+
+  if( cmd && *cmd == '!' )
+    cmd++;
+
+  if( G_SayArgc() < 2 + skiparg )
+  {
+    ADMP( va( "^3!%s: ^7usage: !%s [name|slot#] (on|off)\n", cmd, cmd ) );
+    return qfalse;
+  }
+
+  G_SayArgv( 1 + skiparg, name, sizeof( name ) );
+
+  if( G_ClientNumbersFromString( name, pids ) != 1 )
+  {
+    G_MatchOnePlayer( pids, err, sizeof( err ) );
+    ADMP( va( "^3!%s: ^7%s\n", cmd, err ) );
+    return qfalse;
+  }
+
+  if( !admin_higher( ent, &g_entities[ pids[ 0 ] ] ) )
+  {
+    ADMP( va( "^3!%s: ^7sorry, but your intended victim has a higher admin level than you\n", cmd ) );
+    return qfalse;
+  }
+  vic = &g_entities[ pids[ 0 ] ];
+
+  // Duration
+  if( G_SayArgc() > 2 + skiparg )
+  {
+    G_SayArgv( 2 + skiparg, toggle, sizeof( toggle ) );
+    if( !Q_stricmp( toggle, "off" ) ) isPunishment=qfalse;
+    else if( !Q_stricmp( toggle, "on" ) ) isPunishment=qtrue;
+    else
+    {
+      ADMP( va( "^3!%s: ^7usage: !%s [name|slot#] (on|off)\n", cmd, cmd ) );
+      return qfalse;
+    }
+  }
+
+  if(isPunishment)
+  {
+    if(vic->client->pers.hasBadKarma){
+      ADMP( va( "^3!karma: ^7already turned on for this player\n") );
+      return qfalse;
+    }
+    vic->client->pers.hasBadKarma = qtrue;
+    if(vic->client->pers.bleedDemerits < 11) vic->client->pers.bleedDemerits = 11;
+    CPx( pids[ 0 ], "cp \"^1Feel the harm you do\"" );
+    AP( va( "print \"^3!karma: ^7%s^7 has been condemned by ^7%s\n\"", vic->client->pers.netname, G_admin_adminPrintName( ent ) ) );
+  }
+  else{
+    if(!vic->client->pers.hasBadKarma){
+      ADMP( va( "^3!karma: ^7already turned off for this player\n") );
+      return qfalse;
+    }
+    vic->client->pers.hasBadKarma = qfalse;
+    vic->client->pers.bleedDemerits = 0;
+    AP( va( "print \"^3!karma: ^7%s^7 decided %s ^7has achieved redemption\n\"", G_admin_adminPrintName( ent ), vic->client->pers.netname ) );
+  }
+
+  return qtrue;
+}
+
 qboolean G_admin_cp( gentity_t *ent, int skiparg )
 {
   int minargc;
@@ -4976,7 +5058,8 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
   char n3[ MAX_NAME_LENGTH ] = {""};
   char lname[ MAX_NAME_LENGTH ];
   char lname2[ MAX_NAME_LENGTH ];
-  char muted[ 2 ], denied[ 2 ], dbuilder[ 2 ], immune[ 2 ], guidless[ 2 ];
+  char muted[ 2 ], denied[ 2 ], dbuilder[ 2 ], immune[ 2 ], guidless[ 2 ],
+       karma[ 2 ];
   int l;
   char lname_fmt[ 5 ];
 
@@ -5047,12 +5130,17 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
     {
       Q_strncpyz( denied, "W", sizeof( denied ) );
     }
+    karma[ 0 ] = '\0';
+    if( p->pers.hasBadKarma )
+    {
+      Q_strncpyz( karma, "K", sizeof( karma ) );
+    }
 
     dbuilder[ 0 ] = '\0';
     if( p->pers.designatedBuilder )
     {
       if( !G_admin_permission( &g_entities[ i ], ADMF_INCOGNITO ) &&
-          G_admin_permission( &g_entities[ i ], ADMF_DBUILDER ) && 
+          G_admin_permission( &g_entities[ i ], ADMF_DBUILDER ) &&
           G_admin_permission(ent, ADMF_SEESFULLLISTPLAYERS ) )
       {
         Q_strncpyz( dbuilder, "P", sizeof( dbuilder ) );
@@ -5119,14 +5207,15 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
     }
 
     if ( G_admin_permission(ent, ADMF_SEESFULLLISTPLAYERS ) ) {
-      ADMBP( va( "%2i %s%s^7 %-3i %s^7 ^1%1s%1s%1s%1s%1s^7 %s^7 %s%s^7%s\n",
+      ADMBP( va( "%2i %s%s^7 %-3i %s^7 ^1%1s%1s%1s%1s%1s%1s^7 %s^7 %s%s^7%s\n",
                i,
                c,
                t,
                l,
-               ( *lname ) ? lname2 : "", 
+               ( *lname ) ? lname2 : "",
                immune,
                muted,
+               karma,
                dbuilder,
                denied,
                guidless,
@@ -5136,14 +5225,15 @@ qboolean G_admin_listplayers( gentity_t *ent, int skiparg )
                ( *n ) ? ")" : ""
              ) );
     } else {
-      ADMBP( va( "%2i %s%s^7 %-3i %s^7 ^1%1s%1s%1s%1s^7 %s^7 %s%s^7%s\n",
+      ADMBP( va( "%2i %s%s^7 %-3i %s^7 ^1%s%1s%1s%1s%1s^7 %s^7 %s%s^7%s\n",
                i,
                c,
                t,
                l,
-               ( *lname ) ? lname2 : "", 
+               ( *lname ) ? lname2 : "",
                immune,
                muted,
+               karma,
                dbuilder,
                denied,
                p->pers.netname,

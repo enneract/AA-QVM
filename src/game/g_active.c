@@ -1000,6 +1000,12 @@ void ClientTimerActions( gentity_t *ent, int msec )
         client->ps.clips = 0;
       }
     }
+
+    //clear demerits off players that have not bled their team for a while
+    if( client->pers.bleedDemerits && level.time - client->pers.lastBleedTime  > 5000){
+      client->pers.bleedDemerits -= client->pers.hasBadKarma ? 4 : 6;
+      if(client->pers.bleedDemerits < 0) client->pers.bleedDemerits = 0;
+    }
   }
 }
 

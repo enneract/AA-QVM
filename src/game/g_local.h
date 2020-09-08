@@ -441,6 +441,11 @@ typedef struct
   int                 lastTeamKillTime;      // level.time of last team kill
   int                 teamKillDemerits;      // number of team kill demerits accumulated
 
+  int                 lastBleedTime;         // if player bleeds too much they'll start taking damage too
+  int                 bleedDemerits;
+  int                 bleedBuffer;
+  qboolean            hasBadKarma;           // player has karma applied to them regardless of g_bleedKarma (admin command)
+
   vec3_t              lastDeathLocation;
   char                guid[ 33 ];
   char                ip[ 16 ];
@@ -570,12 +575,14 @@ struct gclient_s
   unlagged_t          unlaggedBackup;
   unlagged_t          unlaggedCalc;
   int                 unlaggedTime;
-  
+
   int               tkcredits[ MAX_CLIENTS ];
+  int               bleedingDone;
 
   adminRangeBoosts_t newRange;
 
   qboolean            nearBase;
+  int                 damageOvertime;
 };
 
 
@@ -1511,6 +1518,7 @@ extern  vmCvar_t  g_Bubbles;
 extern  vmCvar_t  g_scrimMode;
 extern  vmCvar_t  g_gradualFreeFunds;
 extern  vmCvar_t  g_bleedingSpree;
+extern  vmCvar_t  g_bleedingKarma;
 extern  vmCvar_t  g_schachtmeisterClearThreshold;
 extern  vmCvar_t  g_schachtmeisterAutobahnThreshold;
 extern  vmCvar_t  g_schachtmeisterAutobahnMessage;

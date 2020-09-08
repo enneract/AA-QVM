@@ -142,7 +142,9 @@ char *modNames[ ] =
   "MOD_ASPAWN",
   "MOD_ATUBE",
   "MOD_OVERMIND",
-  "MOD_SLAP"
+  "MOD_SLAP",
+  "MOD_KARMA",
+  "MOD_KARMA_P"
 };
 
 /*
@@ -1556,9 +1558,65 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
           level.humanStatsCounters.dmgdone+=takeNoOverkill;
         }
       }
+
+      if( attacker->client )
+      {
+        gclient_t *aclient;
+        qboolean builder = (client->ps.stats[ STAT_PCLASS ] == PCL_ALIEN_LEVEL1_UPG) ||
+          BG_InventoryContainsUpgrade( WP_HBUILD, client->ps.stats ) || BG_InventoryContainsUpgrade( WP_HBUILD2, client->ps.stats );
+
+        aclient = attacker->client;
+
+        if ( !builder && OnSameTeam( targ, attacker ) && targ != attacker) {
+          if( g_bleedingKarma.integer || aclient->pers.hasBadKarma ) {
+            int recoilDamage = 0;
+            int dmod=MOD_KARMA;
+            float damageReflect;
+            int threshold = (client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS) ? 35 : 15;
+
+            damageReflect = aclient->pers.hasBadKarma ? (aclient->pers.bleedDemerits*0.1f+0.5f) : (aclient->pers.bleedDemerits*0.06f);
+
+            if(damageReflect >= 0.25f)
+            {
+              if(aclient->pers.bleedDemerits > 30){
+                 recoilDamage = 777;
+                 dmod=MOD_KARMA_P;
+              }
+              else recoilDamage = ceil(take * damageReflect);
+
+              attacker->health -= recoilDamage;
+              aclient->ps.stats[ STAT_HEALTH ] = attacker->health;
+              attacker->lastDamageTime = level.time;
+
+              if( attacker->health <= 0 )
+              {
+                if( aclient )
+                  attacker->flags |= FL_NO_KNOCKBACK;
+
+                if( attacker->health < -999 )
+                  attacker->health = -999;
+
+                attacker->enemy = &g_entities[ ENTITYNUM_WORLD ];
+                attacker->die( attacker, &g_entities[ ENTITYNUM_WORLD ], &g_entities[ ENTITYNUM_WORLD ], recoilDamage, dmod );
+              }
+              else if( attacker->pain )
+                attacker->pain( attacker, &g_entities[ ENTITYNUM_WORLD ], recoilDamage );
+            }
+
+            aclient->pers.bleedBuffer += damage;
+            while (aclient->pers.bleedBuffer > threshold) {
+              if(aclient->pers.bleedDemerits <41 ) aclient->pers.bleedDemerits++;
+              aclient->pers.bleedBuffer -= threshold;
+            }
+            aclient->pers.lastBleedTime = level.time;
+          }
+        }
+        else if (  (aclient->ps.stats[ STAT_PTEAM ] == PTE_ALIENS && !(G_BuildableRange( aclient->ps.origin, 1100, BA_A_OVERMIND ) )) ||
+          (aclient->ps.stats[ STAT_PTEAM ] == PTE_HUMANS && !(G_BuildableRange( aclient->ps.origin, 1100, BA_H_REACTOR ) ))  )
+            attacker->client->damageOvertime += take;       //memespider: dealing damage while far away from base hastens the decrease of anticamp penalty
+      }
     }
 
-    
     //Do the damage
     targ->health = targ->health - take;
 

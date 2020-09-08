@@ -1705,6 +1705,10 @@ void ClientBegin( int clientNum )
     if( G_admin_permission( ent, ADMF_NO_CHAT ) )
       client->pers.muted = qtrue;
 
+    // auto
+    if( G_admin_permission( ent, ADMF_KARMA ) )
+        client->pers.hasBadKarma = qtrue;
+
     // name can change between ClientConnect() and ClientBegin()
     G_admin_namelog_update( client, qfalse );
 
