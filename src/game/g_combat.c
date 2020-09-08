@@ -1036,24 +1036,11 @@ static float G_CalcDamageModifier( vec3_t point, gentity_t *targ, gentity_t *att
 
   if( dflags & DAMAGE_NO_LOCDAMAGE )
   {
-    for( i = UP_NONE + 1; i < UP_NUM_UPGRADES; i++ )
+    if( BG_InventoryContainsUpgrade( UP_BATTLESUIT, targ->client->ps.stats ) ) modifier -= BSUIT_NL_AVERAGE;
+    else
     {
-      float totalModifier = 0.0f;
-      float averageModifier = 1.0f;
-
-      //average all of this upgrade's armour regions together
-      if( BG_InventoryContainsUpgrade( i, targ->client->ps.stats ) )
-      {
-        for( j = 0; j < g_numArmourRegions[ i ]; j++ )
-          totalModifier += g_armourRegions[ i ][ j ].modifier;
-
-        if( g_numArmourRegions[ i ] )
-          averageModifier = totalModifier / g_numArmourRegions[ i ];
-        else
-          averageModifier = 1.0f;
-      }
-
-      modifier *= averageModifier;
+      if( BG_InventoryContainsUpgrade( UP_HELMET, targ->client->ps.stats ) ) modifier -= HELMET_NL_AVERAGE;
+      if( BG_InventoryContainsUpgrade( UP_LIGHTARMOUR, targ->client->ps.stats ) ) modifier -= LIGHTARMOUR_NL_AVERAGE;
     }
   }
   else
@@ -1461,9 +1448,12 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
     // set the last client who damaged the target
     targ->client->lasthurt_client = attacker->s.number;
     targ->client->lasthurt_mod = mod;
-    
-    damagemodifier = G_CalcDamageModifier( point, targ, attacker, client->ps.stats[ STAT_PCLASS ], dflags );
-    take = (int)( (float)take * damagemodifier );
+
+    if(! ( dflags & DAMAGE_NO_MOD ) )
+    {
+      damagemodifier = G_CalcDamageModifier( point, targ, attacker, client->ps.stats[ STAT_PCLASS ], dflags );
+      take = (int)( (float)take * damagemodifier );
+    }
 
     //if boosted poison every attack
     if( attacker->client && attacker->client->ps.stats[ STAT_STATE ] & SS_BOOSTED )
@@ -1786,6 +1776,8 @@ qboolean G_RadiusDamage( vec3_t origin, gentity_t *attacker, float damage,
       // push the center of mass higher than the origin so players
       // get knocked into the air more
       dir[ 2 ] += 24;
+      if( ent == attacker->parent || mod == MOD_LCANNON_SPLASH )
+        points *= 0.75f; //memespider: deflating how much damage lcannon overcharge does to the user once non-locational damage is fixor'd
       G_Damage( ent, NULL, attacker, dir, origin,
           (int)points, DAMAGE_RADIUS|DAMAGE_NO_LOCDAMAGE|dflags, mod );
     }
