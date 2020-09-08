@@ -1828,7 +1828,7 @@ classAttributes_t bg_classList[ ] =
     80,                                             //int     steptime;
     LEVEL2_UPG_SPEED,                               //float   speed;
     10.0f,                                          //float   acceleration;
-    2.0f,                                           //float   airAcceleration;
+    LEVEL2_AIR_ACCEL,                               //float   airAcceleration;
     6.0f,                                           //float   friction;
     100.0f,                                         //float   stopSpeed;
     400.0f,                                         //float   jumpMagnitude;

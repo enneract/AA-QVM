@@ -572,11 +572,13 @@ PM_CheckWallJump
 */
 static qboolean PM_CheckWallJump( void )
 {
-  vec3_t  dir, forward, right;
+  vec3_t  dir, dircp, forward, right;
   vec3_t  refNormal = { 0.0f, 0.0f, 1.0f };
   float   normalFraction = 1.5f;
   float   cmdFraction = 1.0f;
   float   upFraction = 1.5f;
+  float   speedModulus;
+  int     storedVert;
 
   if( pm->ps->pm_flags & PMF_RESPAWNED )
     return qfalse;    // don't allow jump until all buttons are up
@@ -606,6 +608,13 @@ static qboolean PM_CheckWallJump( void )
 
   pm->ps->groundEntityNum = ENTITYNUM_NONE;
 
+  // this prevents mara from bouncing itself into low earth orbit off some walls
+  if( pm->ps->grapplePoint [2] > 0 && pm->ps->grapplePoint [2] < LEVEL2_WALLJUMP_MAXNRM ){
+    upFraction *= 1 - pm->ps->grapplePoint [2];
+    pm->ps->grapplePoint [2] *= -0.25f;
+    VectorNormalize(pm->ps->grapplePoint);
+  }
+
   ProjectPointOnPlane( forward, pml.forward, pm->ps->grapplePoint );
   ProjectPointOnPlane( right, pml.right, pm->ps->grapplePoint );
 
@@ -625,14 +634,20 @@ static qboolean PM_CheckWallJump( void )
   VectorNormalize( dir );
 
   VectorMA( pm->ps->velocity, BG_FindJumpMagnitudeForClass( pm->ps->stats[ STAT_PCLASS ] ),
-            dir, pm->ps->velocity );
+    dir, dircp );
+  storedVert = dircp[2];
+  dircp[2] = 0;
 
   //for a long run of wall jumps the velocity can get pretty large, this caps it
-  if( VectorLength( pm->ps->velocity ) > LEVEL2_WALLJUMP_MAXSPEED )
+  speedModulus = VectorLength( dircp );
+  if( speedModulus > LEVEL2_WALLJUMP_MAXSPEED && DotProduct(pm->ps->velocity,dircp) > 0 )
   {
-    VectorNormalize( pm->ps->velocity );
-    VectorScale( pm->ps->velocity, LEVEL2_WALLJUMP_MAXSPEED, pm->ps->velocity );
+    float speedFac = 0.001f + pow( LEVEL2_WALLJUMP_OVERCAPEXP, (LEVEL2_WALLJUMP_MAXSPEED - speedModulus) / LEVEL2_WALLJUMP_OVERCAPSCL );
+    VectorScale( dir, speedFac, dir );
   }
+  VectorMA( pm->ps->velocity, BG_FindJumpMagnitudeForClass( pm->ps->stats[ STAT_PCLASS ] ),
+            dir, pm->ps->velocity );
+  pm->ps->velocity[2] = storedVert;
 
   PM_AddEvent( EV_JUMP );
 
@@ -2087,7 +2102,7 @@ static void PM_GroundTrace( void )
   VectorCopy( refNormal, pm->ps->grapplePoint );
 
   // if the trace didn't hit anything, we are in free fall
-  if( trace.fraction == 1.0f )
+  if( trace.fraction == 1.0f || trace.plane.normal[ 2 ] < LEVEL2_WALLJUMP_MAXNRM )
   {
     qboolean  steppedDown = qfalse;
 

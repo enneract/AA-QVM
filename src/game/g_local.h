@@ -1087,7 +1087,9 @@ typedef struct zap_s
   int           numTargets;
 
   int           timeToLive;
-  int           damageUsed;
+  float         damageUsed;
+  //memespider: prevent damage from being dealt too quickly if there's too many targets, store decimals in here
+  float         damageBuffer[ MAX_ZAP_TARGETS ];
 
   gentity_t     *effectChannel;
 } zap_t;
