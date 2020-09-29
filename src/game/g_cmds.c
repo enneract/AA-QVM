@@ -1931,6 +1931,11 @@ void Cmd_CallVote_f( gentity_t *ent )
   }
    else if( !Q_stricmp( arg1, "poll" ) )
     {
+      if( g_disablePollVotes.integer )
+      {
+        trap_SendServerCommand( ent-g_entities, "print \"callvote: Poll votes are currently disabled.\n\"" );
+        return;
+      }
       if( arg2plus[ 0 ] == '\0' )
       {
         trap_SendServerCommand( ent-g_entities, "print \"callvote: You forgot to specify what people should vote on.\n\"" );

@@ -1519,6 +1519,7 @@ extern  vmCvar_t  g_maxGhosts;
 extern  vmCvar_t  g_specNoclip;
 extern  vmCvar_t  g_practise;
 extern  vmCvar_t  g_tyrantNerf;
+extern  vmCvar_t  g_disablePollVotes;
 
 extern  vmCvar_t  g_debugRewards;
 extern  vmCvar_t  g_sdDefenderPenalty;

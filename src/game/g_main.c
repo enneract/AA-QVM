@@ -255,6 +255,8 @@ vmCvar_t  g_debugRewards;
 vmCvar_t  g_sdDefenderPenalty;
 vmCvar_t  g_sdDestructionBonus;
 
+vmCvar_t g_disablePollVotes;
+
 static cvarTable_t   gameCvarTable[ ] =
 {
   // don't override the cheat state set by the system
@@ -488,6 +490,7 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_debugRewards, "g_debugRewards", "0", CVAR_ARCHIVE, 0, qfalse },
   { &g_sdDefenderPenalty, "g_sdDefenderPenalty", "0", CVAR_ARCHIVE, 0, qtrue },
   { &g_sdDestructionBonus, "g_sdDestructionBonus", "0", CVAR_ARCHIVE, 0, qtrue },
+  { &g_disablePollVotes, "g_disablePollVotes", "0", CVAR_ARCHIVE, 0, qfalse }
 };
 
 static int gameCvarTableSize = sizeof( gameCvarTable ) / sizeof( gameCvarTable[ 0 ] );
