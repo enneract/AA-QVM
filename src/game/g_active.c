@@ -1935,8 +1935,8 @@ void ClientThink_real( gentity_t *ent )
   {
     if( client->pers.teamSelection == PTE_ALIENS )
     {
-      if( client->pers.credit < 9 )
-        G_AddCreditToClient( client, 9, qtrue );
+      if( client->pers.credit < EVOS(9) )
+        G_AddCreditToClient( client, EVOS(9), qtrue );
     }
     if( client->pers.teamSelection == PTE_HUMANS )
     {
