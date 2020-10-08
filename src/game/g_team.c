@@ -439,7 +439,7 @@ void G_ShuffleTeams( void )
     if( !ent->client )
       continue;
 
-    if( ent->client->ps.stats[ STAT_PTEAM ] == PTE_NONE )
+    if( ent->client->pers.teamSelection == PTE_NONE )
       continue;
 
     players[ numPlayers++ ] = ent;
