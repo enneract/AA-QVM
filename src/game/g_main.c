@@ -93,6 +93,7 @@ vmCvar_t  g_extendVotesPercent;
 vmCvar_t  g_extendVotesTime;
 vmCvar_t  g_extendVotesCount;
 vmCvar_t  g_kickVotesPercent;
+vmCvar_t  g_shuffleVotesPercent;
 vmCvar_t  g_customVote1;
 vmCvar_t  g_customVote2;
 vmCvar_t  g_customVote3;
@@ -346,6 +347,7 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_suddenDeathExtensionPercent, "g_suddenDeathExtensionPercent", "74", CVAR_ARCHIVE, 0, qtrue },
   { &g_suddenDeathExtensionTime, "g_suddenDeathExtensionTime", "5", CVAR_ARCHIVE, 0, qtrue },
   { &g_kickVotesPercent, "g_kickVotesPercent", "50", CVAR_ARCHIVE, 0, qfalse },
+  { &g_shuffleVotesPercent, "g_shuffleVotesPercent", "50", CVAR_ARCHIVE, 0, qfalse },
   { &g_customVote1, "g_customVote1", "", CVAR_ARCHIVE, 0, qfalse  },
   { &g_customVote2, "g_customVote2", "", CVAR_ARCHIVE, 0, qfalse  },
   { &g_customVote3, "g_customVote3", "", CVAR_ARCHIVE, 0, qfalse  },
@@ -1379,10 +1381,6 @@ void G_CalculateBuildPoints( void )
       if( level.suddenDeathWarning < TW_PASSED )
       {
         trap_SendServerCommand( -1, "cp \"Sudden Death!\"" );
-
-        if ( !Q_stricmp( level.voteString, "delay_sudden_death" ) )
-          trap_SendConsoleCommand( EXEC_APPEND, "!cancelvote" );
-
         G_LogPrintf("Beginning Sudden Death (Mode %d)\n",g_suddenDeathMode.integer);
         localHTP = 0;
         localATP = 0;
@@ -2588,6 +2586,14 @@ void CheckVote( void )
                                         level.suddenDeathBeginTime / 60000 ) );
       }
     }
+
+    if( !Q_stricmp( level.voteString, "shuffle" ) )
+    {
+      G_ShuffleTeams( );
+      level.voteString[0] = '\0';
+      trap_SendServerCommand( -1, "cp \"Teams have been shuffled!\n\"" );
+    }
+
 
     if( level.voteString[0] )
       trap_SendConsoleCommand( EXEC_APPEND, va( "%s\n", level.voteString ) );

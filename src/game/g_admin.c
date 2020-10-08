@@ -112,6 +112,7 @@ g_admin_schachts_t g_admin_schachts[ ] =
     {"practise", "get gud, %s^7.", NULL},
     {"switch", "%s^7, ^3!switch^7 functionality not invented yet.", NULL},
     {"spawn", "%s^7, ^7reproduce.", NULL},
+    {"shuffle", "%s^7: ^2As I lay there listening to the strange night sounds, I hear the shuffle of someone creeping by outside in the grass.", NULL},
   };
 
 g_admin_cmd_t g_admin_cmds[ ] = 
@@ -539,6 +540,11 @@ g_admin_cmd_t g_admin_cmds[ ] =
     {"spawn", G_admin_spawn, "spawn",
       "Spawn a buildable",
       "^7name"
+    },
+
+    {"shuffle", G_admin_shuffle, "shuffle",
+      "Reassign players to teams on a random basis."
+      ""
     },
   };
 
@@ -3708,7 +3714,7 @@ qboolean G_admin_putteam( gentity_t *ent, int skiparg )
   if( useDuration == qtrue && seconds > 0 ) {
     vic->client->pers.specExpires = level.time + ( seconds * 1000 );
   }
-  G_ChangeTeam( vic, teamnum );
+  G_ChangeTeam( vic, teamnum, qfalse );
 
   AP( va( "print \"^3!putteam: ^7%s^7 put %s^7 on to the %s team%s\n\"",
           G_admin_adminPrintName( ent ),
@@ -6151,7 +6157,7 @@ qboolean G_admin_spec999( gentity_t *ent, int skiparg )
       continue;
     if( vic->client->ps.ping == 999 )
     {
-      G_ChangeTeam( vic, PTE_NONE );
+      G_ChangeTeam( vic, PTE_NONE, qfalse );
       AP( va( "print \"^3!spec999: ^7%s^7 moved ^7%s^7 to spectators\n\"",
         G_admin_adminPrintName( ent ), 
         vic->client->pers.netname ) );
@@ -6822,7 +6828,7 @@ qboolean G_admin_putmespec( gentity_t *ent, int skiparg )
     return qfalse;
   }
   
-  G_ChangeTeam( ent, PTE_NONE );
+  G_ChangeTeam( ent, PTE_NONE, qfalse );
   AP( va("print \"^3!specme: ^7%s^7 decided to join the spectators\n\"", ent->client->pers.netname ) );
   return qtrue;
 }
@@ -7743,7 +7749,7 @@ qboolean G_admin_invisible( gentity_t *ent, int skiparg )
   if ( ent->client->sess.invisible != qtrue )
   {
     // Make the player invisible
-    G_ChangeTeam( ent, PTE_NONE );
+    G_ChangeTeam( ent, PTE_NONE, qfalse );
     ent->client->sess.invisible = qtrue;
     ClientUserinfoChanged( ent-g_entities, qfalse );
     G_admin_namelog_update( ent->client, qtrue );
@@ -8991,5 +8997,13 @@ qboolean G_admin_spawn( gentity_t *ent, int skiparg )
   AP( va( "print \"^3!spawn: ^7buildable ^3%s^7 spawned by %s^7 at location ^3%.0f %.0f %.0f^7\n", 
     BG_FindHumanNameForBuildable( buildable ), G_admin_adminPrintName( ent ), entityOrigin[0], entityOrigin[1], entityOrigin[2] ) );
   G_InstantBuild( buildable, entityOrigin, angles, normal, angles );
+  return qtrue;
+}
+
+qboolean G_admin_shuffle( gentity_t *ent, int skiparg )
+{
+  G_ShuffleTeams( );  
+  AP( va( "print \"^3!shuffle: ^7teams have been shuffled by %s^7\n\"",
+           G_admin_adminPrintName( ent ) ) );  
   return qtrue;
 }

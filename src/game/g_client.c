@@ -1639,7 +1639,7 @@ const char *ClientConnect( int clientNum, qboolean firstTime )
 
   // if this is after !restart keepteams or !restart switchteams, apply said selection
   if ( client->sess.restartTeam != PTE_NONE ) {
-    G_ChangeTeam( ent, client->sess.restartTeam );
+    G_ChangeTeam( ent, client->sess.restartTeam, qfalse );
     client->sess.restartTeam = PTE_NONE;
   }
 

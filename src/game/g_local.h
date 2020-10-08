@@ -877,8 +877,6 @@ qboolean  G_SayArgv( int n, char *buffer, int bufferLength );
 char      *G_SayConcatArgs( int start );
 void      G_DecolorString( char *in, char *out );
 void      G_ParseEscapedString( char *buffer );
-void      G_LeaveTeam( gentity_t *self );
-void      G_ChangeTeam( gentity_t *ent, pTeam_t newTeam );
 void      G_SanitiseString( char *in, char *out, int len );
 void      G_PrivateMessage( gentity_t *ent );
 char      *G_statsString( statsCounters_t *sc, pTeam_t *pt );
@@ -1193,6 +1191,9 @@ gentity_t *Team_GetLocation( gentity_t *ent );
 qboolean  Team_GetLocationMsg( gentity_t *ent, char *loc, int loclen );
 void      TeamplayInfoMessage( gentity_t *ent );
 void      CheckTeamStatus( void );
+void      G_LeaveTeam( gentity_t *self );
+void      G_ChangeTeam( gentity_t *ent, pTeam_t newTeam, qboolean keepScores );
+void      G_ShuffleTeams( void );
 
 //
 // g_mem.c
@@ -1367,6 +1368,7 @@ extern  vmCvar_t  g_extendVotesPercent;
 extern  vmCvar_t  g_extendVotesTime;
 extern  vmCvar_t  g_extendVotesCount;
 extern  vmCvar_t  g_kickVotesPercent;
+extern  vmCvar_t  g_shuffleVotesPercent;
 extern  vmCvar_t  g_customVote1;
 extern  vmCvar_t  g_customVote2;
 extern  vmCvar_t  g_customVote3;
