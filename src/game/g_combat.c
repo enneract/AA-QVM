@@ -256,6 +256,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
     G_LogOnlyPrintf("%s^7 was killed by ^1TEAMMATE^7 %s^7 (Did %d damage to %d max)\n",
       self->client->pers.netname, attacker->client->pers.netname, self->client->tkcredits[ attacker->s.number ], self->client->ps.stats[ STAT_MAX_HEALTH ] );
     G_TeamKill_Repent( attacker );
+    G_admin_tklog_log( attacker, self, meansOfDeath );
   }
 
   self->enemy = attacker;

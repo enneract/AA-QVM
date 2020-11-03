@@ -8576,18 +8576,19 @@ qboolean G_admin_tklog( gentity_t *ent, int skiparg )
     Com_sprintf( n1, sizeof( n1 ), fmt_name, results[ i ]->name );
 
     if( results[ i ]->team == PTE_HUMANS )
-      weaponName = BG_FindNameForWeapon( results[ i ]->weapon );
+      weaponName = BG_FindHumanNameForWeapon( results[ i ]->weapon );
     else
-      weaponName = BG_FindNameForClassNum( results[ i ]->weapon );
+      weaponName = BG_FindHumanNameForClassNum( results[ i ]->weapon );
 
-    ADMBP( va( "^7%3d %3d:%02d %s^7 %3d / %3d %10s %s^7\n",
+     ADMBP( va( "^3%3d %3d:%02d ^7%s^7 tk'd %s^7\n"
+             "              with ^3%s^7 for ^3%d^7/^3%d^7 health.\n",
       results[ i ]->id,
       t / 60, t % 60,
       n1,
-      results[ i ]->damage,
-      results[ i ]->value,
+      results[ i ]->victim,
       weaponName,
-      results[ i ]->victim ) );
+      results[ i ]->damage,
+      results[ i ]->value ) );
   }
   if( search_name )
   {
