@@ -1975,6 +1975,31 @@ void Cmd_CallVote_f( gentity_t *ent )
 
     }
   }
+  else if( !Q_stricmp( arg1, "delay_sudden_death" ) || !Q_stricmp( arg1, "delaysd" ) )
+  {
+    if(!g_suddenDeathExtensionTime.integer || !g_suddenDeathExtensionPercent.integer)
+    {
+      trap_SendServerCommand( ent-g_entities, "print \"Sudden Death extension votes have been disabled\n\"" );
+      return;
+    } 
+    else if( g_suddenDeath.integer ) 
+    {
+      trap_SendServerCommand( ent - g_entities, va( "print \"callvote: Sudden Death has already begun\n\"") );
+      return;
+    }
+    else if( G_TimeTilSuddenDeath() >= g_suddenDeathExtensionTime.integer * 60000 )
+    {
+      trap_SendServerCommand( ent - g_entities, va( "print \"callvote: Wait until Sudden Death is close...\n\"") );
+      return;
+    }
+    else 
+    {
+      level.votePassThreshold = g_suddenDeathExtensionPercent.integer;
+      Com_sprintf( level.voteString, sizeof( level.voteString ), "delay_sudden_death" );
+      Com_sprintf( level.voteDisplayString,
+          sizeof( level.voteDisplayString ), "Delay sudden death by %i minutes", g_suddenDeathExtensionTime.integer );
+    }
+  }
   else if( !Q_stricmp( arg1, "extend" ) )
   {
     if( !g_extendVotesPercent.integer )
@@ -2108,7 +2133,7 @@ void Cmd_CallVote_f( gentity_t *ent )
     {
       trap_SendServerCommand( ent-g_entities, "print \"Invalid vote string\n\"" );
       trap_SendServerCommand( ent-g_entities, "print \"Valid vote commands are: "
-        "map, map_restart, draw, extend, nextmap, kick, spec, mute, unmute, poll, and sudden_death\n" );
+        "map, map_restart, draw, extend, nextmap, kick, spec, mute, unmute, poll, sudden_death, and delay_sudden_death (or delaysd)\n" );
       if( customVoteKeys[ 0 ] != '\0' )
         trap_SendServerCommand( ent-g_entities,
           va( "print \"Additional custom vote commands: %s\n\"", customVoteKeys ) );

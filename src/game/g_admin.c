@@ -2150,18 +2150,18 @@ qboolean G_admin_time( gentity_t *ent, int skiparg )
 
   if( g_suddenDeathTime.integer > 0 && !g_suddenDeath.integer )
   {
-    ADMP( va( "^3!time: ^7sudden death will be at ^3%i:00^7, in about ^3%i ^7minutes\n", 
-      g_suddenDeathTime.integer, G_TimeTilSuddenDeath( ) / 60000 ) );
+    ADMP( va( "^3!time: ^7sudden death will be at ^3%02i:00^7, in about ^3%i ^7minutes\n", 
+      level.suddenDeathBeginTime / 60000, G_TimeTilSuddenDeath( ) / 60000 ) );
   }
   else if( g_suddenDeathTime.integer && g_suddenDeath.integer )
   {
-    ADMP( va( "^3!time: ^7sudden death started at ^3%i:00^7\n", 
-      g_suddenDeathTime.integer ) );
+    ADMP( va( "^3!time: ^7sudden death started at ^3%02i:00^7\n", 
+      level.suddenDeathBeginTime ) );
   }
 
   if( g_timelimit.integer > 0)
   {
-    ADMP( va( "^3!time: ^7timelimit is at ^3%i:00^7\n", 
+    ADMP( va( "^3!time: ^7timelimit is at ^3%02i:00^7\n", 
       g_timelimit.integer ) );
   }
     

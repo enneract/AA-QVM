@@ -1361,6 +1361,8 @@ extern  vmCvar_t  g_requireVoteReasons;
 extern  vmCvar_t  g_voteLimit;
 extern  vmCvar_t  g_suddenDeathVotePercent;
 extern  vmCvar_t  g_suddenDeathVoteDelay;
+extern  vmCvar_t  g_suddenDeathExtensionPercent;
+extern  vmCvar_t  g_suddenDeathExtensionTime;
 extern  vmCvar_t  g_extendVotesPercent;
 extern  vmCvar_t  g_extendVotesTime;
 extern  vmCvar_t  g_extendVotesCount;
