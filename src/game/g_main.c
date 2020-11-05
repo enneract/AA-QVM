@@ -2592,6 +2592,7 @@ void CheckVote( void )
     if( !Q_stricmp( level.voteString, "map_restart" ) ||
         !Q_stricmpn( level.voteString, "map", 3 ) )
     {
+      trap_SendConsoleCommand( EXEC_APPEND, va( "%s\n", level.voteString ) );
       level.restarted = qtrue;
     }
   }
