@@ -1379,6 +1379,10 @@ void G_CalculateBuildPoints( void )
       if( level.suddenDeathWarning < TW_PASSED )
       {
         trap_SendServerCommand( -1, "cp \"Sudden Death!\"" );
+
+        if ( !Q_stricmp( level.voteString, "delay_sudden_death" ) )
+          trap_SendConsoleCommand( EXEC_APPEND, "!cancelvote" );
+
         G_LogPrintf("Beginning Sudden Death (Mode %d)\n",g_suddenDeathMode.integer);
         localHTP = 0;
         localATP = 0;
@@ -2564,20 +2568,26 @@ void CheckVote( void )
 
     if( !Q_stricmp( level.voteString, "delay_sudden_death" ) )
     {
-      level.suddenDeathBeginTime = level.suddenDeathBeginTime + ( 60000 * g_suddenDeathExtensionTime.integer );
-
       level.voteString[0] = '\0';
 
-      trap_SendServerCommand( -1, va("cp \"Sudden Death has been delayed by ^3%i^7 minutes\n"
-                                      "and will now be at ^3%02i:00^7\n\"",
-                                      g_suddenDeathExtensionTime.integer,
-                                      level.suddenDeathBeginTime / 60000 ) );
-      trap_SendServerCommand( -1, va("print \"Sudden Death has been delayed by ^3%i^7 minutes "
-                                      "and will now be at ^3%02i:00^7\n\"",
-                                      g_suddenDeathExtensionTime.integer,
-                                      level.suddenDeathBeginTime / 60000 ) );    }
-    if( level.voteString[0] )
-      trap_SendConsoleCommand( EXEC_APPEND, va( "%s\n", level.voteString ) );
+      if ( level.suddenDeath )
+      {
+        trap_SendServerCommand( -1, "print \"^ASudden Death has now begun so this vote is null and void.\n" );
+      }
+      else
+      {
+        level.suddenDeathBeginTime = level.suddenDeathBeginTime + ( 60000 * g_suddenDeathExtensionTime.integer );
+
+        trap_SendServerCommand( -1, va("cp \"Sudden Death has been delayed by ^3%i^7 minutes\n"
+                                        "and will now be at ^3%02i:00^7\n\"",
+                                        g_suddenDeathExtensionTime.integer,
+                                        level.suddenDeathBeginTime / 60000 ) );
+        trap_SendServerCommand( -1, va("print \"Sudden Death has been delayed by ^3%i^7 minutes "
+                                        "and will now be at ^3%02i:00^7\n\"",
+                                        g_suddenDeathExtensionTime.integer,
+                                        level.suddenDeathBeginTime / 60000 ) );
+      }
+    }
 
     if( !Q_stricmp( level.voteString, "map_restart" ) ||
         !Q_stricmpn( level.voteString, "map", 3 ) )
