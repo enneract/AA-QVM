@@ -2156,10 +2156,10 @@ qboolean G_admin_time( gentity_t *ent, int skiparg )
   else if( g_suddenDeathTime.integer && g_suddenDeath.integer )
   {
     ADMP( va( "^3!time: ^7sudden death started at ^3%02i:00^7\n", 
-      level.suddenDeathBeginTime ) );
+      level.suddenDeathBeginTime / 60000 ) );
   }
 
-  if( g_timelimit.integer > 0)
+  if( g_timelimit.integer > 0 )
   {
     ADMP( va( "^3!time: ^7timelimit is at ^3%02i:00^7\n", 
       g_timelimit.integer ) );
