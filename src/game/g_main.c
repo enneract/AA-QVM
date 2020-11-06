@@ -2589,10 +2589,12 @@ void CheckVote( void )
       }
     }
 
+    if( level.voteString[0] )
+      trap_SendConsoleCommand( EXEC_APPEND, va( "%s\n", level.voteString ) );
+
     if( !Q_stricmp( level.voteString, "map_restart" ) ||
         !Q_stricmpn( level.voteString, "map", 3 ) )
     {
-      trap_SendConsoleCommand( EXEC_APPEND, va( "%s\n", level.voteString ) );
       level.restarted = qtrue;
     }
   }
