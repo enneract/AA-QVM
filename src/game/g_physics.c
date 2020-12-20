@@ -45,8 +45,8 @@ static void G_Bounce( gentity_t *ent, trace_t *trace )
 
   if( ent->s.eType == ET_BUILDABLE )
   {
-    minNormal = BG_FindMinNormalForBuildable( ent->s.modelindex );
-    invert = BG_FindInvertNormalForBuildable( ent->s.modelindex );
+    minNormal = g_stackableBuildings.integer ? 0.0f : BG_FindMinNormalForBuildable( ent->s.modelindex );
+    invert = g_stackableBuildings.integer ? qtrue : BG_FindInvertNormalForBuildable( ent->s.modelindex );
   }
   else
     minNormal = 0.707f;

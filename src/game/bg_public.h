@@ -1326,4 +1326,3 @@ void BG_ClientListParse( clientList_t *list, const char *s );
 #define FFF_HUMANS         1
 #define FFF_ALIENS         2
 #define FFF_BUILDABLES     4
-
