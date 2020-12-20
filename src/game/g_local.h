@@ -1427,6 +1427,7 @@ extern  vmCvar_t  g_disabledBuildables;
 extern  vmCvar_t  g_markDeconstruct;
 extern  vmCvar_t  g_markDeconstructMode;
 extern  vmCvar_t  g_deconDead;
+extern  vmCvar_t  g_stackableBuildings;
 extern  vmCvar_t  g_guidlessBuildersAllowed;
 
 extern  vmCvar_t  g_debugMapRotation;
