@@ -3422,7 +3422,8 @@ itemBuildError_t G_CanBuild( gentity_t *ent, buildable_t buildable, int distance
   itemBuildError_t  tempReason;
 
   // Stop all buildables from interacting with traces
-  G_SetBuildableLinkState( qfalse );
+  if ( !g_stackableBuildings.integer )
+    G_SetBuildableLinkState( qfalse );
 
   BG_FindBBoxForBuildable( buildable, mins, maxs );
 
@@ -3437,12 +3438,15 @@ itemBuildError_t G_CanBuild( gentity_t *ent, buildable_t buildable, int distance
   minNormal = BG_FindMinNormalForBuildable( buildable );
   invert = BG_FindInvertNormalForBuildable( buildable );
 
-  //can we build at this angle?
-  if( !( normal[ 2 ] >= minNormal || ( invert && normal[ 2 ] <= -minNormal ) ) )
-    reason = IBE_NORMAL;
+  if( !g_stackableBuildings.integer )
+  {
+    //can we build at this angle?
+    if( !( normal[ 2 ] >= minNormal || ( invert && normal[ 2 ] <= -minNormal ) ) )
+      reason = IBE_NORMAL;
 
-  if( tr1.entityNum != ENTITYNUM_WORLD )
-    reason = IBE_NORMAL;
+    if( tr1.entityNum != ENTITYNUM_WORLD )
+      reason = IBE_NORMAL;
+  }
 
   contents = trap_PointContents( entity_origin, -1 );
   
@@ -3613,7 +3617,8 @@ itemBuildError_t G_CanBuild( gentity_t *ent, buildable_t buildable, int distance
     reason = tempReason;
 
   // Relink buildables
-  G_SetBuildableLinkState( qtrue );
+  if ( !g_stackableBuildings.integer )
+    G_SetBuildableLinkState( qtrue );
 
   //check there is enough room to spawn from (presuming this is a spawn)
   if( reason == IBE_NONE )
