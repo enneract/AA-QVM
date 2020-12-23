@@ -262,6 +262,8 @@ struct gentity_s
   
   // For nobuild!
   noBuild_t	    noBuild;
+
+  int               razorchristActive;
 };
 
 typedef enum
@@ -1322,6 +1324,12 @@ void                G_UpdatePTRConnection( gclient_t *client );
 connectionRecord_t  *G_GenerateNewConnection( gclient_t *client );
 void                G_ResetPTRConnections( void );
 connectionRecord_t  *G_FindConnectionForCode( int code );
+
+
+// g_shitpost.c
+void G_RunRazorchrist( gentity_t *ent, int msec );
+void G_AddRazorchristCandidate( gentity_t *src, vec3_t origin );
+void G_CheckSpawnRazorchrists( void );
 
 
 //some maxs

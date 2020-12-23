@@ -1084,6 +1084,7 @@ GOBJ_ = \
   $(B)/game/g_ptr.o \
   $(B)/game/g_weapon.o \
   $(B)/game/g_admin.o \
+  $(B)/game/g_shitpost.o \
   \
   $(B)/qcommon/q_math.o \
   $(B)/qcommon/q_shared.o

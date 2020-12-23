@@ -3036,6 +3036,12 @@ void G_RunFrame( int levelTime )
       continue;
     }
 
+    if( ent->s.eType == ET_RAZORCHRIST )
+    {
+      G_RunRazorchrist( ent, msec );
+      continue;
+    }
+
     if( i < MAX_CLIENTS )
     {
       G_RunClient( ent );
@@ -3091,5 +3097,7 @@ void G_RunFrame( int levelTime )
 
     trap_Cvar_Set( "g_listEntity", "0" );
   }
+
+  G_CheckSpawnRazorchrists( );
 }
 

@@ -135,6 +135,9 @@ static void CG_Obituary( entityState_t *ent )
     case MOD_CORONAVIRUS:
       message = "died of viral lung infection";
       break;
+    case MOD_RAZORCHRIST:
+      message = "was hacked into pieces";
+      break;
     default:
       message = NULL;
       break;

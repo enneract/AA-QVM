@@ -1281,6 +1281,9 @@ typedef struct
   qhandle_t   upgradeClassIconShader;
 
   sfxHandle_t coughingSounds[ NUM_COUGHING_SOUNDS ];
+
+  qhandle_t   razorchristModel;
+  sfxHandle_t razorchristNoise;
 } cgMedia_t;
 
 typedef struct

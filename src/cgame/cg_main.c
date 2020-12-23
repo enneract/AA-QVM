@@ -963,6 +963,8 @@ static void CG_RegisterSounds( void )
 
   for( i = 0; i < NUM_COUGHING_SOUNDS; i++ )
     cgs.media.coughingSounds[ i ] = trap_S_RegisterSound( va( "sound/player/cough%d.wav", i ), qfalse );
+
+  cgs.media.razorchristNoise = trap_S_RegisterSound( "sound/zittrig/razorchrist.wav", qfalse );
 }
 
 
@@ -1131,6 +1133,8 @@ static void CG_RegisterGraphics( void )
 
     cgs.gameParticleSystems[ i ] = CG_RegisterParticleSystem( (char *)psName );
   }
+
+  cgs.media.razorchristModel = trap_R_RegisterModel( "models/zittrig/razorchrist/xmasred.md3" );
 }
 
 

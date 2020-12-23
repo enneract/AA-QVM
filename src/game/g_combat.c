@@ -144,7 +144,8 @@ char *modNames[ ] =
   "MOD_OVERMIND",
   "MOD_SLAP",
 
-  "MOD_CORONAVIRUS"
+  "MOD_CORONAVIRUS",
+  "MOD_RAZORCHRIST"
 };
 
 /*

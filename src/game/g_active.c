@@ -1140,6 +1140,7 @@ void ClientTimerActions( gentity_t *ent, int msec )
     }
 
     G_Coronavirus( ent );
+    G_AddRazorchristCandidate( ent, ent->s.origin );
   }
 
   while( client->time10000 >= 10000 )

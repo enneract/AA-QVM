@@ -896,7 +896,8 @@ typedef enum
   MOD_OVERMIND,
   MOD_SLAP,
 
-  MOD_CORONAVIRUS
+  MOD_CORONAVIRUS,
+  MOD_RAZORCHRIST
 } meansOfDeath_t;
 
 
@@ -1278,6 +1279,8 @@ typedef enum
   ET_MODELDOOR,
   ET_LIGHTFLARE,
   ET_LEV2_ZAP_CHAIN,
+
+  ET_RAZORCHRIST,
 
   ET_EVENTS       // any of the EV_* events can be added freestanding
               // by setting eType to ET_EVENTS + eventNum
