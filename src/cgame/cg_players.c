@@ -818,6 +818,10 @@ void CG_NewClientInfo( int clientNum )
   v = Info_ValueForKey( configstring, "model" );
   Q_strncpyz( newInfo.modelName, v, sizeof( newInfo.modelName ) );
 
+  // pronoun
+  v = Info_ValueForKey( configstring, "pronoun" );
+  Q_strncpyz( newInfo.pronoun, v, sizeof( newInfo.pronoun ) );
+
   slash = strchr( newInfo.modelName, '/' );
 
   if( !slash )
