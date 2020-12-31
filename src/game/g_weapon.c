@@ -247,8 +247,6 @@ void meleeAttack( gentity_t *ent, float range, float width, int damage, meansOfD
   G_UnlaggedOff( );
 
   if( tr.surfaceFlags & SURF_NOIMPACT )
-    return;
-  else
     goto lol;
 
   traceEnt = &g_entities[ tr.entityNum ];
