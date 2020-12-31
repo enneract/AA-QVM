@@ -3,8 +3,8 @@
 #define RAZORCHRIST_RADIUS 32
 #define RAZORCHRIST_HEIGHT 80
 #define RAZORCHRIST_RANGE 40
-#define RAZORCHRIST_SPAWN_DIST 500
-#define MAX_RAZORCHRISTS 40
+#define RAZORCHRIST_SPAWN_DIST 1000
+#define MAX_RAZORCHRISTS 20
 
 
 static const vec3_t rcMins = {-RAZORCHRIST_RADIUS, -RAZORCHRIST_RADIUS, 0.0f};
@@ -17,7 +17,7 @@ void G_RunRazorchrist(gentity_t *ent, int msec)
 	int i, nearbyCount;
 
 	G_Physics(ent, msec);
-	VectorCopy(ent->s.origin, ent->r.currentOrigin);
+	VectorCopy(ent->r.currentOrigin, ent->s.origin);
 
 	mins[0] = ent->s.origin[0] - RAZORCHRIST_RANGE;
 	mins[1] = ent->s.origin[1] - RAZORCHRIST_RANGE;
@@ -29,26 +29,35 @@ void G_RunRazorchrist(gentity_t *ent, int msec)
 
 	nearbyCount = trap_EntitiesInBox(mins, maxs, nearby, MAX_GENTITIES);
 	for (i = 0; i < nearbyCount; i++) {
+		int damage;
 		gentity_t *other = g_entities + nearby[i];
 
-		if (other->s.eType != ET_PLAYER
-		    && other->s.eType != ET_BUILDABLE)
+		if (other->s.eType == ET_PLAYER) {
+			if (other->client->ps.stats[STAT_HEALTH] <= 0)
+				continue;
+		} else if (other->s.eType == ET_BUILDABLE) {
+			if (other->health <= 0)
+				continue;
+		} else
 			continue;
 
-		G_Damage(other, ent, ent, NULL, NULL, 30, 0, MOD_RAZORCHRIST);
+		damage = 60 + crandom() * 50;
+		G_Damage(other, ent, ent, NULL, NULL, damage, 0, MOD_RAZORCHRIST);
 
 		// Trigger the Razorchrist
-		ent->razorchristActive = 10000;
-		ent->s.pos.trDelta[0] = crandom() * 1000.0f;
-		ent->s.pos.trDelta[1] = crandom() * 1000.0f;
-		ent->s.pos.trDelta[2] = crandom() * 1000.0f;
+		ent->razorchristActive = 5000;
+		ent->s.pos.trType = TR_GRAVITY;
+		ent->s.pos.trDelta[0] = crandom() * 4000;
+		ent->s.pos.trDelta[1] = crandom() * 4000;
+		ent->s.pos.trDelta[2] = 4000 + crandom() * 4000;
+		ent->s.pos.trTime = level.time;
+		ent->s.groundEntityNum = ENTITYNUM_WORLD;
 	}
 
-	ent->razorchristActive -= 100;
+	ent->razorchristActive -= msec;
 	if (ent->razorchristActive <= 0) {
 		ent->razorchristActive = 0;
 		ent->s.generic1 = 0;
-		//VectorScale(ent->s.pos.trDelta, 0.5f, ent->s.pos.trDelta);
 	} else
 		ent->s.generic1 = 1;
 }
@@ -125,9 +134,9 @@ gentity_t *G_SpawnRazorchrist(vec3_t origin)
 	ent->s.eType = ET_RAZORCHRIST;
 	G_SetOrigin(ent, origin);
 
-	ent->s.pos.trType = BG_FindTrajectoryForBuildable(BA_H_MGTURRET);
+	ent->s.pos.trType = TR_GRAVITY;
 	ent->s.pos.trTime = level.time;
-	ent->physicsBounce = 0.9f;
+	ent->physicsBounce = 0.95f;
 	ent->clipmask = MASK_PLAYERSOLID;
 
 	VectorCopy(rcMins, ent->r.mins);
