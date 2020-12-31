@@ -33,8 +33,8 @@ void G_RunRazorchrist(gentity_t *ent, int msec)
 		gentity_t *other = g_entities + nearby[i];
 
 		if (other->s.eType == ET_PLAYER) {
-			if (other->client->ps.stats[STAT_HEALTH] <= 0)
-				continue;
+			//if (other->client->ps.stats[STAT_HEALTH] <= 0)
+			//	continue;
 		} else if (other->s.eType == ET_BUILDABLE) {
 			if (other->health <= 0)
 				continue;
@@ -175,3 +175,33 @@ void G_CheckSpawnRazorchrists(void)
 	G_SpawnRazorchrist(origin);
 	numRazorchrists++;
 }
+
+
+void G_GibEffect(gentity_t *ent)
+{
+	float *origin;
+	qboolean human;
+
+	if(ent->client) {
+		origin = ent->client->ps.origin;
+		human = ent->client->pers.teamSelection == PTE_HUMANS;
+	} else if (ent->s.eType == ET_CORPSE) {
+		origin = ent->s.origin;
+		human = !strcmp(ent->classname, "humanCorpse");
+	} else
+		return;
+
+	if (human)
+		G_TempEntity(origin, EV_HUMAN_GIB);
+	else
+		G_TempEntity(origin, EV_ALIEN_BUILDABLE_EXPLOSION);
+}
+
+void G_GibCorpse(gentity_t *ent, gentity_t *inflictor, gentity_t *attacker,
+                 int take, int mod )
+{
+	G_GibEffect(ent);
+	trap_UnlinkEntity(ent);
+	G_FreeEntity(ent);
+}
+

@@ -579,7 +579,9 @@ typedef enum
 
   EV_RPTUSE_SOUND,     //TA: trigger a sound
 
-  EV_COUGH
+  EV_COUGH,
+
+  EV_HUMAN_GIB
 } entity_event_t;
 
 typedef enum

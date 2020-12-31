@@ -2247,10 +2247,17 @@ void ClientEndFrame( gentity_t *ent )
     ent->s.eFlags &= ~EF_CONNECTION;
 
   ent->client->ps.stats[ STAT_HEALTH ] = ent->health; // FIXME: get rid of ent->health...
+
+  // gib
+  if( ent->client->ps.stats[ STAT_HEALTH ] <= -GIB_THRESHOLD )
+  {
+    G_GibEffect( ent );
+    respawn( ent, qfalse );
+  }
   
   // respawn if dead
   if( ent->client->ps.stats[ STAT_HEALTH ] <= 0 && level.time >= ent->client->respawnTime )
-    respawn( ent );
+    respawn( ent, qtrue );
 
   G_SetClientSound( ent );
 

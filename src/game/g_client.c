@@ -738,7 +738,6 @@ void BodyFree( gentity_t *ent )
   ent->nextthink = level.time + 60000;
 }
 
-
 /*
 =============
 SpawnCorpse
@@ -776,7 +775,7 @@ void SpawnCorpse( gentity_t *ent )
   body->s.number = body - g_entities;
   body->timestamp = level.time;
   body->s.event = 0;
-  body->r.contents = CONTENTS_CORPSE;
+  body->r.contents = CONTENTS_BODY;
   body->s.clientNum = ent->client->ps.stats[ STAT_PCLASS ];
   body->nonSegModel = ent->client->ps.persistant[ PERS_STATE ] & PS_NONSEGMODEL;
 
@@ -788,7 +787,7 @@ void SpawnCorpse( gentity_t *ent )
   body->s.misc = MAX_CLIENTS;
 
   body->think = BodySink;
-  body->nextthink = level.time + 20000;
+  body->nextthink = level.time + 180000;
 
   body->s.legsAnim = ent->s.legsAnim;
 
@@ -831,10 +830,12 @@ void SpawnCorpse( gentity_t *ent )
     }
   }
 
-  body->takedamage = qfalse;
+  body->takedamage = qtrue;
 
-  body->health = ent->health = ent->client->ps.stats[ STAT_HEALTH ];
+  body->health = GIB_THRESHOLD + ent->client->ps.stats[ STAT_HEALTH ];
   ent->health = 0;
+
+  body->die = G_GibCorpse;
 
   //change body dimensions
   BG_FindBBoxForClass( ent->client->ps.stats[ STAT_PCLASS ], NULL, NULL, NULL, body->r.mins, body->r.maxs );
@@ -886,9 +887,12 @@ void G_SetClientViewAngle( gentity_t *ent, vec3_t angle )
 respawn
 ================
 */
-void respawn( gentity_t *ent )
+void respawn( gentity_t *ent, qboolean spawnCorpse )
 {
-  SpawnCorpse( ent );
+  if( spawnCorpse )
+  {
+    SpawnCorpse( ent );
+  }
 
   //TA: Clients can't respawn - they must go thru the class cmd
   ent->client->pers.classSelection = PCL_NONE;

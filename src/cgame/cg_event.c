@@ -769,6 +769,12 @@ void CG_EntityEvent( centity_t *cent, vec3_t position )
       CG_AlienBuildableExplosion( position, dir );
       break;
 
+    case EV_HUMAN_GIB:
+      DEBUGNAME( "EV_HUMAN_GIB" );
+      ByteToDir( es->eventParm, dir );
+      CG_HumanGib( position, dir );
+      break;
+
     case EV_TESLATRAIL:
       DEBUGNAME( "EV_TESLATRAIL" );
       cent->currentState.weapon = WP_TESLAGEN;

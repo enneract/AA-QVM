@@ -679,10 +679,10 @@ finish_dying: // from MOD_SLAP
 
   VectorCopy( self->s.origin, self->client->pers.lastDeathLocation );
 
-  self->takedamage = qfalse; // can still be gibbed
+  self->takedamage = qtrue; // can still be gibbed
 
   self->s.weapon = WP_NONE;
-  self->r.contents = CONTENTS_CORPSE;
+  self->r.contents = CONTENTS_BODY;
 
   self->s.angles[ PITCH ] = 0;
   self->s.angles[ ROLL ] = 0;
@@ -1199,8 +1199,8 @@ void G_InitDamageLocations( void )
   }
 }
 
-////////TA: locdamage
 
+////////TA: locdamage
 
 /*
 ============

@@ -1863,7 +1863,7 @@ void BeginIntermission( void )
 
     // respawn if dead
     if( client->health <= 0 )
-      respawn(client);
+      respawn(client, qfalse);
 
     MoveClientToIntermission( client );
   }

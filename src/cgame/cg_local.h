@@ -1284,6 +1284,8 @@ typedef struct
 
   qhandle_t   razorchristModel;
   sfxHandle_t razorchristNoise;
+
+  qhandle_t   humanGibPS;
 } cgMedia_t;
 
 typedef struct
@@ -1871,6 +1873,12 @@ void  CG_WritePTRCode( int code );
 // cg_tutorial.c
 //
 const char *CG_TutorialText( void );
+
+//
+// cg_shitpost.c
+//
+void CG_HumanGib( vec3_t origin, vec3_t dir );
+
 
 //
 //===============================================

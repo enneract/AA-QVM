@@ -1130,7 +1130,7 @@ gentity_t *G_SelectSpawnPoint( vec3_t avoidPoint, vec3_t origin, vec3_t angles )
 gentity_t *G_SelectAlienLockSpawnPoint( vec3_t origin, vec3_t angles );
 gentity_t *G_SelectHumanLockSpawnPoint( vec3_t origin, vec3_t angles );
 void      SpawnCorpse( gentity_t *ent );
-void      respawn( gentity_t *ent );
+void      respawn( gentity_t *ent, qboolean spawnCorpse );
 void      BeginIntermission( void );
 void      ClientSpawn( gentity_t *ent, gentity_t *spawn, vec3_t origin, vec3_t angles );
 void      player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod );
@@ -1330,6 +1330,8 @@ connectionRecord_t  *G_FindConnectionForCode( int code );
 void G_RunRazorchrist( gentity_t *ent, int msec );
 void G_AddRazorchristCandidate( gentity_t *src, vec3_t origin );
 void G_CheckSpawnRazorchrists( void );
+void G_GibEffect( gentity_t *ent );
+void G_GibCorpse( gentity_t *ent, gentity_t *inflictor, gentity_t *attacker, int take, int mod );
 
 
 //some maxs

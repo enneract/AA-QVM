@@ -999,6 +999,7 @@ CGOBJ_ = \
   $(B)/cgame/cg_ptr.o \
   $(B)/cgame/cg_tutorial.o \
   $(B)/cgame/ui_shared.o \
+  $(B)/cgame/cg_shitpost.o \
   \
   $(B)/qcommon/q_math.o \
   $(B)/qcommon/q_shared.o
@@ -1032,6 +1033,7 @@ CGOBJ11_ = \
   $(B)/cgame/cg_ptr.o \
   $(B)/cgame/cg_tutorial.o \
   $(B)/cgame/ui_shared.o \
+  $(B)/cgame/cg_shitpost.o \
   \
   $(B)/qcommon/q_math.o \
   $(B)/qcommon/q_shared.o
