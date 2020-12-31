@@ -773,6 +773,8 @@ typedef struct
 
   sfxHandle_t customFootsteps[ 4 ];
   sfxHandle_t customMetalFootsteps[ 4 ];
+
+  char        pronoun[41];
 } clientInfo_t;
 
 
@@ -1550,6 +1552,8 @@ extern  vmCvar_t    cg_debugRandom;
 extern  vmCvar_t    cg_optimizePrediction;
 extern  vmCvar_t    cg_projectileNudge;
 extern  vmCvar_t    cg_unlagged;
+
+extern  vmCvar_t    cg_pronoun;
 
 //
 // cg_main.c

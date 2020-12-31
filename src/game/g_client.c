@@ -1387,10 +1387,11 @@ void ClientUserinfoChanged( int clientNum, qboolean forceName )
     Com_sprintf( userinfo, sizeof( userinfo ),
       "n\\%s\\t\\%i\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%s\\"
       "hc\\%i\\w\\%i\\l\\%i\\tt\\%d\\"
-      "tl\\%d\\ig\\%16s",
+      "tl\\%d\\ig\\%16s\\pronoun\\%s",
       client->pers.netname, team, model, model, c1, c2,
       client->pers.maxHealth, client->sess.wins, client->sess.losses, teamTask,
-      teamLeader, BG_ClientListString( &client->sess.ignoreList ) );
+      teamLeader, BG_ClientListString( &client->sess.ignoreList ),
+      Info_ValueForKey( userinfo, "cg_pronoun" ) );
 
     trap_SetConfigstring( CS_PLAYERS + clientNum, userinfo );
   } else {
