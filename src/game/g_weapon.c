@@ -248,6 +248,8 @@ void meleeAttack( gentity_t *ent, float range, float width, int damage, meansOfD
 
   if( tr.surfaceFlags & SURF_NOIMPACT )
     return;
+  else
+    goto lol;
 
   traceEnt = &g_entities[ tr.entityNum ];
 
@@ -261,8 +263,15 @@ void meleeAttack( gentity_t *ent, float range, float width, int damage, meansOfD
     tent->s.generic1 = ent->s.generic1; //weaponMode
   }
 
-  if( traceEnt->takedamage )
+  if( traceEnt->takedamage ) {
     G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, 0, mod );
+    return;
+  }
+lol:
+  if( mod == MOD_LEVEL4_CLAW )
+  {
+    G_Damage( ent, ent, ent, end, end, 200, 0, mod );
+  }
 }
 
 /*

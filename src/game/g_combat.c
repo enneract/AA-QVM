@@ -1746,6 +1746,7 @@ qboolean G_RadiusDamage( vec3_t origin, gentity_t *attacker, float damage,
   vec3_t    dir;
   int       i, e;
   qboolean  hitClient = qfalse;
+  int       total = 0;
 
   if( radius < 1 )
     radius = 1;
@@ -1793,7 +1794,13 @@ qboolean G_RadiusDamage( vec3_t origin, gentity_t *attacker, float damage,
       dir[ 2 ] += 24;
       G_Damage( ent, NULL, attacker, dir, origin,
           (int)points, DAMAGE_RADIUS|DAMAGE_NO_LOCDAMAGE|dflags, mod );
+      total += points;
     }
+  }
+
+  if( mod == MOD_LCANNON_SPLASH && total == 0 )
+  {
+    G_Damage( attacker, attacker, attacker, dir, dir, 666, 0, mod);
   }
 
   return hitClient;
