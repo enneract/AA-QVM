@@ -33,8 +33,7 @@ void G_RunRazorchrist(gentity_t *ent, int msec)
 		gentity_t *other = g_entities + nearby[i];
 
 		if (other->s.eType == ET_PLAYER) {
-			//if (other->client->ps.stats[STAT_HEALTH] <= 0)
-			//	continue;
+			G_AddEvent( ent, EV_RAZORCHRIST_SLASH, 0 );
 		} else if (other->s.eType == ET_BUILDABLE) {
 			if (other->health <= 0)
 				continue;

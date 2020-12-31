@@ -969,6 +969,7 @@ static void CG_RegisterSounds( void )
     cgs.media.coughingSounds[ i ] = trap_S_RegisterSound( va( "sound/player/cough%d.wav", i ), qfalse );
 
   cgs.media.razorchristNoise = trap_S_RegisterSound( "sound/zittrig/razorchrist.wav", qfalse );
+  cgs.media.razorchristSlash = trap_S_RegisterSound( "sound/zittrig/slash.wav", qfalse );
 }
 
 

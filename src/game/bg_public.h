@@ -581,7 +581,9 @@ typedef enum
 
   EV_COUGH,
 
-  EV_HUMAN_GIB
+  EV_HUMAN_GIB,
+
+  EV_RAZORCHRIST_SLASH
 } entity_event_t;
 
 typedef enum

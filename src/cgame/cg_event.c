@@ -136,7 +136,7 @@ static void CG_Obituary( entityState_t *ent )
       message = "died of viral lung infection";
       break;
     case MOD_RAZORCHRIST:
-      message = "was hacked into pieces";
+      message = "got fucking shredded";
       break;
     default:
       message = NULL;
@@ -967,6 +967,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position )
       DEBUGNAME( "EV_PLAYER_RESPAWN" );
       if( es->number == cg.clientNum )
         cg.spawnTime = cg.time;
+      break;
+
+    case EV_RAZORCHRIST_SLASH:
+      DEBUGNAME( "EV_RAZORCHRIST_SLASH" );
+      trap_S_StartSound( NULL, es->number, CHAN_AUTO, cgs.media.razorchristSlash );
       break;
 
     default:

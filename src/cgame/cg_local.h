@@ -1286,6 +1286,7 @@ typedef struct
 
   qhandle_t   razorchristModel;
   sfxHandle_t razorchristNoise;
+  sfxHandle_t razorchristSlash;
 
   qhandle_t   humanGibPS;
 } cgMedia_t;
