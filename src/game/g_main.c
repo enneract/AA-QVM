@@ -87,10 +87,13 @@ vmCvar_t  g_requireVoteReasons;
 vmCvar_t  g_voteLimit;
 vmCvar_t  g_suddenDeathVotePercent;
 vmCvar_t  g_suddenDeathVoteDelay;
+vmCvar_t  g_suddenDeathExtensionPercent;
+vmCvar_t  g_suddenDeathExtensionTime;
 vmCvar_t  g_extendVotesPercent;
 vmCvar_t  g_extendVotesTime;
 vmCvar_t  g_extendVotesCount;
 vmCvar_t  g_kickVotesPercent;
+vmCvar_t  g_shuffleVotesPercent;
 vmCvar_t  g_customVote1;
 vmCvar_t  g_customVote2;
 vmCvar_t  g_customVote3;
@@ -146,6 +149,7 @@ vmCvar_t  g_disabledBuildables;
 vmCvar_t  g_markDeconstruct;
 vmCvar_t  g_markDeconstructMode;
 vmCvar_t  g_deconDead;
+vmCvar_t  g_stackableBuildings;
 vmCvar_t  g_guidlessBuildersAllowed;
 
 vmCvar_t  g_debugMapRotation;
@@ -252,8 +256,12 @@ vmCvar_t  g_practise;
 vmCvar_t  g_tyrantNerf;
 
 vmCvar_t  g_debugRewards;
-vmCvar_t  g_sdDefenderPenalty;
+vmCvar_t  g_sdDefenderMaxPenalty;
+vmCvar_t  g_sdDefenderForgiveness;
+vmCvar_t  g_sdDefenderPenaltyIncrement;
 vmCvar_t  g_sdDestructionBonus;
+
+vmCvar_t g_disablePollVotes;
 
 static cvarTable_t   gameCvarTable[ ] =
 {
@@ -339,7 +347,10 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_votableMaps, "g_votableMaps", "", CVAR_ARCHIVE, 0, qtrue },
   { &g_suddenDeathVotePercent, "g_suddenDeathVotePercent", "74", CVAR_ARCHIVE, 0, qfalse },
   { &g_suddenDeathVoteDelay, "g_suddenDeathVoteDelay", "180", CVAR_ARCHIVE, 0, qfalse },
+  { &g_suddenDeathExtensionPercent, "g_suddenDeathExtensionPercent", "74", CVAR_ARCHIVE, 0, qtrue },
+  { &g_suddenDeathExtensionTime, "g_suddenDeathExtensionTime", "5", CVAR_ARCHIVE, 0, qtrue },
   { &g_kickVotesPercent, "g_kickVotesPercent", "50", CVAR_ARCHIVE, 0, qfalse },
+  { &g_shuffleVotesPercent, "g_shuffleVotesPercent", "50", CVAR_ARCHIVE, 0, qfalse },
   { &g_customVote1, "g_customVote1", "", CVAR_ARCHIVE, 0, qfalse  },
   { &g_customVote2, "g_customVote2", "", CVAR_ARCHIVE, 0, qfalse  },
   { &g_customVote3, "g_customVote3", "", CVAR_ARCHIVE, 0, qfalse  },
@@ -398,7 +409,8 @@ static cvarTable_t   gameCvarTable[ ] =
 
   { &g_markDeconstruct, "g_markDeconstruct", "0", CVAR_ARCHIVE, 0, qtrue  },
   { &g_markDeconstructMode, "g_markDeconstructMode", "0", CVAR_ARCHIVE, 0, qfalse  },
-  { &g_deconDead, "g_deconDead", "0", CVAR_ARCHIVE, 0, qtrue  }, //g_guidlessBuildersAllowed
+  { &g_deconDead, "g_deconDead", "0", CVAR_ARCHIVE, 0, qtrue  },
+  { &g_stackableBuildings, "g_stackableBuildings", "0", CVAR_ARCHIVE, 0, qtrue },
   { &g_guidlessBuildersAllowed, "g_guidlessBuildersAllowed", "1", CVAR_ARCHIVE, 0, qtrue },
 
   { &g_debugMapRotation, "g_debugMapRotation", "0", 0, 0, qfalse  },
@@ -486,8 +498,11 @@ static cvarTable_t   gameCvarTable[ ] =
   { &g_tyrantNerf, "g_tyrantNerf", "0", CVAR_ARCHIVE, 0, qfalse },
 
   { &g_debugRewards, "g_debugRewards", "0", CVAR_ARCHIVE, 0, qfalse },
-  { &g_sdDefenderPenalty, "g_sdDefenderPenalty", "0", CVAR_ARCHIVE, 0, qtrue },
+  { &g_sdDefenderMaxPenalty, "g_sdDefenderMaxPenalty", "45", CVAR_ARCHIVE, 0, qtrue },
+  { &g_sdDefenderForgiveness, "g_sdDefenderForgiveness", "7", CVAR_ARCHIVE, 0, qtrue },
+  { &g_sdDefenderPenaltyIncrement, "g_sdDefenderPenaltyIncrement", "3", CVAR_ARCHIVE, 0, qfalse },
   { &g_sdDestructionBonus, "g_sdDestructionBonus", "0", CVAR_ARCHIVE, 0, qtrue },
+  { &g_disablePollVotes, "g_disablePollVotes", "0", CVAR_ARCHIVE, 0, qfalse }
 };
 
 static int gameCvarTableSize = sizeof( gameCvarTable ) / sizeof( gameCvarTable[ 0 ] );
@@ -2545,7 +2560,6 @@ void CheckVote( void )
       G_admin_maplog_result( "m" );
     }
 
-
     if( !Q_stricmp( level.voteString, "suddendeath" ) )
     {
       level.suddenDeathBeginTime = level.time + ( 1000 * g_suddenDeathVoteDelay.integer ) - level.startTime;
@@ -2555,6 +2569,37 @@ void CheckVote( void )
       if( g_suddenDeathVoteDelay.integer )
         trap_SendServerCommand( -1, va("cp \"Sudden Death will begin in %d seconds\n\"", g_suddenDeathVoteDelay.integer  ) );
     }
+
+    if( !Q_stricmp( level.voteString, "delay_sudden_death" ) )
+    {
+      level.voteString[0] = '\0';
+
+      if ( level.suddenDeath )
+      {
+        trap_SendServerCommand( -1, "print \"^ASudden Death has now begun so this vote is null and void.\n" );
+      }
+      else
+      {
+        level.suddenDeathBeginTime = level.suddenDeathBeginTime + ( 60000 * g_suddenDeathExtensionTime.integer );
+
+        trap_SendServerCommand( -1, va("cp \"Sudden Death has been delayed by ^3%i^7 minutes\n"
+                                        "and will now be at ^3%02i:00^7\n\"",
+                                        g_suddenDeathExtensionTime.integer,
+                                        level.suddenDeathBeginTime / 60000 ) );
+        trap_SendServerCommand( -1, va("print \"Sudden Death has been delayed by ^3%i^7 minutes "
+                                        "and will now be at ^3%02i:00^7\n\"",
+                                        g_suddenDeathExtensionTime.integer,
+                                        level.suddenDeathBeginTime / 60000 ) );
+      }
+    }
+
+    if( !Q_stricmp( level.voteString, "shuffle" ) )
+    {
+      G_ShuffleTeams( );
+      level.voteString[0] = '\0';
+      trap_SendServerCommand( -1, "cp \"Teams have been shuffled!\n\"" );
+    }
+
 
     if( level.voteString[0] )
       trap_SendConsoleCommand( EXEC_APPEND, va( "%s\n", level.voteString ) );

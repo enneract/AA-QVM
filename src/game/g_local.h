@@ -441,6 +441,8 @@ typedef struct
   int                 lastTeamKillTime;      // level.time of last team kill
   int                 teamKillDemerits;      // number of team kill demerits accumulated
 
+  int                 campPenalty;           // tracks defender penalty
+
   vec3_t              lastDeathLocation;
   char                guid[ 33 ];
   char                ip[ 16 ];
@@ -462,7 +464,7 @@ typedef struct
   int                 godMode;
 } clientPersistant_t;
 
-#define MAX_UNLAGGED_MARKERS 10
+#define MAX_UNLAGGED_MARKERS 256
 typedef struct unlagged_s {
   vec3_t      origin;
   vec3_t      mins;
@@ -575,7 +577,7 @@ struct gclient_s
 
   adminRangeBoosts_t newRange;
 
-  qboolean            nearBase;
+  int                 damageOvertime;
 };
 
 
@@ -877,8 +879,6 @@ qboolean  G_SayArgv( int n, char *buffer, int bufferLength );
 char      *G_SayConcatArgs( int start );
 void      G_DecolorString( char *in, char *out );
 void      G_ParseEscapedString( char *buffer );
-void      G_LeaveTeam( gentity_t *self );
-void      G_ChangeTeam( gentity_t *ent, pTeam_t newTeam );
 void      G_SanitiseString( char *in, char *out, int len );
 void      G_PrivateMessage( gentity_t *ent );
 char      *G_statsString( statsCounters_t *sc, pTeam_t *pt );
@@ -1196,6 +1196,9 @@ gentity_t *Team_GetLocation( gentity_t *ent );
 qboolean  Team_GetLocationMsg( gentity_t *ent, char *loc, int loclen );
 void      TeamplayInfoMessage( gentity_t *ent );
 void      CheckTeamStatus( void );
+void      G_LeaveTeam( gentity_t *self );
+void      G_ChangeTeam( gentity_t *ent, pTeam_t newTeam, qboolean keepScores );
+void      G_ShuffleTeams( void );
 
 //
 // g_mem.c
@@ -1364,10 +1367,13 @@ extern  vmCvar_t  g_requireVoteReasons;
 extern  vmCvar_t  g_voteLimit;
 extern  vmCvar_t  g_suddenDeathVotePercent;
 extern  vmCvar_t  g_suddenDeathVoteDelay;
+extern  vmCvar_t  g_suddenDeathExtensionPercent;
+extern  vmCvar_t  g_suddenDeathExtensionTime;
 extern  vmCvar_t  g_extendVotesPercent;
 extern  vmCvar_t  g_extendVotesTime;
 extern  vmCvar_t  g_extendVotesCount;
 extern  vmCvar_t  g_kickVotesPercent;
+extern  vmCvar_t  g_shuffleVotesPercent;
 extern  vmCvar_t  g_customVote1;
 extern  vmCvar_t  g_customVote2;
 extern  vmCvar_t  g_customVote3;
@@ -1423,6 +1429,7 @@ extern  vmCvar_t  g_disabledBuildables;
 extern  vmCvar_t  g_markDeconstruct;
 extern  vmCvar_t  g_markDeconstructMode;
 extern  vmCvar_t  g_deconDead;
+extern  vmCvar_t  g_stackableBuildings;
 extern  vmCvar_t  g_guidlessBuildersAllowed;
 
 extern  vmCvar_t  g_debugMapRotation;
@@ -1522,9 +1529,12 @@ extern  vmCvar_t  g_maxGhosts;
 extern  vmCvar_t  g_specNoclip;
 extern  vmCvar_t  g_practise;
 extern  vmCvar_t  g_tyrantNerf;
+extern  vmCvar_t  g_disablePollVotes;
 
 extern  vmCvar_t  g_debugRewards;
-extern  vmCvar_t  g_sdDefenderPenalty;
+extern  vmCvar_t  g_sdDefenderMaxPenalty;
+extern  vmCvar_t  g_sdDefenderForgiveness;
+extern  vmCvar_t  g_sdDefenderPenaltyIncrement;
 extern  vmCvar_t  g_sdDestructionBonus;
 
 void      trap_Printf( const char *fmt );

@@ -274,3 +274,205 @@ void CheckTeamStatus( void )
 	  }
   }
 }
+
+/*
+==================
+G_LeaveTeam
+==================
+*/
+void G_LeaveTeam( gentity_t *self )
+{
+  pTeam_t   team = self->client->pers.teamSelection;
+  gentity_t *ent;
+  int       i, clientNum;
+
+  clientNum = self->client->ps.clientNum;
+
+  if( team == PTE_ALIENS )
+    G_RemoveFromSpawnQueue( &level.alienSpawnQueue, self->client->ps.clientNum );
+  else if( team == PTE_HUMANS )
+    G_RemoveFromSpawnQueue( &level.humanSpawnQueue, self->client->ps.clientNum );
+  else
+  {
+    if( self->client->sess.spectatorState == SPECTATOR_FOLLOW )
+    {
+      G_StopFollowing( self );
+    }
+    return;
+  }
+  
+  // Cancel pending suicides
+  self->suicideTime = 0;
+
+  // stop any following clients
+  G_StopFromFollowing( self );
+
+  for( i = 0; i < level.num_entities; i++ )
+  {
+    ent = &g_entities[ i ];
+    if( !ent->inuse )
+      continue;
+
+    // clean up projectiles
+    if( ent->s.eType == ET_MISSILE && ent->r.ownerNum == self->s.number )
+      G_FreeEntity( ent );
+    if( ent->client && ent->client->pers.connected == CON_CONNECTED )
+    {
+      // cure poison
+      if( ent->client->ps.stats[ STAT_STATE ] & SS_POISONCLOUDED &&
+          ent->client->lastPoisonCloudedClient == self )
+        ent->client->ps.stats[ STAT_STATE ] &= ~SS_POISONCLOUDED;
+      if( ent->client->ps.stats[ STAT_STATE ] & SS_POISONED &&
+          ent->client->lastPoisonClient == self )
+        ent->client->ps.stats[ STAT_STATE ] &= ~SS_POISONED;
+    }
+  }
+
+  if( level.teamVoteTime[ team ] && level.teamVotedHow[ team ][ clientNum ] )
+  {
+     int cs_offset = (team == PTE_ALIENS ? 1 : 0);
+
+     if( level.teamVotedHow[ team ][ clientNum ] > 0 )
+     {
+       level.teamVoteYes[ team ]--;
+       trap_SetConfigstring( CS_TEAMVOTE_YES + cs_offset, va( "%i", level.teamVoteYes[ team ] ) );
+     }
+     else
+     {
+       level.teamVoteNo[ team ]--;
+       trap_SetConfigstring( CS_TEAMVOTE_NO + cs_offset, va( "%i", level.teamVoteNo[ team ] ) );
+     }
+
+     level.teamVotedHow[ team ][ clientNum ] = 0;
+  }
+}
+
+/*
+=================
+G_ChangeTeam
+=================
+*/
+void G_ChangeTeam( gentity_t *ent, pTeam_t newTeam, qboolean keepScores )
+{
+  pTeam_t oldTeam = ent->client->pers.teamSelection;
+  qboolean isFixingImbalance=qfalse;
+
+  if( oldTeam == newTeam )
+    return;
+
+  G_LeaveTeam( ent );
+  ent->client->pers.teamSelection = newTeam;
+
+  ent->client->pers.lastFreekillTime = level.time;
+
+  // G_LeaveTeam() calls G_StopFollowing() which sets spec mode to free. 
+  // Undo that in this case, or else people can freespec while in the spawn queue on their new team
+  if( newTeam != PTE_NONE )
+  {
+    ent->client->sess.spectatorState = SPECTATOR_LOCKED;
+  }
+  
+  
+  if ( ( level.numAlienClients - level.numHumanClients > 2 && oldTeam==PTE_ALIENS && newTeam == PTE_HUMANS && level.numHumanSpawns>0 ) ||
+       ( level.numHumanClients - level.numAlienClients > 2 && oldTeam==PTE_HUMANS && newTeam == PTE_ALIENS  && level.numAlienSpawns>0 ) ) 
+  {
+    isFixingImbalance=qtrue;
+  }
+
+  // under certain circumstances, clients can keep their kills and credits
+  // when switching teams
+  if( !keepScores && !G_admin_permission( ent, ADMF_TEAMCHANGEFREE ) &&
+      !( g_teamImbalanceWarnings.integer && isFixingImbalance ) &&
+      !( ( oldTeam == PTE_HUMANS || oldTeam == PTE_ALIENS )
+         && ( level.time - ent->client->pers.teamChangeTime ) > 60000 ) )
+  {
+    ent->client->pers.credit = 0;
+    ent->client->pers.score = 0;
+  }
+  
+  ent->client->ps.persistant[ PERS_KILLED ] = 0;
+  memset( &ent->client->pers.statscounters, 0, sizeof( statsCounters_t ) );
+
+  if( G_admin_permission( ent, ADMF_DBUILDER ) )
+  {
+    if( !ent->client->pers.designatedBuilder )
+    {
+      ent->client->pers.designatedBuilder = qtrue;
+      trap_SendServerCommand( ent-g_entities, 
+        "print \"Your designation has been restored\n\"" );
+    }
+  }
+  else if( ent->client->pers.designatedBuilder )
+  {
+    ent->client->pers.designatedBuilder = qfalse;
+    trap_SendServerCommand( ent-g_entities, 
+     "print \"You have lost designation due to teamchange\n\"" );
+  }
+
+  ent->client->pers.classSelection = PCL_NONE;
+  ClientSpawn( ent, NULL, NULL, NULL );
+
+  ent->client->pers.joinedATeam = qtrue;
+  ent->client->pers.teamChangeTime = level.time;
+
+  //update ClientInfo
+  ClientUserinfoChanged( ent->client->ps.clientNum, qfalse );
+  G_CheckDBProtection( );
+}
+
+/*
+=================
+G_ShuffleTeams
+=================
+*/
+void G_ShuffleTeams( void )
+{
+  gentity_t *players[ MAX_CLIENTS ];
+  int i, numPlayers = 0, toShuffle;
+  pTeam_t team;
+
+  // Compile a list of players (non-spectators).
+  for( i = 0; i < MAX_CLIENTS; i++ )
+  {
+    gentity_t *ent = g_entities + i;
+
+    if( !ent->client )
+      continue;
+
+    if( ent->client->pers.teamSelection == PTE_NONE )
+      continue;
+
+    players[ numPlayers++ ] = ent;
+  }
+
+  // Shuffle the array to randomize the remaining code.
+  toShuffle = numPlayers;
+
+  // Fisher-Yates shuffle
+  while( toShuffle )
+  {
+    int i;
+    gentity_t *temp;
+
+    i = rand() % toShuffle--;
+
+    temp = players[ toShuffle ];
+    players[ toShuffle ] = players[ i ];
+    players[ i ] = temp;
+  }
+
+  // Pick the starting team at random.
+  team = ( rand() & 256 ) ? PTE_HUMANS : PTE_ALIENS;
+
+  for( i = 0; i < numPlayers; i++ )
+  {
+    G_LogPrintf( "ShuffleTeams: %d %s", players[ i ] - g_entities,
+                 team == PTE_ALIENS ? "aliens" : "humans" );
+    G_ChangeTeam( players[ i ], team, qtrue);
+
+    if( team == PTE_ALIENS )
+      team = PTE_HUMANS;
+    else
+      team = PTE_ALIENS;
+  }
+}

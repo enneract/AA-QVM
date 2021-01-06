@@ -249,6 +249,8 @@ vmCvar_t  cg_optimizePrediction;
 vmCvar_t  cg_projectileNudge;
 vmCvar_t  cg_unlagged;
 
+vmCvar_t  cg_pronoun;
+
 
 typedef struct
 {
@@ -394,8 +396,10 @@ static cvarTable_t cvarTable[ ] =
   { &cg_oldRail, "cg_oldRail", "1", CVAR_ARCHIVE},
   { &cg_oldRocket, "cg_oldRocket", "1", CVAR_ARCHIVE},
   { &cg_oldPlasma, "cg_oldPlasma", "1", CVAR_ARCHIVE},
-  { &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE}
-//  { &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE }
+  { &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE},
+//  { &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE },
+
+  { &cg_pronoun, "cg_pronoun", "themselves", CVAR_USERINFO | CVAR_ARCHIVE },
 };
 
 static int   cvarTableSize = sizeof( cvarTable ) / sizeof( cvarTable[0] );

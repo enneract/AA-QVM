@@ -896,8 +896,6 @@ void ClientTimerActions( gentity_t *ent, int msec )
         ent->health = client->ps.stats[ STAT_MAX_HEALTH ];
     }
     
-    ent->client->nearBase = qfalse;
-    
     if( ent->client->ps.stats[ STAT_HEALTH ] > 0 && ent->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
     {
       ent->client->pers.statscounters.timealive++;
@@ -906,8 +904,12 @@ void ClientTimerActions( gentity_t *ent, int msec )
       {
         ent->client->pers.statscounters.timeinbase++;
         level.alienStatsCounters.timeinbase++;
-        ent->client->nearBase = qtrue;
+        //  negative values in client->pers.campPenalty represent how much time is left before defender penalty kicks in
+        //  this prevents defender penalty from slamming players that died trying to rush and just respawned
+        client->pers.campPenalty += client->pers.campPenalty < 0 ? 1 : g_sdDefenderPenaltyIncrement.integer;
       }
+      else client->pers.campPenalty -= client->pers.campPenalty < 0 ? 1 : g_sdDefenderPenaltyIncrement.integer;
+
       if( BG_ClassHasAbility( ent->client->ps.stats[ STAT_PCLASS ], SCA_WALLCLIMBER )  )
       {
         ent->client->pers.statscounters.dretchbasytime++;
@@ -921,26 +923,28 @@ void ClientTimerActions( gentity_t *ent, int msec )
         }
       }
     }
-    else if( ent->client->ps.stats[ STAT_HEALTH ] > 0 && ent->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
-    {
+    else if( ent->client->ps.stats[ STAT_HEALTH ] > 0 && ent->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS ) {
       ent->client->pers.statscounters.timealive++;
       level.humanStatsCounters.timealive++;
       if( G_BuildableRange( ent->client->ps.origin, 900, BA_H_REACTOR ) )
       {
         ent->client->pers.statscounters.timeinbase++;
-        level.humanStatsCounters.timeinbase++;
-        ent->client->nearBase = qtrue;
+        level.alienStatsCounters.timeinbase++;
+        if(client->pers.campPenalty < g_sdDefenderMaxPenalty.integer)
+          client->pers.campPenalty += (client->pers.campPenalty < 0) ? 1 : g_sdDefenderPenaltyIncrement.integer;
       }
+      else client->pers.campPenalty -= (client->pers.campPenalty < 0) ? 1 : g_sdDefenderPenaltyIncrement.integer;
+
       if( BG_InventoryContainsUpgrade( UP_JETPACK, client->ps.stats ) )
       {
-    if( client->ps.pm_type == PM_JETPACK ) 
+    if( client->ps.pm_type == PM_JETPACK )
     {
       ent->client->pers.statscounters.jetpackusewallwalkusetime++;
       level.humanStatsCounters.jetpackusewallwalkusetime++;
     }
       }
     }
-   
+
     // turn off life support when a team admits defeat 
     if( client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS &&
       level.surrenderTeam == PTE_ALIENS )
@@ -980,6 +984,14 @@ void ClientTimerActions( gentity_t *ent, int msec )
         }
       }
     }
+
+    // clear some rubbish regarding defender penalty
+    if( client->damageOvertime > 0 ){
+       client->pers.campPenalty -= (int)(client->damageOvertime / 15.0f);
+       client->damageOvertime = 0;
+    }
+    if( client->pers.campPenalty < -g_sdDefenderForgiveness.integer ) client->pers.campPenalty = -g_sdDefenderForgiveness.integer;
+    else if( client->pers.campPenalty > g_sdDefenderMaxPenalty.integer ) client->pers.campPenalty = g_sdDefenderMaxPenalty.integer;
   }
 
   while( client->time10000 >= 10000 )
@@ -1935,8 +1947,8 @@ void ClientThink_real( gentity_t *ent )
   {
     if( client->pers.teamSelection == PTE_ALIENS )
     {
-      if( client->pers.credit < 9 )
-        G_AddCreditToClient( client, 9, qtrue );
+      if( client->pers.credit < EVOS(9) )
+        G_AddCreditToClient( client, EVOS(9), qtrue );
     }
     if( client->pers.teamSelection == PTE_HUMANS )
     {
@@ -2008,7 +2020,8 @@ void SpectatorClientEndFrame( gentity_t *ent )
  
     if( cl -> sess.spectatorState != SPECTATOR_FOLLOW ) 
     {
-          flags = cl->ps.eFlags | ent->client->ps.eFlags;
+          flags = ( cl->ps.eFlags & ~( 0x00010000 | 0x00020000 ) ) |
+            ( ent->client->ps.eFlags & ( 0x00010000 | 0x00020000 ) );
           score = ent->client->ps.persistant[ PERS_SCORE ];
           ping = ent->client->ps.ping;
           ent->client->ps = cl->ps;

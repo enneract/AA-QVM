@@ -112,6 +112,7 @@ g_admin_schachts_t g_admin_schachts[ ] =
     {"practise", "get gud, %s^7.", NULL},
     {"switch", "%s^7, ^3!switch^7 functionality not invented yet.", NULL},
     {"spawn", "%s^7, ^7reproduce.", NULL},
+    {"shuffle", "%s^7: ^2As I lay there listening to the strange night sounds, I hear the shuffle of someone creeping by outside in the grass.", NULL},
   };
 
 g_admin_cmd_t g_admin_cmds[ ] = 
@@ -540,6 +541,11 @@ g_admin_cmd_t g_admin_cmds[ ] =
       "Spawn a buildable",
       "^7name"
     },
+
+    {"shuffle", G_admin_shuffle, "shuffle",
+      "Reassign players to teams on a random basis."
+      ""
+    },
   };
 
 static int adminNumCmds = sizeof( g_admin_cmds ) / sizeof( g_admin_cmds[ 0 ] );
@@ -723,11 +729,14 @@ static qboolean admin_higher_guid( char *admin_guid, char *victim_guid )
   int i;
   int alevel = 0;
   qboolean perm = qfalse;
+  char aguid[ 33 ];
 
   for( i = 0; i < MAX_ADMIN_ADMINS && g_admin_admins[ i ]; i++ )
   {
     if( !Q_stricmp( admin_guid, g_admin_admins[ i ]->guid ) )
     {
+
+      Q_strncpyz( aguid, g_admin_admins[i]->guid, sizeof( aguid ) );
       alevel = g_admin_admins[ i ]->level;
       break;
     }
@@ -2150,18 +2159,18 @@ qboolean G_admin_time( gentity_t *ent, int skiparg )
 
   if( g_suddenDeathTime.integer > 0 && !g_suddenDeath.integer )
   {
-    ADMP( va( "^3!time: ^7sudden death will be at ^3%i:00^7, in about ^3%i ^7minutes\n", 
-      g_suddenDeathTime.integer, G_TimeTilSuddenDeath( ) / 60000 ) );
+    ADMP( va( "^3!time: ^7sudden death will be at ^3%02i:00^7, in about ^3%i ^7minutes\n", 
+      level.suddenDeathBeginTime / 60000, G_TimeTilSuddenDeath( ) / 60000 ) );
   }
   else if( g_suddenDeathTime.integer && g_suddenDeath.integer )
   {
-    ADMP( va( "^3!time: ^7sudden death started at ^3%i:00^7\n", 
-      g_suddenDeathTime.integer ) );
+    ADMP( va( "^3!time: ^7sudden death started at ^3%02i:00^7\n", 
+      level.suddenDeathBeginTime / 60000 ) );
   }
 
-  if( g_timelimit.integer > 0)
+  if( g_timelimit.integer > 0 )
   {
-    ADMP( va( "^3!time: ^7timelimit is at ^3%i:00^7\n", 
+    ADMP( va( "^3!time: ^7timelimit is at ^3%02i:00^7\n", 
       g_timelimit.integer ) );
   }
     
@@ -3708,7 +3717,7 @@ qboolean G_admin_putteam( gentity_t *ent, int skiparg )
   if( useDuration == qtrue && seconds > 0 ) {
     vic->client->pers.specExpires = level.time + ( seconds * 1000 );
   }
-  G_ChangeTeam( vic, teamnum );
+  G_ChangeTeam( vic, teamnum, qfalse );
 
   AP( va( "print \"^3!putteam: ^7%s^7 put %s^7 on to the %s team%s\n\"",
           G_admin_adminPrintName( ent ),
@@ -6151,7 +6160,7 @@ qboolean G_admin_spec999( gentity_t *ent, int skiparg )
       continue;
     if( vic->client->ps.ping == 999 )
     {
-      G_ChangeTeam( vic, PTE_NONE );
+      G_ChangeTeam( vic, PTE_NONE, qfalse );
       AP( va( "print \"^3!spec999: ^7%s^7 moved ^7%s^7 to spectators\n\"",
         G_admin_adminPrintName( ent ), 
         vic->client->pers.netname ) );
@@ -6822,7 +6831,7 @@ qboolean G_admin_putmespec( gentity_t *ent, int skiparg )
     return qfalse;
   }
   
-  G_ChangeTeam( ent, PTE_NONE );
+  G_ChangeTeam( ent, PTE_NONE, qfalse );
   AP( va("print \"^3!specme: ^7%s^7 decided to join the spectators\n\"", ent->client->pers.netname ) );
   return qtrue;
 }
@@ -7743,7 +7752,7 @@ qboolean G_admin_invisible( gentity_t *ent, int skiparg )
   if ( ent->client->sess.invisible != qtrue )
   {
     // Make the player invisible
-    G_ChangeTeam( ent, PTE_NONE );
+    G_ChangeTeam( ent, PTE_NONE, qfalse );
     ent->client->sess.invisible = qtrue;
     ClientUserinfoChanged( ent-g_entities, qfalse );
     G_admin_namelog_update( ent->client, qtrue );
@@ -8576,18 +8585,19 @@ qboolean G_admin_tklog( gentity_t *ent, int skiparg )
     Com_sprintf( n1, sizeof( n1 ), fmt_name, results[ i ]->name );
 
     if( results[ i ]->team == PTE_HUMANS )
-      weaponName = BG_FindNameForWeapon( results[ i ]->weapon );
+      weaponName = BG_FindHumanNameForWeapon( results[ i ]->weapon );
     else
-      weaponName = BG_FindNameForClassNum( results[ i ]->weapon );
+      weaponName = BG_FindHumanNameForClassNum( results[ i ]->weapon );
 
-    ADMBP( va( "^7%3d %3d:%02d %s^7 %3d / %3d %10s %s^7\n",
+     ADMBP( va( "^3%3d %3d:%02d ^7%s^7 tk'd %s^7\n"
+             "              with ^3%s^7 for ^3%d^7/^3%d^7 health.\n",
       results[ i ]->id,
       t / 60, t % 60,
       n1,
-      results[ i ]->damage,
-      results[ i ]->value,
+      results[ i ]->victim,
       weaponName,
-      results[ i ]->victim ) );
+      results[ i ]->damage,
+      results[ i ]->value ) );
   }
   if( search_name )
   {
@@ -8990,5 +9000,13 @@ qboolean G_admin_spawn( gentity_t *ent, int skiparg )
   AP( va( "print \"^3!spawn: ^7buildable ^3%s^7 spawned by %s^7 at location ^3%.0f %.0f %.0f^7\n", 
     BG_FindHumanNameForBuildable( buildable ), G_admin_adminPrintName( ent ), entityOrigin[0], entityOrigin[1], entityOrigin[2] ) );
   G_InstantBuild( buildable, entityOrigin, angles, normal, angles );
+  return qtrue;
+}
+
+qboolean G_admin_shuffle( gentity_t *ent, int skiparg )
+{
+  G_ShuffleTeams( );  
+  AP( va( "print \"^3!shuffle: ^7teams have been shuffled by %s^7\n\"",
+           G_admin_adminPrintName( ent ) ) );  
   return qtrue;
 }

@@ -82,8 +82,8 @@ float G_RewardFactor( gentity_t *self, gentity_t *attacker )
   if( G_TimeTilSuddenDeath( ) > 0 )
     return 1.0f;
 
-  if( attacker->client->nearBase )
-    return 1.0f - g_sdDefenderPenalty.value / 100.0f;
+  if( attacker->client->pers.campPenalty > 0 )
+    return 1.0f - attacker->client->pers.campPenalty / 100.0f;
 
   if( self->s.eType == ET_BUILDABLE )
     return 1.0f + g_sdDestructionBonus.value / 100.0f;
@@ -256,6 +256,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
     G_LogOnlyPrintf("%s^7 was killed by ^1TEAMMATE^7 %s^7 (Did %d damage to %d max)\n",
       self->client->pers.netname, attacker->client->pers.netname, self->client->tkcredits[ attacker->s.number ], self->client->ps.stats[ STAT_MAX_HEALTH ] );
     G_TeamKill_Repent( attacker );
+    G_admin_tklog_log( attacker, self, meansOfDeath );
   }
 
   self->enemy = attacker;
@@ -1036,24 +1037,11 @@ static float G_CalcDamageModifier( vec3_t point, gentity_t *targ, gentity_t *att
 
   if( dflags & DAMAGE_NO_LOCDAMAGE )
   {
-    for( i = UP_NONE + 1; i < UP_NUM_UPGRADES; i++ )
+    if( BG_InventoryContainsUpgrade( UP_BATTLESUIT, targ->client->ps.stats ) ) modifier -= BSUIT_NL_AVERAGE;
+    else
     {
-      float totalModifier = 0.0f;
-      float averageModifier = 1.0f;
-
-      //average all of this upgrade's armour regions together
-      if( BG_InventoryContainsUpgrade( i, targ->client->ps.stats ) )
-      {
-        for( j = 0; j < g_numArmourRegions[ i ]; j++ )
-          totalModifier += g_armourRegions[ i ][ j ].modifier;
-
-        if( g_numArmourRegions[ i ] )
-          averageModifier = totalModifier / g_numArmourRegions[ i ];
-        else
-          averageModifier = 1.0f;
-      }
-
-      modifier *= averageModifier;
+      if( BG_InventoryContainsUpgrade( UP_HELMET, targ->client->ps.stats ) ) modifier -= HELMET_NL_AVERAGE;
+      if( BG_InventoryContainsUpgrade( UP_LIGHTARMOUR, targ->client->ps.stats ) ) modifier -= LIGHTARMOUR_NL_AVERAGE;
     }
   }
   else
@@ -1240,6 +1228,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
   int     knockback = 0;
   float damagemodifier=0.0;
   int takeNoOverkill;
+  int campForgiveness = (-1 * g_sdDefenderForgiveness.integer );
 
   if( !targ->takedamage )
     return;
@@ -1461,9 +1450,12 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
     // set the last client who damaged the target
     targ->client->lasthurt_client = attacker->s.number;
     targ->client->lasthurt_mod = mod;
-    
-    damagemodifier = G_CalcDamageModifier( point, targ, attacker, client->ps.stats[ STAT_PCLASS ], dflags );
-    take = (int)( (float)take * damagemodifier );
+
+    if(! ( dflags & DAMAGE_NO_MOD ) )
+    {
+      damagemodifier = G_CalcDamageModifier( point, targ, attacker, client->ps.stats[ STAT_PCLASS ], dflags );
+      take = (int)( (float)take * damagemodifier );
+    }
 
     //if boosted poison every attack
     if( attacker->client && attacker->client->ps.stats[ STAT_STATE ] & SS_BOOSTED )
@@ -1555,6 +1547,17 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
         {
           level.humanStatsCounters.dmgdone+=takeNoOverkill;
         }
+      }
+
+      if( attacker->client )
+      {
+        gclient_t *aclient;
+
+        aclient = attacker->client;
+
+        if (  (aclient->ps.stats[ STAT_PTEAM ] == PTE_ALIENS && !(G_BuildableRange( aclient->ps.origin, 1100, BA_A_OVERMIND ) )) ||
+          (aclient->ps.stats[ STAT_PTEAM ] == PTE_HUMANS && !(G_BuildableRange( aclient->ps.origin, 1100, BA_H_REACTOR ) ))  )
+            attacker->client->damageOvertime += take;       //memespider: dealing damage while far away from base hastens the decrease of anticamp penalty
       }
     }
 
@@ -1786,6 +1789,8 @@ qboolean G_RadiusDamage( vec3_t origin, gentity_t *attacker, float damage,
       // push the center of mass higher than the origin so players
       // get knocked into the air more
       dir[ 2 ] += 24;
+      if( ent == attacker->parent || mod == MOD_LCANNON_SPLASH )
+        points *= 0.75f; //memespider: deflating how much damage lcannon overcharge does to the user once non-locational damage is fixor'd
       G_Damage( ent, NULL, attacker, dir, origin,
           (int)points, DAMAGE_RADIUS|DAMAGE_NO_LOCDAMAGE|dflags, mod );
     }

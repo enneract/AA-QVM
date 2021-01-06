@@ -2165,18 +2165,18 @@ void HMedistat_Think( gentity_t *self )
     if( self->active )
       G_SetIdleBuildableAnim( self, BANIM_IDLE2 );
 
-    //check if a previous occupier is still here
+    // memespider: medistation now gives out medikits to people already on full health no matter what
     num = trap_EntitiesInBox( mins, maxs, entityList, MAX_GENTITIES );
     for( i = 0; i < num; i++ )
     {
       player = &g_entities[ entityList[ i ] ];
 
-      if( player->client && player->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
+      if( player->client && player->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS && player->client->ps.pm_type != PM_DEAD )
       {
-        if( player->health < player->client->ps.stats[ STAT_MAX_HEALTH ] &&
-            player->client->ps.pm_type != PM_DEAD &&
-            self->enemy == player )
+        if( player->health < player->client->ps.stats[ STAT_MAX_HEALTH ] && self->enemy == player )
           occupied = qtrue;
+        else if( player->health == player->client->ps.stats[ STAT_MAX_HEALTH ] && !BG_InventoryContainsUpgrade( UP_MEDKIT, player->client->ps.stats ) )
+          BG_AddUpgradeToInventory( UP_MEDKIT, player->client->ps.stats );
       }
     }
 
@@ -3422,7 +3422,8 @@ itemBuildError_t G_CanBuild( gentity_t *ent, buildable_t buildable, int distance
   itemBuildError_t  tempReason;
 
   // Stop all buildables from interacting with traces
-  G_SetBuildableLinkState( qfalse );
+  if ( !g_stackableBuildings.integer )
+    G_SetBuildableLinkState( qfalse );
 
   BG_FindBBoxForBuildable( buildable, mins, maxs );
 
@@ -3437,12 +3438,15 @@ itemBuildError_t G_CanBuild( gentity_t *ent, buildable_t buildable, int distance
   minNormal = BG_FindMinNormalForBuildable( buildable );
   invert = BG_FindInvertNormalForBuildable( buildable );
 
-  //can we build at this angle?
-  if( !( normal[ 2 ] >= minNormal || ( invert && normal[ 2 ] <= -minNormal ) ) )
-    reason = IBE_NORMAL;
+  if( !g_stackableBuildings.integer )
+  {
+    //can we build at this angle?
+    if( !( normal[ 2 ] >= minNormal || ( invert && normal[ 2 ] <= -minNormal ) ) )
+      reason = IBE_NORMAL;
 
-  if( tr1.entityNum != ENTITYNUM_WORLD )
-    reason = IBE_NORMAL;
+    if( tr1.entityNum != ENTITYNUM_WORLD )
+      reason = IBE_NORMAL;
+  }
 
   contents = trap_PointContents( entity_origin, -1 );
   
@@ -3613,7 +3617,8 @@ itemBuildError_t G_CanBuild( gentity_t *ent, buildable_t buildable, int distance
     reason = tempReason;
 
   // Relink buildables
-  G_SetBuildableLinkState( qtrue );
+  if ( !g_stackableBuildings.integer )
+    G_SetBuildableLinkState( qtrue );
 
   //check there is enough room to spawn from (presuming this is a spawn)
   if( reason == IBE_NONE )

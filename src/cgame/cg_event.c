@@ -42,7 +42,7 @@ static void CG_Obituary( entityState_t *ent )
   char          targetName[ 32 ];
   char          attackerName[ 32 ];
   char          className[ 64 ];
-  gender_t      gender;
+  const char    *fmt;
   clientInfo_t  *ci;
   qboolean      teamKill = qfalse;
 
@@ -139,45 +139,27 @@ static void CG_Obituary( entityState_t *ent )
 
   if( attacker == target )
   {
-    gender = ci->gender;
     switch( mod )
     {
       case MOD_FLAMER_SPLASH:
-        if( gender == GENDER_FEMALE )
-          message = "toasted herself";
-        else if( gender == GENDER_NEUTER )
-          message = "toasted itself";
-        else
-          message = "toasted himself";
+        fmt = "%s toasted %s.\n";
         break;
 
       case MOD_LCANNON_SPLASH:
-        if( gender == GENDER_FEMALE )
-          message = "irradiated herself";
-        else if( gender == GENDER_NEUTER )
-          message = "irradiated itself";
-        else
-          message = "irradiated himself";
+        fmt = "%s irradiated %s.\n";
         break;
 
       case MOD_GRENADE:
-        if( gender == GENDER_FEMALE )
-          message = "blew herself up";
-        else if( gender == GENDER_NEUTER )
-          message = "blew itself up";
-        else
-          message = "blew himself up";
+        fmt = "%s blew %s up.\n";
         break;
 
       default:
-        if( gender == GENDER_FEMALE )
-          message = "killed herself";
-        else if( gender == GENDER_NEUTER )
-          message = "killed itself";
-        else
-          message = "killed himself";
+        fmt = "%s killed %s.\n";
         break;
     }
+
+    CG_Printf( fmt, targetName, ci->pronoun );
+    return;
   }
 
   if( message )
