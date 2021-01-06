@@ -1365,7 +1365,7 @@ qboolean BG_FindTransparentTestForBuildable( int bclass )
       return bg_buildableList[ i ].transparentTest;
     }
   }
-  return qfalse; 
+  return qfalse;
 }
 
 /*
@@ -1789,7 +1789,7 @@ classAttributes_t bg_classList[ ] =
     80,                                             //int     steptime;
     LEVEL2_SPEED,                                   //float   speed;
     10.0f,                                          //float   acceleration;
-    2.0f,                                           //float   airAcceleration;
+    LEVEL2_AIR_ACCEL,                               //float   airAcceleration;
     6.0f,                                           //float   friction;
     100.0f,                                         //float   stopSpeed;
     400.0f,                                         //float   jumpMagnitude;
@@ -1828,7 +1828,7 @@ classAttributes_t bg_classList[ ] =
     80,                                             //int     steptime;
     LEVEL2_UPG_SPEED,                               //float   speed;
     10.0f,                                          //float   acceleration;
-    2.0f,                                           //float   airAcceleration;
+    LEVEL2_AIR_ACCEL,                               //float   airAcceleration;
     6.0f,                                           //float   friction;
     100.0f,                                         //float   stopSpeed;
     400.0f,                                         //float   jumpMagnitude;
@@ -2359,7 +2359,7 @@ void BG_FindViewheightForClass( int pclass, int *viewheight, int *cViewheight )
       break;
     }
   }
-  
+
   if( bg_classOverrideList[ pclass ].viewheight != 0 )
     vh = bg_classOverrideList[ pclass ].viewheight;
   if( bg_classOverrideList[ pclass ].crouchViewheight != 0 )
@@ -5615,9 +5615,9 @@ qboolean BG_ClientListTest( clientList_t *list, int clientNum )
   if( clientNum < 0 || clientNum >= MAX_CLIENTS || !list )
     return qfalse;
   if( clientNum < 32 )
-    return ( ( list->lo & ( 1 << clientNum ) ) != 0 ); 
+    return ( ( list->lo & ( 1 << clientNum ) ) != 0 );
   else
-    return ( ( list->hi & ( 1 << ( clientNum - 32 ) ) ) != 0 ); 
+    return ( ( list->hi & ( 1 << ( clientNum - 32 ) ) ) != 0 );
 }
 
 /*
@@ -5630,7 +5630,7 @@ void BG_ClientListAdd( clientList_t *list, int clientNum )
   if( clientNum < 0 || clientNum >= MAX_CLIENTS || !list )
     return;
   if( clientNum < 32 )
-    list->lo |= ( 1 << clientNum ); 
+    list->lo |= ( 1 << clientNum );
   else
     list->hi |= ( 1 << ( clientNum - 32 ) );
 }
@@ -5645,7 +5645,7 @@ void BG_ClientListRemove( clientList_t *list, int clientNum )
   if( clientNum < 0 || clientNum >= MAX_CLIENTS || !list )
     return;
   if( clientNum < 32 )
-    list->lo &= ~( 1 << clientNum ); 
+    list->lo &= ~( 1 << clientNum );
   else
     list->hi &= ~( 1 << ( clientNum - 32 ) );
 }
@@ -5683,5 +5683,3 @@ void BG_ClientListParse( clientList_t *list, const char *s )
     return;
   sscanf( s, "%x%x", &list->hi, &list->lo );
 }
-
-

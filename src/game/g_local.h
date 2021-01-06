@@ -1034,7 +1034,7 @@ void      G_InitDamageLocations( void );
 #define DAMAGE_KNOCKBACK      0x00000004  // affect velocity, not just view angles
 #define DAMAGE_NO_PROTECTION  0x00000008  // armor, shields, invulnerability, and godmode have no effect
 #define DAMAGE_NO_LOCDAMAGE   0x00000010  // do not apply locational damage
-#define DAMAGE_NO_MOD         0x00000020  // do not use any modifiers (roughly equivalent to NO_ARMOR|NO_LOCDAMAGE)
+#define DAMAGE_NO_MOD   	  0x00000020  // don't apply any modifiers, but protection still works
 
 //
 // g_missile.c
@@ -1088,7 +1088,9 @@ typedef struct zap_s
   int           numTargets;
 
   int           timeToLive;
-  int           damageUsed;
+  float         damageUsed;
+  //memespider: prevent damage from being dealt too quickly if there's too many targets, store decimals in here
+  float         damageBuffer[ MAX_ZAP_TARGETS ];
 
   gentity_t     *effectChannel;
 } zap_t;
