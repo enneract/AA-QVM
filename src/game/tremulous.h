@@ -476,7 +476,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define HELMET_PRICE                90
 #define HELMET_RANGE                1000.0f
-#define HELMET_POISON_PROTECTION    2 
+#define HELMET_POISON_PROTECTION    2
 
 #define MEDKIT_PRICE                0
 
@@ -502,7 +502,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MEDKIT_STARTUP_TIME         4000
 #define MEDKIT_STARTUP_SPEED        5
 
-#define LIGHTARMOUR_NL_AVERAGE      0.55  //used for marauder's zapschachtmeisterProcess
+#define LIGHTARMOUR_NL_AVERAGE      0.55  // used for marauder's zap
 #define HELMET_NL_AVERAGE           0.15
 #define BSUIT_NL_AVERAGE            0.8
 

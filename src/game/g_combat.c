@@ -167,7 +167,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
   if( self->client->ps.pm_type == PM_DEAD )
     return;
-  
+
 
   if( level.intermissiontime )
     return;
@@ -182,13 +182,13 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
     if( attacker->client )
     {
       killerName = attacker->client->pers.netname;
-      tk = ( attacker != self && attacker->client->ps.stats[ STAT_PTEAM ] 
+      tk = ( attacker != self && attacker->client->ps.stats[ STAT_PTEAM ]
         == self->client->ps.stats[ STAT_PTEAM ] );
 
-      if( attacker != self && attacker->client->ps.stats[ STAT_PTEAM ]  == self->client->ps.stats[ STAT_PTEAM ] ) 
+      if( attacker != self && attacker->client->ps.stats[ STAT_PTEAM ]  == self->client->ps.stats[ STAT_PTEAM ] )
       {
         attacker->client->pers.statscounters.teamkills++;
-        if( attacker->client->pers.teamSelection == PTE_ALIENS ) 
+        if( attacker->client->pers.teamSelection == PTE_ALIENS )
         {
           level.alienStatsCounters.teamkills++;
         }
@@ -263,7 +263,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
   self->client->ps.persistant[ PERS_KILLED ]++;
   self->client->pers.statscounters.deaths++;
-  if( self->client->pers.teamSelection == PTE_ALIENS ) 
+  if( self->client->pers.teamSelection == PTE_ALIENS )
   {
     level.alienStatsCounters.deaths++;
   }
@@ -310,7 +310,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
       if( g_gradualFreeFunds.integer < 2 )
         attacker->client->pers.lastFreekillTime = level.time;
       attacker->client->pers.statscounters.kills++;
-      if( attacker->client->pers.teamSelection == PTE_ALIENS ) 
+      if( attacker->client->pers.teamSelection == PTE_ALIENS )
       {
         level.alienStatsCounters.kills++;
       }
@@ -319,11 +319,11 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
          level.humanStatsCounters.kills++;
       }
      }
-    
+
     if( attacker == self )
     {
       attacker->client->pers.statscounters.suicides++;
-      if( attacker->client->pers.teamSelection == PTE_ALIENS ) 
+      if( attacker->client->pers.teamSelection == PTE_ALIENS )
       {
         level.alienStatsCounters.suicides++;
       }
@@ -444,16 +444,16 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
           if ( !frags )
            break;
         }
-        
+
         // now move the evos around
         for ( i = 0; i < MAX_CLIENTS; i++ )
         {
           if ( !toPay[ i ] )
             continue;
-          
+
           G_AddCreditToClient( self->client, toPay[ i ], qtrue );
           G_AddCreditToClient( g_entities[ i ].client, -toPay[ i ], qtrue );
-          
+
           self->client->pers.statscounters.received += toPay[ i ];
           g_entities[ i ].client->pers.statscounters.shared += toPay[ i ];
 
@@ -471,7 +471,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
   // if players did more than DAMAGE_FRACTION_FOR_KILL increment the stage counters
   if( !OnSameTeam( self, attacker ) && totalDamage >= ( self->client->ps.stats[ STAT_MAX_HEALTH ] * DAMAGE_FRACTION_FOR_KILL ) )
   {
-    if( self->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS ) 
+    if( self->client->ps.stats[ STAT_PTEAM ] == PTE_HUMANS )
     {
       trap_Cvar_Set( "g_alienKills", va( "%d", g_alienKills.integer + 1 ) );
       if( g_alienStage.integer < 2 )
@@ -528,7 +528,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
         }
 
         //add credit
-        amount = classValue * percentDamage; 
+        amount = classValue * percentDamage;
         G_AddCreditToClient( player->client, amount, qtrue );
         player->client->pers.statscounters.earned += amount;
         self->client->pers.statscounters.fed += amount;
@@ -581,7 +581,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
             player->client->pers.statscounters.assists++;
             level.alienStatsCounters.assists++;
          }
-    
+
         frags = (int)floor( humanValue * percentDamage);
 
         if( frags > 0 )
@@ -1037,11 +1037,23 @@ static float G_CalcDamageModifier( vec3_t point, gentity_t *targ, gentity_t *att
 
   if( dflags & DAMAGE_NO_LOCDAMAGE )
   {
-    if( BG_InventoryContainsUpgrade( UP_BATTLESUIT, targ->client->ps.stats ) ) modifier -= BSUIT_NL_AVERAGE;
-    else
+    for( i = UP_NONE + 1; i < UP_NUM_UPGRADES; i++ )
     {
-      if( BG_InventoryContainsUpgrade( UP_HELMET, targ->client->ps.stats ) ) modifier -= HELMET_NL_AVERAGE;
-      if( BG_InventoryContainsUpgrade( UP_LIGHTARMOUR, targ->client->ps.stats ) ) modifier -= LIGHTARMOUR_NL_AVERAGE;
+      float totalModifier = 0.0f;
+      float averageModifier = 1.0f;
+
+      //average all of this upgrade's armour regions together
+      if( BG_InventoryContainsUpgrade( i, targ->client->ps.stats ) )
+      {
+        for( j = 0; j < g_numArmourRegions[ i ]; j++ )
+          totalModifier += g_armourRegions[ i ][ j ].modifier;
+
+        if( g_numArmourRegions[ i ] )
+          averageModifier = totalModifier / g_numArmourRegions[ i ];
+        else
+          averageModifier = 1.0f;
+      }
+      modifier *= averageModifier;
     }
   }
   else
@@ -1074,8 +1086,8 @@ static float G_CalcDamageModifier( vec3_t point, gentity_t *targ, gentity_t *att
           ( g_damageRegions[ class ][ i ].crouch ==
             ( targ->client->ps.pm_flags & PMF_DUCKED ) ) )
         modifier *= g_damageRegions[ class ][ i ].modifier;
-    }    
-    
+    }
+
     if( attacker && attacker->client && modifier == 2 )
     {
       attacker->client->pers.statscounters.headshots++;
@@ -1343,7 +1355,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
         push[2] = 64.0f;
         VectorAdd( targ->client->ps.velocity, push, targ->client->ps.velocity );
         return;
-      } 
+      }
       else if(mod == MOD_LEVEL4_CHARGE || mod == MOD_LEVEL3_POUNCE )
       { // don't do friendly fire on movement attacks
         if( g_friendlyFireMovementAttacks.value <= 0 || ( g_friendlyFire.value<=0 && g_friendlyFireAliens.value<=0 ) )
@@ -1358,7 +1370,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
           if(g_friendlyFireHumans.value<=0)
             return;
           else if( g_friendlyFireHumans.value > 0 && g_friendlyFireHumans.value < 1 )
-            damage =(int)(0.5 + g_friendlyFireHumans.value * (float) damage);       
+            damage =(int)(0.5 + g_friendlyFireHumans.value * (float) damage);
         }
         if( targ->client->ps.stats[ STAT_PTEAM ] == PTE_ALIENS )
         {
@@ -1378,7 +1390,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
     if( targ->s.eType == ET_BUILDABLE && attacker->client &&
         targ->biteam == attacker->client->pers.teamSelection )
     {
-      if(mod == MOD_LEVEL4_CHARGE || mod == MOD_LEVEL3_POUNCE ) 
+      if(mod == MOD_LEVEL4_CHARGE || mod == MOD_LEVEL3_POUNCE )
       {
          if(g_friendlyFireMovementAttacks.value <= 0)
            return;
@@ -1401,7 +1413,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
     if( level.paused )
       return;
-    
+
     if(targ->s.eType == ET_BUILDABLE && g_cheats.integer && g_devmapNoStructDmg.integer)
       return;
 
@@ -1484,7 +1496,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
   }
 
   takeNoOverkill = take;
-  if( takeNoOverkill > targ->health ) 
+  if( takeNoOverkill > targ->health )
   {
     if(targ->health > 0)
       takeNoOverkill = targ->health;
@@ -1497,10 +1509,10 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
     //Increment some stats counters
     if( attacker && attacker->client )
     {
-      if( targ->biteam == attacker->client->pers.teamSelection || OnSameTeam( targ, attacker ) ) 
+      if( targ->biteam == attacker->client->pers.teamSelection || OnSameTeam( targ, attacker ) )
       {
         attacker->client->pers.statscounters.ffdmgdone += takeNoOverkill;
-        if( attacker->client->pers.teamSelection == PTE_ALIENS ) 
+        if( attacker->client->pers.teamSelection == PTE_ALIENS )
         {
           level.alienStatsCounters.ffdmgdone+=takeNoOverkill;
         }
@@ -1512,8 +1524,8 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
       else if( targ->s.eType == ET_BUILDABLE )
       {
         attacker->client->pers.statscounters.structdmgdone += takeNoOverkill;
-            
-        if( attacker->client->pers.teamSelection == PTE_ALIENS ) 
+
+        if( attacker->client->pers.teamSelection == PTE_ALIENS )
         {
           level.alienStatsCounters.structdmgdone+=takeNoOverkill;
         }
@@ -1521,11 +1533,11 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
         {
           level.humanStatsCounters.structdmgdone+=takeNoOverkill;
         }
-            
+
         if( targ->health > 0 && ( targ->health - take ) <=0 )
         {
           attacker->client->pers.statscounters.structskilled++;
-          if( attacker->client->pers.teamSelection == PTE_ALIENS ) 
+          if( attacker->client->pers.teamSelection == PTE_ALIENS )
           {
             level.alienStatsCounters.structskilled++;
           }
@@ -1539,7 +1551,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
       {
         attacker->client->pers.statscounters.dmgdone +=takeNoOverkill;
         attacker->client->pers.statscounters.hits++;
-        if( attacker->client->pers.teamSelection == PTE_ALIENS ) 
+        if( attacker->client->pers.teamSelection == PTE_ALIENS )
         {
           level.alienStatsCounters.dmgdone+=takeNoOverkill;
         }
@@ -1561,7 +1573,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
       }
     }
 
-    
+
     //Do the damage
     targ->health = targ->health - take;
 
@@ -1789,8 +1801,6 @@ qboolean G_RadiusDamage( vec3_t origin, gentity_t *attacker, float damage,
       // push the center of mass higher than the origin so players
       // get knocked into the air more
       dir[ 2 ] += 24;
-      if( ent == attacker->parent || mod == MOD_LCANNON_SPLASH )
-        points *= 0.75f; //memespider: deflating how much damage lcannon overcharge does to the user once non-locational damage is fixor'd
       G_Damage( ent, NULL, attacker, dir, origin,
           (int)points, DAMAGE_RADIUS|DAMAGE_NO_LOCDAMAGE|dflags, mod );
     }
@@ -1842,4 +1852,3 @@ void G_Knockback( gentity_t *targ, vec3_t dir, int knockback )
     }
   }
 }
-
