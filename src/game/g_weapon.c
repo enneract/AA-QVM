@@ -1167,7 +1167,7 @@ G_CreateNewZap
 */
 static void G_CreateNewZap( gentity_t *creator, gentity_t *target )
 {
-  int       i, j, r;
+  int       i, j;
   zap_t     *zap;
 
   for( i = 0; i < MAX_ZAPS; i++ )
@@ -1212,9 +1212,9 @@ G_UpdateZaps
 */
 void G_UpdateZaps( int msec )
 {
-  int   i, j, k;
+  int   i, j;
   zap_t *zap;
-  float trueDamage=0;
+  float trueDamage = 0;
   float damageFraction = 1;
 
   for( i = 0; i < MAX_ZAPS; i++ )
@@ -1253,19 +1253,17 @@ void G_UpdateZaps( int msec )
 
           //let's not have the damage numbers inflated by a high msec value, thank you very much
           if (trueDamage + zap->damageUsed > LEVEL2_AREAZAP_DMG )
-          {
             trueDamage = LEVEL2_AREAZAP_DMG - zap->damageUsed;
-          }
+            
           zap->damageUsed += trueDamage;
         }
 
-        for( j = 0; j < zap->numTargets; j++ )
+        for( j = 0; j < zap->numTargets ; j++ )
         {
           gentity_t *source;
           gentity_t *target = zap->targets[ j ];
           int       damage;
-          float     damageFalloffFac;
-          float     armourTotal = 0;
+          float     armourFac = 0;
           vec3_t    forward;
 
           if( j == 0 )
@@ -1273,15 +1271,17 @@ void G_UpdateZaps( int msec )
           else
             source = zap->targets[ j - 1 ];
 
-          if( BG_InventoryContainsUpgrade( UP_BATTLESUIT, target->client->ps.stats ) ) armourTotal = BSUIT_NL_AVERAGE;
-          else
-          {
-            if( BG_InventoryContainsUpgrade( UP_HELMET, target->client->ps.stats ) ) armourTotal += HELMET_NL_AVERAGE;
-            if( BG_InventoryContainsUpgrade( UP_LIGHTARMOUR, target->client->ps.stats ) ) armourTotal += LIGHTARMOUR_NL_AVERAGE;
+          if( target->client ){
+            if( BG_InventoryContainsUpgrade( UP_BATTLESUIT, target->client->ps.stats ) ) armourFac += BSUIT_NL_AVERAGE;
+            else
+            {
+              if( BG_InventoryContainsUpgrade( UP_HELMET, target->client->ps.stats ) ) armourFac += HELMET_NL_AVERAGE;
+              if( BG_InventoryContainsUpgrade( UP_LIGHTARMOUR, target->client->ps.stats ) ) armourFac += LIGHTARMOUR_NL_AVERAGE;
+            }
+            armourFac *= 1 - LEVEL2_AREAZAP_ARMOURPEN;
           }
-          armourTotal *= 1 - LEVEL2_AREAZAP_ARMOURPEN;
 
-          zap->damageBuffer[ j ] += trueDamage * damageFraction * (1 - armourTotal);
+          zap->damageBuffer[ j ] += trueDamage * damageFraction * (1 - armourFac);
           damage = (int)( zap->damageBuffer[ j ] );
           zap->damageBuffer[ j ] -= damage;
 
@@ -1291,11 +1291,11 @@ void G_UpdateZaps( int msec )
           if( damage )
             G_Damage( target, source, zap->creator, forward, target->s.origin, damage, DAMAGE_NO_MOD, MOD_LEVEL2_ZAP );
 
-          if(target->s.eType == ET_BUILDABLE )
-            damageFalloffFac = LEVEL2_AREAZAP_FALLOFF_BLD;
+          if( target->s.eType == ET_BUILDABLE )
+            damageFraction /=  LEVEL2_AREAZAP_FALLOFF_BLD;
           else
-            damageFalloffFac = LEVEL2_AREAZAP_FALLOFF;
-          damageFraction /= damageFalloffFac;
+            damageFraction /=  LEVEL2_AREAZAP_FALLOFF;
+
         }
       }
 
