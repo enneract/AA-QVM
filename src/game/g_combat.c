@@ -999,6 +999,9 @@ static float G_CalcDamageModifier( vec3_t point, gentity_t *targ, gentity_t *att
 
   if( point == NULL )
     return 1.0f;
+    
+  if(dflags & DAMAGE_NO_MOD)
+    return 1.0f;
 
   if( g_unlagged.integer && targ->client && targ->client->unlaggedCalc.used )
     VectorCopy( targ->client->unlaggedCalc.origin, targOrigin );
@@ -1241,7 +1244,6 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
   int     knockback = 0;
   float damagemodifier=0.0;
   int takeNoOverkill;
-  int campForgiveness = (-1 * g_sdDefenderForgiveness.integer );
 
   if( !targ->takedamage )
     return;
