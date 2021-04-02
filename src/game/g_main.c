@@ -814,6 +814,7 @@ G_MapConfigs
 */
 void G_MapConfigs(const char *mapname)
 {
+	char buffer[MAX_QPATH];
 
 	if (!g_mapConfigs.string[0])
 		return;
@@ -825,9 +826,12 @@ void G_MapConfigs(const char *mapname)
 				va("exec \"%s/default.cfg\"\n",
 				   g_mapConfigs.string));
 
+	Q_strncpyz(buffer, mapname, sizeof(buffer));
+	Q_strlwr(buffer);
+	
 	trap_SendConsoleCommand(EXEC_APPEND,
 				va("exec \"%s/%s.cfg\"\n", g_mapConfigs.string,
-				   mapname));
+				   buffer));
 
 	trap_Cvar_Set("g_mapConfigsLoaded", "1");
 }
