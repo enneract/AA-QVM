@@ -118,6 +118,9 @@ qboolean Team_GetLocationMsg(gentity_t * ent, char *loc, int loclen)
 {
 	gentity_t *best;
 
+	if (ent->client->pers.teamSelection == PTE_NONE)
+		return qfalse; // no need for locations for spectators
+
 	best = Team_GetLocation(ent);
 
 	if (!best)
