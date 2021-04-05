@@ -1770,6 +1770,12 @@ void Cmd_CallVote_f(gentity_t * ent)
 			    "Set the next map to ^7'%s^7'", arg2);
 		level.votePassThreshold = g_mapVotesPercent.integer;
 	} else if (!Q_stricmp(arg1, "draw")) {
+		if (level.numAlienSpawns < 1 || level.numHumanSpawns < 1) {
+			trap_SendServerCommand(ent - g_entities,
+					       "print \"^7callvote: One or both teams have no spawns so a draw may not be called.\n"
+								 "Use ^3/callteamvote admitdefeat ^7instead.\n\"");
+			return;
+		}
 		Com_sprintf(level.voteString, sizeof(level.voteString),
 			    "evacuation");
 		Com_sprintf(level.voteDisplayString,
