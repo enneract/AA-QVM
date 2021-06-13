@@ -922,9 +922,7 @@ void CheckGrabAttack(gentity_t * ent)
 
 	VectorMA(muzzle, LEVEL1_GRAB_RANGE, forward, end);
 
-	G_UnlaggedOn(ent, muzzle, LEVEL1_GRAB_RANGE);
 	trap_Trace(&tr, muzzle, NULL, NULL, end, ent->s.number, MASK_SHOT);
-	G_UnlaggedOff();
 
 	if (tr.surfaceFlags & SURF_NOIMPACT)
 		return;
