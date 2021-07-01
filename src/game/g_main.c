@@ -2006,11 +2006,6 @@ void ExitLevel(void)
 	gclient_t *cl;
 	buildHistory_t *tmp, *mark;
 
-	char currentmap[MAX_CVAR_VALUE_STRING];
-
-	trap_Cvar_VariableStringBuffer("mapname", currentmap,
-				       sizeof(currentmap));
-
 	if (level.mapRotationVoteTime) {
 		if (level.time < level.mapRotationVoteTime &&
 		    !G_IntermissionMapVoteWinner())
@@ -2029,9 +2024,7 @@ void ExitLevel(void)
 		}
 	}
 
-	if (!Q_stricmp(currentmap, g_nextMap.string))
-		trap_SendConsoleCommand(EXEC_APPEND, "map_restart\n");
-	else if (G_MapExists(g_nextMap.string))
+	if ( G_MapExists( g_nextMap.string ) )
 		trap_SendConsoleCommand(EXEC_APPEND,
 					va("!map %s\n", g_nextMap.string));
 	else if (G_MapRotationActive())
