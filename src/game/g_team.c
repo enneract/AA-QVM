@@ -295,7 +295,7 @@ void G_LeaveTeam(gentity_t * self)
 {
 	pTeam_t team = self->client->pers.teamSelection;
 	gentity_t *ent;
-	int i, clientNum;
+	int i, clientNum, cs_offset;
 
 	clientNum = self->client->ps.clientNum;
 
@@ -340,20 +340,21 @@ void G_LeaveTeam(gentity_t * self)
 		}
 	}
 
-	if (level.teamVoteTime[team] && level.teamVotedHow[team][clientNum]) {
-		int cs_offset = (team == PTE_ALIENS ? 1 : 0);
+	cs_offset = (team == PTE_ALIENS ? 1 : 0);
 
-		if (level.teamVotedHow[team][clientNum] > 0) {
-			level.teamVoteYes[team]--;
+	if (level.teamVoteTime[cs_offset] && level.teamVotedHow[cs_offset][clientNum]) {
+
+		if (level.teamVotedHow[cs_offset][clientNum] > 0) {
+			level.teamVoteYes[cs_offset]--;
 			trap_SetConfigstring(CS_TEAMVOTE_YES + cs_offset,
-					     va("%i", level.teamVoteYes[team]));
+					     va("%i", level.teamVoteYes[cs_offset]));
 		} else {
-			level.teamVoteNo[team]--;
+			level.teamVoteNo[cs_offset]--;
 			trap_SetConfigstring(CS_TEAMVOTE_NO + cs_offset,
-					     va("%i", level.teamVoteNo[team]));
+					     va("%i", level.teamVoteNo[cs_offset]));
 		}
 
-		level.teamVotedHow[team][clientNum] = 0;
+		level.teamVotedHow[cs_offset][clientNum] = 0;
 	}
 }
 
