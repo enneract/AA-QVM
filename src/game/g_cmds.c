@@ -4258,11 +4258,12 @@ Cmd_TeamStatus_f
 */
 void Cmd_TeamStatus_f(gentity_t * ent)
 {
-	char multiple[12];
+	char multiomrc[12];
+	char multidchovel[12];
 	int builders = 0;
-	int arm = 0, mediboost = 0;
-	int omrccount = 0, omrchealth = 0;
-	qboolean omrcbuild = qfalse;
+	int arm = 0, mediboost = 0, dcchovel = 0;
+	int omrccount = 0, omrchealth = 0, dcchovelhp = 0;
+	qboolean omrcbuild = qfalse, dcchovelbld = qfalse;
 	gentity_t *tmp;
 	int i;
 
@@ -4331,6 +4332,14 @@ void Cmd_TeamStatus_f(gentity_t * ent)
 			case BA_A_BOOSTER:
 				mediboost++;
 				break;
+			case BA_H_DCC:
+			case BA_A_HOVEL:
+				dcchovel++;
+				if (tmp->health > dcchovelhp)
+					dcchovelhp = tmp->health;
+				if (!dcchovelbld)
+					dcchovelbld = tmp->spawned;
+				break;
 			default:
 				break;
 			}
@@ -4338,25 +4347,33 @@ void Cmd_TeamStatus_f(gentity_t * ent)
 	}
 
 	if (omrccount > 1)
-		Com_sprintf(multiple, sizeof(multiple), "^7[x%d]", omrccount);
+		Com_sprintf(multiomrc, sizeof(multiomrc), "^7[x%d]", omrccount);
 	else
-		multiple[0] = '\0';
+		multiomrc[0] = '\0';
+	
+	if (dcchovel > 1)
+		Com_sprintf(multidchovel, sizeof(multidchovel), "^7[x%d]", dcchovel);
+	else
+		multidchovel[0] = '\0';
 
 	if (ent->client->pers.teamSelection == PTE_ALIENS) {
 		G_Say(ent, NULL, SAY_TEAM,
 		      va
-		      ("^3OM: %s(%d)%s ^3Spawns: ^5%d ^3Builders: ^5%d ^3Boosters: ^5%d^7",
-		       (!omrccount) ? "^1Down" : (omrcbuild) ? "^2Up" :
-		       "^5Building", omrchealth * 100 / OVERMIND_HEALTH,
-		       multiple, level.numAlienSpawns, builders, mediboost));
+		      ("^3OM: %s(%d)%s ^3Spawns: ^5%d ^3Builders: ^5%d ^3Boosters: ^5%d^7 ^3Hovel: %s(%d)%s^7",
+		       (!omrccount) ? "^1Down" : (omrcbuild) ? "^2Up" : // OM health logic
+		       "^5Building", omrchealth * 100 / OVERMIND_HEALTH, multiomrc, 
+					 level.numAlienSpawns, builders, mediboost, // spawns, builders, booster
+					 (!dcchovel) ? "^1None" : (dcchovelbld) ? "^2Up" : // hovel health logic
+		       "^5Building", dcchovelhp * 100 / HOVEL_HEALTH, multidchovel));
 	} else {
 		G_Say(ent, NULL, SAY_TEAM,
 		      va
-		      ("^3RC: %s(%d)%s ^3Spawns: ^5%d ^3Builders: ^5%d ^3Armouries: ^5%d ^3Medistations: ^5%d^7",
-		       (!omrccount) ? "^1Down" : (omrcbuild) ? "^2Up" :
-		       "^5Building", omrchealth * 100 / REACTOR_HEALTH,
-		       multiple, level.numHumanSpawns, builders, arm,
-		       mediboost));
+		      ("^3RC: %s(%d)%s ^3Spawns: ^5%d ^3Builders: ^5%d ^3Armouries: ^5%d ^3Medistations: ^5%d ^3DC: %s(%d)%s^7",
+		       (!omrccount) ? "^1Down" : (omrcbuild) ? "^2Up" : // RC health logic
+		       "^5Building", omrchealth * 100 / REACTOR_HEALTH, multiomrc, 
+					 level.numHumanSpawns, builders, arm, mediboost, // spawns, builders, arm, medi
+					 (!dcchovel) ? "^1None" : (dcchovelbld) ? "^2Online" : // dcc health logic
+		       "^5Building", dcchovelhp * 100 / DC_HEALTH, multidchovel));
 	}
 }
 
