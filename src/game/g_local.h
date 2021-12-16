@@ -1469,7 +1469,7 @@ extern vmCvar_t g_slapDamage;
 
 extern vmCvar_t g_voteMinTime;
 extern vmCvar_t g_mapvoteMaxTime;
-extern vmCvar_t g_votableMaps;
+extern vmCvar_t g_blacklistedMaps;
 
 extern vmCvar_t g_msg;
 extern vmCvar_t g_msgTime;

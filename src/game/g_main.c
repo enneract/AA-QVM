@@ -218,7 +218,7 @@ vmCvar_t g_slapDamage;
 
 vmCvar_t g_voteMinTime;
 vmCvar_t g_mapvoteMaxTime;
-vmCvar_t g_votableMaps;
+vmCvar_t g_blacklistedMaps;
 
 vmCvar_t g_msg;
 vmCvar_t g_msgTime;
@@ -360,7 +360,7 @@ static cvarTable_t gameCvarTable[] = {
 	{ &g_voteMinTime, "g_voteMinTime", "120", CVAR_ARCHIVE, 0, qfalse },
 	{ &g_mapvoteMaxTime, "g_mapvoteMaxTime", "240", CVAR_ARCHIVE, 0,
 	 qfalse },
-	{ &g_votableMaps, "g_votableMaps", "", CVAR_ARCHIVE, 0, qtrue },
+	{ &g_blacklistedMaps, "g_blacklistedMaps", "", CVAR_ARCHIVE, 0, qtrue },
 	{ &g_suddenDeathVotePercent, "g_suddenDeathVotePercent", "74",
 	 CVAR_ARCHIVE, 0, qfalse },
 	{ &g_suddenDeathVoteDelay, "g_suddenDeathVoteDelay", "180",
