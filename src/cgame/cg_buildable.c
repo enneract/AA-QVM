@@ -620,7 +620,7 @@ static void CG_PositionAndOrientateBuildable(const vec3_t angles,
 					     const vec3_t maxs,
 					     vec3_t outAxis[3],
 					     vec3_t outOrigin,
-					     qboolean alien)
+					     buildable_t buildable)
 {
 	vec3_t forward, start, end;
 	trace_t tr, box_tr;
@@ -656,7 +656,7 @@ static void CG_PositionAndOrientateBuildable(const vec3_t angles,
 	// or the model is positioned in thin air anyways.
 	// cu-kai: don't fix alien buildables here, this breaks them more.
 	//				 TODO: fix alien buildables properly later
-	if(!alien && (mag > 10.0f || tr.fraction == 1.0f))
+	if (BG_FindTeamForBuildable(buildable) == BIT_HUMANS && (mag > 10.0f || tr.fraction == 1.0f))
 		fraction = box_tr.fraction;
 
 	VectorMA(inOrigin, fraction * -TRACE_DEPTH, normal, outOrigin);
@@ -687,8 +687,7 @@ void CG_GhostBuildable(buildable_t buildable)
 
 	CG_PositionAndOrientateBuildable(ps->viewangles, entity_origin,
 					 tr.plane.normal, ps->clientNum, mins,
-					 maxs, ent.axis, ent.origin, 
-					 BG_FindTeamForBuildable(buildable) == BIT_ALIENS);
+					 maxs, ent.axis, ent.origin, buildable);
 
 	//offset on the Z axis if required
 	VectorMA(ent.origin, BG_FindZOffsetForBuildable(buildable),
@@ -1202,6 +1201,7 @@ void CG_Buildable(centity_t * cent)
 {
 	refEntity_t ent;
 	entityState_t *es = &cent->currentState;
+	buildable_t buildable = cent->currentState.modelindex;
 	vec3_t angles;
 	vec3_t surfNormal, xNormal, mins, maxs;
 	vec3_t refNormal = { 0.0f, 0.0f, 1.0f };
@@ -1237,8 +1237,7 @@ void CG_Buildable(centity_t * cent)
 	if (es->pos.trType == TR_STATIONARY)
 		CG_PositionAndOrientateBuildable(angles, ent.origin, surfNormal,
 						 es->number, mins, maxs,
-						 ent.axis, ent.origin, 
-						 BG_FindTeamForBuildable(es->modelindex) == BIT_ALIENS);
+						 ent.axis, ent.origin, buildable);
 
 	//offset on the Z axis if required
 	VectorMA(ent.origin, BG_FindZOffsetForBuildable(es->modelindex),
