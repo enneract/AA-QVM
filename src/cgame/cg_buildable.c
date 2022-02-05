@@ -645,19 +645,19 @@ static void CG_PositionAndOrientateBuildable(const vec3_t angles,
 	VectorMA(inOrigin, 1.0f, normal, start);
 	CG_CapTrace(&tr, start, mins, maxs, end, skipNumber, MASK_PLAYERSOLID);
 
-	CG_Trace( &box_tr, start, mins, maxs, end, skipNumber,
-            MASK_PLAYERSOLID );
+	CG_Trace(&box_tr, start, mins, maxs, end, skipNumber,
+					 MASK_PLAYERSOLID);
 
-  mag = Distance( tr.endpos, box_tr.endpos );
+	mag = Distance(tr.endpos, box_tr.endpos);
 
-  fraction = tr.fraction;
+ 	fraction = tr.fraction;
 
-  // this is either too far off of the bbox to be useful for gameplay purposes
-  // or the model is positioned in thin air anyways.
+	// this is either too far off of the bbox to be useful for gameplay purposes
+	// or the model is positioned in thin air anyways.
 	// cu-kai: don't fix alien buildables here, this breaks them more.
 	//				 TODO: fix alien buildables properly later
-  if( alien == qfalse && ( mag > 10.0f || tr.fraction == 1.0f ) )
-    fraction = box_tr.fraction;
+	if(!alien && (mag > 10.0f || tr.fraction == 1.0f))
+		fraction = box_tr.fraction;
 
 	VectorMA(inOrigin, fraction * -TRACE_DEPTH, normal, outOrigin);
 }
@@ -688,7 +688,7 @@ void CG_GhostBuildable(buildable_t buildable)
 	CG_PositionAndOrientateBuildable(ps->viewangles, entity_origin,
 					 tr.plane.normal, ps->clientNum, mins,
 					 maxs, ent.axis, ent.origin, 
-					 BG_FindTeamForBuildable(buildable) == BIT_ALIENS ? qtrue : qfalse );
+					 BG_FindTeamForBuildable(buildable) == BIT_ALIENS);
 
 	//offset on the Z axis if required
 	VectorMA(ent.origin, BG_FindZOffsetForBuildable(buildable),
@@ -1238,7 +1238,7 @@ void CG_Buildable(centity_t * cent)
 		CG_PositionAndOrientateBuildable(angles, ent.origin, surfNormal,
 						 es->number, mins, maxs,
 						 ent.axis, ent.origin, 
-						 BG_FindTeamForBuildable(es->modelindex) == BIT_ALIENS ? qtrue : qfalse);
+						 BG_FindTeamForBuildable(es->modelindex) == BIT_ALIENS);
 
 	//offset on the Z axis if required
 	VectorMA(ent.origin, BG_FindZOffsetForBuildable(es->modelindex),
