@@ -656,7 +656,13 @@ static void CG_PositionAndOrientateBuildable(const vec3_t angles,
 	// or the model is positioned in thin air anyways.
 	// cu-kai: don't fix alien buildables here, this breaks them more.
 	//				 TODO: fix alien buildables properly later
-	if (BG_FindTeamForBuildable(buildable) == BIT_HUMANS && (mag > 10.0f || tr.fraction == 1.0f))
+	if ((buildable == BA_H_SPAWN ||
+			buildable == BA_H_MEDISTAT) &&
+			(mag > 10.0f || tr.fraction == 1.0f))
+		fraction = box_tr.fraction;
+	
+	else if (BG_FindTeamForBuildable(buildable) == BIT_HUMANS &&
+					 (mag > 15.0f || tr.fraction == 1.0f))
 		fraction = box_tr.fraction;
 
 	VectorMA(inOrigin, fraction * -TRACE_DEPTH, normal, outOrigin);
