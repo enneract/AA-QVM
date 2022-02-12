@@ -2036,6 +2036,12 @@ void Cmd_CallVote_f(gentity_t * ent)
 		}
 	}
 
+	trap_SendServerCommand(-1, va("cp \"%s" S_COLOR_WHITE // send the center print message
+				      " called a vote:\n%s" S_COLOR_WHITE "\"", // before the votePassThreshold & reason
+				      ent->client->pers.netname,                // is added to level.voteDisplayString
+				      va("%s\n^7(Needs > ^A%d^7 percent)",      // otherwise the message will be too long.
+				         level.voteDisplayString, level.votePassThreshold)));
+
 	if (level.votePassThreshold != 50) {
 		Q_strcat(level.voteDisplayString,
 			 sizeof(level.voteDisplayString),
@@ -2052,11 +2058,6 @@ void Cmd_CallVote_f(gentity_t * ent)
 
 	trap_SendServerCommand(-1, va("print \"^3/callvote:^7 %s" S_COLOR_WHITE
 				      " called a vote: %s" S_COLOR_WHITE "\n\"",
-				      ent->client->pers.netname,
-				      level.voteDisplayString));
-
-	trap_SendServerCommand(-1, va("cp \"%s" S_COLOR_WHITE
-				      " called a vote:\n%s" S_COLOR_WHITE "\"",
 				      ent->client->pers.netname,
 				      level.voteDisplayString));
 

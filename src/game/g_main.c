@@ -2589,7 +2589,7 @@ CheckVote
 void CheckVote(void)
 {
 	int votePassThreshold = level.votePassThreshold;
-	int voteYesPercent, turnout;
+	int voteYesPercent, turnout = 0;
 	char *turnoutCol;
 
 	if (level.voteExecuteTime && level.voteExecuteTime < level.time) {
@@ -2677,8 +2677,8 @@ void CheckVote(void)
 	else
 		voteYesPercent = 0;
 
-	turnout =
-	    100 * (level.voteYes + level.voteNo) / level.numConnectedClients;
+	if (level.numConnectedClients > 0) // can't divide by 0!
+		turnout = 100 * (level.voteYes + level.voteNo) / level.numConnectedClients;
 
 	if (turnout <= 10) {
 		turnoutCol = "^1";
@@ -2698,7 +2698,7 @@ void CheckVote(void)
 			// execute the command, then remove the vote
 			trap_SendServerCommand(-1,
 					       va
-					       ("print \"Vote ^Zpassed ^7(^ZYes^7: %d | ^ANo^7: %d | ^dTurnout^7: %s%i%%^7)\n\"",
+					       ("print \"Vote ^Zpassed ^7(^ZYes^7: %d | ^ANo^7: %d | ^d%% of players who voted^7: %s%i%%^7)\n\"",
 						level.voteYes, level.voteNo,
 						turnoutCol, turnout));
 			G_LogPrintf
@@ -2709,7 +2709,7 @@ void CheckVote(void)
 			// same behavior as a timeout
 			trap_SendServerCommand(-1,
 					       va
-					       ("print \"Vote ^Afailed ^7(^ZYes^7: %d | ^ANo^7: %d | ^dTurnout^7: %s%i%%^7)\n\"",
+					       ("print \"Vote ^Afailed ^7(^ZYes^7: %d | ^ANo^7: %d | ^d%% of players who voted^7: %s%i%%^7)\n\"",
 						level.voteYes, level.voteNo,
 						turnoutCol, turnout));
 			G_LogPrintf
@@ -2723,7 +2723,7 @@ void CheckVote(void)
 			// execute the command, then remove the vote
 			trap_SendServerCommand(-1,
 					       va
-					       ("print \"Vote ^Zpassed ^7(^ZYes^7: %d | ^ANo^7: %d | ^dTurnout^7: %s%i%%^7)\n\"",
+					       ("print \"Vote ^Zpassed ^7(^ZYes^7: %d | ^ANo^7: %d | ^d%% of players who voted^7: %s%i%%^7)\n\"",
 						level.voteYes, level.voteNo,
 						turnoutCol, turnout));
 			G_LogPrintf
@@ -2737,7 +2737,7 @@ void CheckVote(void)
 			// same behavior as a timeout
 			trap_SendServerCommand(-1,
 					       va
-					       ("print \"Vote ^Afailed ^7(^ZYes^7: %d | ^ANo^7: %d | ^dTurnout^7: %s%i%%^7)\n\"",
+					       ("print \"Vote ^Afailed ^7(^ZYes^7: %d | ^ANo^7: %d | ^d%% of players who voted^7: %s%i%%^7)\n\"",
 						level.voteYes, level.voteNo,
 						turnoutCol, turnout));
 			G_LogPrintf
