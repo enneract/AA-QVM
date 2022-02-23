@@ -1128,7 +1128,7 @@ static void admin_log(gentity_t * admin, char *cmd, int skiparg)
 
 	if (victim && Q_stricmp(cmd, "attempted")) {
 		Com_sprintf(string, sizeof(string),
-			    "%3i:%i%i: %i: %s: %s (%s): %s: %s: %s: %s: \"%s\"\n",
+			    "%3i:%i%i: %i: %s: %s (%s): %s: %s: %s: %s: \"%.512s\"\n",
 			    min,
 			    tens,
 			    sec,
@@ -1144,7 +1144,7 @@ static void admin_log(gentity_t * admin, char *cmd, int skiparg)
 			    G_SayConcatArgs(2 + skiparg));
 	} else {
 		Com_sprintf(string, sizeof(string),
-			    "%3i:%i%i: %i: %s: %s (%s): %s: %s: \"%s\"\n",
+			    "%3i:%i%i: %i: %s: %s (%s): %s: %s: \"%.512s\"\n",
 			    min,
 			    tens,
 			    sec,
@@ -1166,14 +1166,14 @@ static void admin_log(gentity_t * admin, char *cmd, int skiparg)
 
 	if (!Q_stricmp(cmd, "attempted")) {
 		Com_sprintf(string, sizeof(string),
-			    "%s^7 (%i) %s: %s",
+			    "%s^7 (%i) %s: %.512s",
 			    (admin) ? admin->client->pers.netname : "console",
 			    (admin) ? admin->s.clientNum : -1,
 			    cmd, G_SayConcatArgs(1 + skiparg));
 		G_AdminsPrintf("%s\n", string);
 	}
 
-	G_LogPrintf("Admin Command: %s^7 (%s^7): %s %s\n",
+	G_LogPrintf("Admin Command: %s^7 (%s^7): %s %.512s\n",
 		    (admin) ? admin->client->pers.netname : "console",
 		    (admin) ? admin->client->pers.adminName : "console", cmd,
 		    G_SayConcatArgs(1 + skiparg));
