@@ -872,7 +872,7 @@ void ClientTimerActions(gentity_t * ent, int msec)
 					   BA_A_BOOSTER && boostEntity->spawned
 					   && boostEntity->health > 0) {
 					if (client->ps.stats[STAT_PCLASS] == PCL_ALIEN_LEVEL4) {
-						modifier = BOOSTER_REGEN_MOD * 1.05f; // give rants a slightly faster healing
+						modifier = BOOSTER_REGEN_MOD * 1.2f; // give rants a slightly faster healing
 						break;															 // modifier only when near a booster
 					}
 					modifier = BOOSTER_REGEN_MOD;
