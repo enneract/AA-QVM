@@ -1571,7 +1571,7 @@ classAttributes_t bg_classList[] = {
 	  },
 	{
 	 PCL_ALIEN_LEVEL0,	//int     classnum;
-	 "level0",		//char    *classname;
+	 "level4",		//char    *classname;
 	 "Soldier",		//char    *humanname;
 	 "jumper",		//char    *modelname;
 	 0.2f,			//float   modelScale;
@@ -1609,7 +1609,7 @@ classAttributes_t bg_classList[] = {
 	  },
 	{
 	 PCL_ALIEN_LEVEL1,	//int     classnum;
-	 "level1",		//char    *classname;
+	 "level3",		//char    *classname;
 	 "Hydra",		//char    *humanname;
 	 "spitter",		//char    *modelname;
 	 0.6f,			//float   modelScale;
@@ -1647,7 +1647,7 @@ classAttributes_t bg_classList[] = {
 	  },
 	{
 	 PCL_ALIEN_LEVEL1_UPG,	//int     classnum;
-	 "level1upg",		//char    *classname;
+	 "level3upg",		//char    *classname;
 	 "Hydra Upgrade",	//char    *humanname;
 	 "spitter",		//char    *modelname;
 	 0.7f,			//float   modelScale;
@@ -1761,7 +1761,7 @@ classAttributes_t bg_classList[] = {
 	  },
 	{
 	 PCL_ALIEN_LEVEL3,	//int     classnum;
-	 "level3",		//char    *classname;
+	 "level1",		//char    *classname;
 	 "Dragoon",		//char    *humanname;
 	 "prowl",		//char    *modelname;
 	 1.0f,			//float   modelScale;
@@ -1799,7 +1799,7 @@ classAttributes_t bg_classList[] = {
 	  },
 	{
 	 PCL_ALIEN_LEVEL3_UPG,	//int     classnum;
-	 "level3upg",		//char    *classname;
+	 "level1upg",		//char    *classname;
 	 "Dragoon Upgrade",	//char    *humanname;
 	 "prowl",		//char    *modelname;
 	 1.0f,			//float   modelScale;
@@ -1837,7 +1837,7 @@ classAttributes_t bg_classList[] = {
 	  },
 	{
 	 PCL_ALIEN_LEVEL4,	//int     classnum;
-	 "level4",		//char    *classname;
+	 "level0",		//char    *classname;
 	 "Big Mofo",		//char    *humanname;
 	 "mofo",		//char    *modelname;
 	 1.0f,			//float   modelScale;
