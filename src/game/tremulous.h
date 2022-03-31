@@ -364,7 +364,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define RIFLE_CLIPSIZE              30
 #define RIFLE_MAXCLIPS              6
-#define RIFLE_REPEAT                90
+#define RIFLE_REPEAT                216
 #define RIFLE_K_SCALE               1.0f
 #define RIFLE_RELOAD                2000
 #define RIFLE_PRICE                 0
@@ -386,13 +386,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define SHOTGUN_PRICE               150
 #define SHOTGUN_SHELLS              8
-#define SHOTGUN_PELLETS             8	//used to sync server and client side
+#define SHOTGUN_PELLETS             1	//used to sync server and client side
 #define SHOTGUN_MAXCLIPS            3
 #define SHOTGUN_REPEAT              1000
 #define SHOTGUN_K_SCALE             1.0f
 #define SHOTGUN_RELOAD              2000
 #define SHOTGUN_SPREAD              900
-#define SHOTGUN_DMG                 HDM(7)
+#define SHOTGUN_DMG                 HDM(56)
 
 #define LASGUN_PRICE                250
 #define LASGUN_AMMO                 200
