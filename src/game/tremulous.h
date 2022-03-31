@@ -410,11 +410,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MDRIVER_RELOAD              2000
 
 #define CHAINGUN_PRICE              400
-#define CHAINGUN_BULLETS            300
+#define CHAINGUN_CLIPS              300
 #define CHAINGUN_REPEAT             80
 #define CHAINGUN_K_SCALE            1.0f
 #define CHAINGUN_SPREAD             1000
 #define CHAINGUN_DMG                HDM(6)
+#define CHAINGUN_RELOAD             3000
 
 #define PRIFLE_PRICE                400
 #define PRIFLE_CLIPS                50

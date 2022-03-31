@@ -3043,14 +3043,14 @@ weaponAttributes_t bg_weapons[] = {
 	 SLOT_WEAPON,		//int       slots;
 	 "chaingun",		//char      *weaponName;
 	 "Chaingun",		//char      *weaponHumanName;
-	 CHAINGUN_BULLETS,	//int       maxAmmo;
-	 0,			//int       maxClips;
+	 1,	//int       maxAmmo;
+	 CHAINGUN_CLIPS,			//int       maxClips;
 	 qfalse,		//int       infiniteAmmo;
 	 qfalse,		//int       usesEnergy;
 	 CHAINGUN_REPEAT,	//int       repeatRate1;
 	 0,			//int       repeatRate2;
 	 0,			//int       repeatRate3;
-	 0,			//int       reloadTime;
+	 CHAINGUN_RELOAD,			//int       reloadTime;
 	 CHAINGUN_K_SCALE,	//float     knockbackScale;
 	 qfalse,		//qboolean  hasAltMode;
 	 qfalse,		//qboolean  hasThirdMode;
