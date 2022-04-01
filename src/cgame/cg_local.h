@@ -1324,6 +1324,9 @@ typedef struct {
 	//TA: corpse info
 	clientInfo_t corpseinfo[MAX_CLIENTS];
 
+	// shitpost
+	int lag;
+
 	int cursorX;
 	int cursorY;
 	qboolean eventHandling;

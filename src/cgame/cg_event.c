@@ -218,7 +218,7 @@ static void CG_Obituary(entityState_t * ent)
 			break;
 		case MOD_GRENADE:
 			message = "couldn't escape";
-			message2 = "'s grenade";
+			message2 = "'s lag bomb";
 			break;
 
 		case MOD_ABUILDER_CLAW:

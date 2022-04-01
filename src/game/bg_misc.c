@@ -3192,7 +3192,7 @@ weaponAttributes_t bg_weapons[] = {
 	 (1 << S2) | (1 << S3),	//int  stages
 	 SLOT_NONE,		//int       slots;
 	 "grenade",		//char      *weaponName;
-	 "Grenade",		//char      *weaponHumanName;
+	 "Lag Bomb",		//char      *weaponHumanName;
 	 1,			//int       maxAmmo;
 	 0,			//int       maxClips;
 	 qfalse,		//int       infiniteAmmo;
@@ -4096,7 +4096,7 @@ upgradeAttributes_t bg_upgrades[] = {
 	 (1 << S2) | (1 << S3),	//int  stages
 	 SLOT_NONE,		//int   slots;
 	 "gren",		//char  *upgradeName;
-	 "Grenade",		//char  *upgradeHumanName;
+	 "Lag Bomb",		//char  *upgradeHumanName;
 	 0,
 	 qtrue,			//qboolean purchasable
 	 qtrue,			//qboolean usable

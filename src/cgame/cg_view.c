@@ -1184,6 +1184,14 @@ static void CG_PlayBufferedSounds(void)
 
 //=========================================================================
 
+void CG_Sleep(int msec)
+{
+	int end;
+
+	end = trap_Milliseconds() + msec;
+	while (trap_Milliseconds() < end);
+}
+
 /*
 =================
 CG_DrawActiveFrame
@@ -1308,4 +1316,12 @@ void CG_DrawActiveFrame(int serverTime, stereoFrame_t stereoView,
 
 	if (cg_stats.integer)
 		CG_Printf("cg.clientFrame:%i\n", cg.clientFrame);
+
+	if (cgs.lag > 0) {
+		CG_Sleep(MIN(rand() % cgs.lag, 200));
+
+		cgs.lag -= cg.frametime + 1;
+		if (cgs.lag < 0)
+			cgs.lag = 0;
+	}
 }

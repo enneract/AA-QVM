@@ -1519,6 +1519,15 @@ void CG_MissileHitWall(weapon_t weaponNum, weaponMode_t weaponMode,
 	float radius = 1.0f;
 	weaponInfo_t *weapon = &cg_weapons[weaponNum];
 
+	if (weaponNum == WP_GRENADE) {
+		float range, dist;
+
+		range = 4 * GRENADE_RANGE;
+		dist = Distance(origin, cg.snap->ps.origin);
+		if (dist < range)
+			cgs.lag += 8000 * pow((range - dist) / range, 2.0f);
+	}
+
 	if (weaponMode <= WPM_NONE || weaponMode >= WPM_NUM_WEAPONMODES)
 		weaponMode = WPM_PRIMARY;
 

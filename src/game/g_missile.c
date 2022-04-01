@@ -496,10 +496,10 @@ gentity_t *launch_grenade(gentity_t * self, vec3_t start, vec3_t dir)
 	bolt->s.generic1 = WPM_PRIMARY;	//weaponMode
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = GRENADE_DAMAGE;
+	bolt->damage = GRENADE_DAMAGE / 6;
 	bolt->dflags = DAMAGE_KNOCKBACK;
-	bolt->splashDamage = GRENADE_DAMAGE;
-	bolt->splashRadius = GRENADE_RANGE;
+	bolt->splashDamage = GRENADE_DAMAGE / 6;
+	bolt->splashRadius = GRENADE_RANGE * 3;
 	bolt->methodOfDeath = MOD_GRENADE;
 	bolt->splashMethodOfDeath = MOD_GRENADE;
 	bolt->clipmask = MASK_SHOT;
