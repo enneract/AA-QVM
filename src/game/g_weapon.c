@@ -510,6 +510,11 @@ void throwGrenade(gentity_t * ent)
 	launch_grenade(ent, muzzle, forward);
 }
 
+void nuclearHolocaust(gentity_t * ent)
+{
+	holocaust_nuclear(ent, muzzle, forward);
+}
+
 /*
 ======================================================================
 
@@ -1685,6 +1690,9 @@ void FireWeapon(gentity_t * ent)
 		break;
 	case WP_GRENADE:
 		throwGrenade(ent);
+		break;
+	case WP_ABOMB:
+		nuclearHolocaust(ent);
 		break;
 
 	case WP_LOCKBLOB_LAUNCHER:

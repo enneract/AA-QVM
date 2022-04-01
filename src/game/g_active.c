@@ -1736,6 +1736,19 @@ void ClientThink_real(gentity_t * ent)
 		FireWeapon(ent);
 		ent->s.weapon = lastWeapon;
 	}
+	if (BG_InventoryContainsUpgrade(UP_ABOMB, client->ps.stats) &&
+	    BG_UpgradeIsActive(UP_ABOMB, client->ps.stats)) {
+		int lastWeapon = ent->s.weapon;
+
+		//remove grenade
+		BG_DeactivateUpgrade(UP_ABOMB, client->ps.stats);
+		BG_RemoveUpgradeFromInventory(UP_ABOMB, client->ps.stats);
+
+		//M-M-M-M-MONSTER HACK
+		ent->s.weapon = WP_ABOMB;
+		FireWeapon(ent);
+		ent->s.weapon = lastWeapon;
+	}
 	// set speed
 	client->ps.speed =
 	    g_speed.value * BG_FindSpeedForClass(client->ps.stats[STAT_PCLASS]);

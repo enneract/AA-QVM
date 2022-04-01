@@ -348,6 +348,7 @@ typedef enum {
 	WP_FLAMER,
 	WP_LUCIFER_CANNON,
 	WP_GRENADE,
+	WP_ABOMB,
 
 	WP_LOCKBLOB_LAUNCHER,
 	WP_HIVE,
@@ -374,6 +375,7 @@ typedef enum {
 	UP_JETPACK,
 	UP_BATTLESUIT,
 	UP_GRENADE,
+	UP_ABOMB,
 
 	UP_AMMO,
 
@@ -861,7 +863,9 @@ typedef enum {
 	MOD_ASPAWN,
 	MOD_ATUBE,
 	MOD_OVERMIND,
-	MOD_SLAP
+	MOD_SLAP,
+
+	MOD_NUKE
 } meansOfDeath_t;
 
 //---------------------------------------------------------

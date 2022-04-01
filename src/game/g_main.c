@@ -2530,6 +2530,15 @@ void CheckExitRules(void)
 		return;
 	}
 
+	if (level.nuclearHolocaust) {
+		level.lastWin = PTE_NONE;
+		trap_SendServerCommand(-1, "print \"I am become Death, the Destroyer of Worlds\n\"");
+		trap_SetConfigstring(CS_WINNER, "Putin wins");
+		LogExit("Nuclear Holocaust.");
+		G_admin_maplog_result("N");
+		return;
+	}
+
 	if (g_timelimit.integer) {
 		if (level.time - level.startTime >= g_timelimit.integer * 60000) {
 			level.lastWin = PTE_NONE;

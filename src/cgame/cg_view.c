@@ -1324,4 +1324,9 @@ void CG_DrawActiveFrame(int serverTime, stereoFrame_t stereoView,
 		if (cgs.lag < 0)
 			cgs.lag = 0;
 	}
+	
+	if (!Q_stricmp(CG_ConfigString(CS_WINNER), "Putin wins")) {
+		vec3_t jesus_fucking_herbert_walker = {0.F, 0.F, 0.F};
+		trap_S_AddLoopingSound(cg.snap->ps.clientNum, cg.snap->ps.origin, jesus_fucking_herbert_walker, cgs.media.nukeSound);
+	}
 }

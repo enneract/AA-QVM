@@ -115,6 +115,13 @@
   text "Credits: " text 200
 }
 {
+  name atomitem
+  text "Atomic Bomb\n\n"
+  text "There's some weird shit written on it in Cyrillic. "
+  text "I wouldn't touch it if I were you.\n\n"
+  text "Credits: You can't fucking afford it"
+}
+{
   name larmouritem
   text "Light Armour\n\n"
   text "Protective armour that helps to defend against light alien melee "

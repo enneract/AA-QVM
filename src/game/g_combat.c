@@ -142,7 +142,9 @@ char *modNames[] = {
 	"MOD_ASPAWN",
 	"MOD_ATUBE",
 	"MOD_OVERMIND",
-	"MOD_SLAP"
+	"MOD_SLAP",
+
+	"MOD_NUKE"
 };
 
 /*

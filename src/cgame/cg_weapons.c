@@ -54,7 +54,7 @@ void CG_RegisterUpgrade(int upgradeNum)
 	upgradeInfo->humanName = BG_FindHumanNameForUpgrade(upgradeNum);
 
 	//la la la la la, i'm not listening!
-	if (upgradeNum == UP_GRENADE)
+	if (upgradeNum == UP_GRENADE || upgradeNum == UP_ABOMB)
 		upgradeInfo->upgradeIcon = cg_weapons[WP_GRENADE].weaponIcon;
 	else if ((icon = BG_FindIconForUpgrade(upgradeNum)))
 		upgradeInfo->upgradeIcon = trap_R_RegisterShader(icon);

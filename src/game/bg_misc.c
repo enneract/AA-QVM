@@ -3212,6 +3212,31 @@ weaponAttributes_t bg_weapons[] = {
 	 WUT_HUMANS		//WUTeam_t  team;
 	  },
 	{
+	 WP_ABOMB,		//int       weaponNum;
+	 3200,		//int       price;
+	 (1 << S3),	//int  stages
+	 SLOT_NONE,		//int       slots;
+	 "abomb",		//char      *weaponName;
+	 "Atomic Bomb",		//char      *weaponHumanName;
+	 1,			//int       maxAmmo;
+	 0,			//int       maxClips;
+	 qfalse,		//int       infiniteAmmo;
+	 qfalse,		//int       usesEnergy;
+	 GRENADE_REPEAT,	//int       repeatRate1;
+	 0,			//int       repeatRate2;
+	 0,			//int       repeatRate3;
+	 0,			//int       reloadTime;
+	 GRENADE_K_SCALE,	//float     knockbackScale;
+	 qfalse,		//qboolean  hasAltMode;
+	 qfalse,		//qboolean  hasThirdMode;
+	 qfalse,		//qboolean  canZoom;
+	 90.0f,			//float     zoomFov;
+	 qfalse,		//qboolean  purchasable;
+	 qfalse,		//qboolean  longRanged;
+	 0,			//int       buildDelay;
+	 WUT_HUMANS		//WUTeam_t  team;
+	  },
+	{
 	 WP_HBUILD,		//int       weaponNum;
 	 HBUILD_PRICE,		//int       price;
 	 (1 << S1) | (1 << S2) | (1 << S3),	//int  stages
@@ -4097,6 +4122,18 @@ upgradeAttributes_t bg_upgrades[] = {
 	 SLOT_NONE,		//int   slots;
 	 "gren",		//char  *upgradeName;
 	 "Lag Bomb",		//char  *upgradeHumanName;
+	 0,
+	 qtrue,			//qboolean purchasable
+	 qtrue,			//qboolean usable
+	 WUT_HUMANS		//WUTeam_t  team;
+	  },
+	{
+	 UP_ABOMB,		//int   upgradeNum;
+	 3200,		//int   price;
+	 (1 << S3),	//int  stages
+	 SLOT_NONE,		//int   slots;
+	 "atom",		//char  *upgradeName;
+	 "Atomic Bomb",		//char  *upgradeHumanName;
 	 0,
 	 qtrue,			//qboolean purchasable
 	 qtrue,			//qboolean usable

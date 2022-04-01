@@ -814,6 +814,8 @@ typedef struct {
 	float nbHeight;
 
 	nbMarkers_t nbMarkers[MAX_GENTITIES];
+
+	qboolean nuclearHolocaust;
 } level_locals_t;
 
 #define CMD_CHEAT         0x01
@@ -1039,6 +1041,7 @@ gentity_t *fire_slowBlob(gentity_t * self, vec3_t start, vec3_t dir);
 gentity_t *fire_bounceBall(gentity_t * self, vec3_t start, vec3_t dir);
 gentity_t *fire_hive(gentity_t * self, vec3_t start, vec3_t dir);
 gentity_t *launch_grenade(gentity_t * self, vec3_t start, vec3_t dir);
+gentity_t *holocaust_nuclear(gentity_t * self, vec3_t start, vec3_t dir);
 
 void granger_curse(gentity_t * attacker, gentity_t * self); //cu-kai: HACK ALERT HACK ALERT HACK ALERT
 

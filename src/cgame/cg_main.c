@@ -988,6 +988,10 @@ static void CG_RegisterSounds(void)
 	cgs.media.alienEvolveSound =
 	    trap_S_RegisterSound("sound/player/alienevolve.wav", qfalse);
 
+	cgs.media.nukeSound =
+	    trap_S_RegisterSound("sound/announcements/nuke.wav", qfalse);
+
+
 	cgs.media.alienBuildableExplosion =
 	    trap_S_RegisterSound("sound/buildables/alien/explosion.wav",
 				 qfalse);

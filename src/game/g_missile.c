@@ -519,6 +519,89 @@ gentity_t *launch_grenade(gentity_t * self, vec3_t start, vec3_t dir)
 	return bolt;
 }
 
+/*
+=================
+holocaust_nuclear
+
+=================
+*/
+/*
+================
+G_ExplodeMissile
+
+Explode a missile without an impact
+================
+*/
+void G_NuclearCountdown(gentity_t * ent)
+{
+	int i;
+	vec3_t zero;
+
+	VectorSet(zero, 0.F, 0.F, 0.F);
+
+	if (ent->s.time2 > 0) {
+		trap_SendServerCommand(-1, va("cp \"^1!!!!! %d !!!!!\"", ent->s.time2));
+		ent->s.time2--;
+		ent->nextthink = level.time + 1000;
+		return;
+	}
+
+	for (i = 0; i < MAX_GENTITIES; i++) {
+		gentity_t *vic = g_entities + i;
+		
+		if (!vic->inuse || !vic->takedamage)
+			continue;
+
+		G_Damage(vic, ent, ent->parent, zero, zero, 9999999, DAMAGE_NO_PROTECTION | DAMAGE_NO_ARMOR, MOD_NUKE);
+	}
+
+	level.nuclearHolocaust = qtrue;
+}
+
+
+gentity_t *holocaust_nuclear(gentity_t * self, vec3_t start, vec3_t dir)
+{
+	gentity_t *bolt;
+
+	VectorNormalize(dir);
+
+	bolt = G_Spawn();
+	bolt->classname = "abomb";
+	bolt->nextthink = level.time + 4000;
+	bolt->s.time2 = 15;
+	bolt->think = G_NuclearCountdown;
+	bolt->s.eType = ET_MISSILE;
+	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
+	bolt->s.weapon = WP_ABOMB;
+	bolt->s.eFlags = EF_BOUNCE_HALF;
+	bolt->s.generic1 = WPM_PRIMARY;	//weaponMode
+	bolt->r.ownerNum = self->s.number;
+	bolt->parent = self;
+	bolt->damage = 0;
+	bolt->dflags = 0;
+	bolt->splashDamage = 0;
+	bolt->splashRadius = 0;
+	bolt->methodOfDeath = 0;
+	bolt->splashMethodOfDeath = 0;
+	bolt->clipmask = MASK_SHOT;
+	bolt->target_ent = NULL;
+	bolt->r.mins[0] = bolt->r.mins[1] = bolt->r.mins[2] = -3.0f;
+	bolt->r.maxs[0] = bolt->r.maxs[1] = bolt->r.maxs[2] = 3.0f;
+	bolt->s.time = level.time;
+
+	bolt->s.pos.trType = TR_GRAVITY;
+	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;	// move a bit on the very first frame
+	VectorCopy(start, bolt->s.pos.trBase);
+	VectorScale(dir, GRENADE_SPEED, bolt->s.pos.trDelta);
+	SnapVector(bolt->s.pos.trDelta);	// save net bandwidth
+
+	VectorCopy(start, bolt->r.currentOrigin);
+
+	trap_SendServerCommand(-1, "cp \"^1HOLY SHIT THE NUCLEAR HOLOCAUST IS UPON US\"");
+
+	return bolt;
+}
+
 //=============================================================================
 
 /*

@@ -2255,7 +2255,7 @@ void CG_Corpse(centity_t * cent)
 	corpseNum = CG_GetCorpseNum(es->clientNum);
 
 	if (corpseNum < 0 || corpseNum >= MAX_CLIENTS)
-		CG_Error("Bad corpseNum on corpse entity: %d", corpseNum);
+		return;
 
 	ci = &cgs.corpseinfo[corpseNum];
 

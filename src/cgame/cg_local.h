@@ -1213,6 +1213,8 @@ typedef struct {
 
 	sfxHandle_t alienEvolveSound;
 
+	sfxHandle_t nukeSound;
+
 	qhandle_t humanBuildableDamagedPS;
 	qhandle_t humanBuildableDestroyedPS;
 	qhandle_t alienBuildableDamagedPS;

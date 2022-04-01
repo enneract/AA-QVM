@@ -3365,6 +3365,13 @@ static void CG_Draw2D(void)
 	if (cg.levelShot)
 		return;
 
+	if (!Q_stricmp(CG_ConfigString(CS_WINNER), "Putin wins")) {
+		vec4_t white = {1.F, 1.F, 1.F, 1.F};
+		trap_R_SetColor(white);
+		CG_DrawPic(0, 0, 640, 480, cgs.media.whiteShader);
+		trap_R_SetColor(NULL);
+	}
+
 	if (cg_draw2D.integer == 0)
 		return;
 
