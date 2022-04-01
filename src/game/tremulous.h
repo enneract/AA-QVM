@@ -418,13 +418,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define CHAINGUN_RELOAD             3250
 
 #define PRIFLE_PRICE                400
-#define PRIFLE_CLIPS                50
+#define PRIFLE_CLIPS                5
 #define PRIFLE_MAXCLIPS             4
-#define PRIFLE_REPEAT               100
+#define PRIFLE_REPEAT               1000
 #define PRIFLE_K_SCALE              1.0f
 #define PRIFLE_RELOAD               2000
-#define PRIFLE_DMG                  HDM(9)
-#define PRIFLE_SPEED                1000
+#define PRIFLE_DMG                  HDM(180)
+#define PRIFLE_SPEED                50
 
 #define FLAMER_PRICE                450
 #define FLAMER_GAS                  150
@@ -432,8 +432,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define FLAMER_K_SCALE              1.0f
 #define FLAMER_DMG                  HDM(20)
 #define FLAMER_RADIUS               50
-#define FLAMER_LIFETIME             800.0f
-#define FLAMER_SPEED                200.0f
+#define FLAMER_LIFETIME             400.0f
+#define FLAMER_SPEED                400.0f
 #define FLAMER_LAG                  0.65f	//the amount of player velocity that is added to the fireball
 
 #define LCANNON_PRICE               600
