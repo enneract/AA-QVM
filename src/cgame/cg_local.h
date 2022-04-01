@@ -1227,6 +1227,9 @@ typedef struct {
 
 	qhandle_t buildWeaponTimerPie[8];
 	qhandle_t upgradeClassIconShader;
+
+	sfxHandle_t putinNoise;
+	qhandle_t putinModel;
 } cgMedia_t;
 
 typedef struct {
@@ -1493,6 +1496,17 @@ extern vmCvar_t cg_projectileNudge;
 extern vmCvar_t cg_unlagged;
 
 extern vmCvar_t cg_pronoun;
+
+extern vmCvar_t cg_tweak0;
+extern vmCvar_t cg_tweak1;
+extern vmCvar_t cg_tweak2;
+extern vmCvar_t cg_tweak3;
+extern vmCvar_t cg_tweak4;
+extern vmCvar_t cg_tweak5;
+extern vmCvar_t cg_tweak6;
+extern vmCvar_t cg_tweak7;
+extern vmCvar_t cg_tweak8;
+extern vmCvar_t cg_tweak9;
 
 //
 // cg_main.c

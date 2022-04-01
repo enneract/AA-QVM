@@ -258,6 +258,8 @@ struct gentity_s {
 
 	// For nobuild!
 	noBuild_t noBuild;
+
+	int putinActive;
 };
 
 typedef enum {
@@ -1577,3 +1579,8 @@ qboolean trap_GetEntityToken(char *buffer, int bufferSize);
 
 void trap_SnapVector(float *v);
 void trap_SendGameStat(const char *data);
+
+// g_shitpost.c
+void G_RunPutin( gentity_t *ent, int msec );
+void G_AddPutinCandidate( gentity_t *src, vec3_t origin );
+void G_CheckSpawnPutins( void );

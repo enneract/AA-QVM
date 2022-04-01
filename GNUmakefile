@@ -1090,6 +1090,7 @@ GOBJ_ = \
   $(B)/game/g_ptr.o \
   $(B)/game/g_weapon.o \
   $(B)/game/g_admin.o \
+  $(B)/game/g_shitpost.o \
   \
   $(B)/qcommon/q_math.o \
   $(B)/qcommon/q_shared.o
@@ -1101,9 +1102,10 @@ $(B)/out/$(BASEGAME)/game$(SHLIBNAME): $(GOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(GOBJ)
 
-$(B)/out/$(BASEGAME)/vm/game.qvm: $(GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
-	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(GVMOBJ) $(GDIR)/g_syscalls.asm
+$(B)/out/$(BASEGAME)/vm/game.qvm: # $(GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
+	touch $(B)/out/$(BASEGAME)/vm/game.qvm
+# $(echo_cmd) "Q3ASM $@"
+# $(Q)$(Q3ASM) -o $@ $(GVMOBJ) $(GDIR)/g_syscalls.asm
 
 
 

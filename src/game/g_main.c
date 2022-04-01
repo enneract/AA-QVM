@@ -3139,6 +3139,11 @@ void G_RunFrame(int levelTime)
 			continue;
 		}
 
+		if (ent->s.eType == ET_PUTIN) {
+			G_RunPutin(ent, msec);
+			continue;
+		}
+
 		if (i < MAX_CLIENTS) {
 			G_RunClient(ent);
 			continue;
@@ -3191,4 +3196,6 @@ void G_RunFrame(int levelTime)
 
 		trap_Cvar_Set("g_listEntity", "0");
 	}
+
+	G_CheckSpawnPutins();
 }
