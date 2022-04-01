@@ -817,6 +817,22 @@ void slowBlobFire(gentity_t * ent)
 }
 
 /*
+===============
+cu-kai: granger_curse
+
+cursed granger spit
+===============
+*/
+
+void granger_curse(gentity_t * attacker, gentity_t * victim)
+{
+	G_TempEntity(victim->client->ps.origin, EV_ALIEN_BUILDABLE_EXPLOSION);
+	G_RadiusDamage(victim->client->ps.origin, attacker,
+					GRENADE_DAMAGE * 2, GRENADE_RANGE * 2, NULL,
+					DAMAGE_KNOCKBACK * 2, MOD_GRANGER_CURSE);
+}
+
+/*
 ======================================================================
 
 LEVEL0

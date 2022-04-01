@@ -1040,7 +1040,7 @@ gentity_t *fire_bounceBall(gentity_t * self, vec3_t start, vec3_t dir);
 gentity_t *fire_hive(gentity_t * self, vec3_t start, vec3_t dir);
 gentity_t *launch_grenade(gentity_t * self, vec3_t start, vec3_t dir);
 
-gentity_t *granger_curse(gentity_t * attacker, gentity_t * self, vec3_t start, vec3_t dir); //cu-kai: HACK ALERT HACK ALERT HACK ALERT
+void granger_curse(gentity_t * attacker, gentity_t * self); //cu-kai: HACK ALERT HACK ALERT HACK ALERT
 
 //
 // g_mover.c

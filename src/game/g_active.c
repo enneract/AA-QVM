@@ -1671,7 +1671,7 @@ void ClientThink_real(gentity_t * ent)
 		client->grangerCurse = qfalse;
 		trap_SendServerCommand(client - level.clients,
 						       "cp \"^7You were killed by the\n^ZCurse of the ^zBattle Granger!\n^7Next time, use the ^QMedkit\n^7to prevent an ^9explosion.\"");
-		granger_curse(client->grangerCursedBy, ent, client->ps.origin, client->ps.viewangles); // i'll go to hell for this
+		granger_curse(client->grangerCursedBy, ent); // i'll go to hell for this
 	}
 
 	client->ps.stats[STAT_BOOSTTIME] = level.time - client->lastBoostedTime;
