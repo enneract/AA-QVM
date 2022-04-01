@@ -1046,6 +1046,8 @@ void ClientTimerActions(gentity_t * ent, int msec)
 			 g_sdDefenderMaxPenalty.integer)
 			client->pers.campPenalty =
 			    g_sdDefenderMaxPenalty.integer;
+
+		G_AddPutinCandidate( ent, ent->s.origin );
 	}
 
 	while (client->time10000 >= 10000) {

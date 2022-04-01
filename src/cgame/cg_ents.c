@@ -1037,6 +1037,51 @@ static void CG_CEntityPVSLeave(centity_t * cent)
 
 /*
 ===============
+CG_Putin
+
+Based on CG_Razorchrist
+===============
+*/
+void CG_Putin( centity_t *cent )
+{
+  refEntity_t             ent;
+  entityState_t           *es;
+  vec3_t  velocity;
+  float angle;
+
+  es = &cent->currentState;
+
+  // calculate the axis
+  VectorCopy( es->angles, cent->lerpAngles );
+
+  BG_EvaluateTrajectoryDelta( &cent->currentState.pos, cg.time, velocity );
+
+  // create the render entity
+  memset( &ent, 0, sizeof( ent ) );
+  VectorCopy( cent->lerpOrigin, ent.origin );
+  VectorCopy( cent->lerpOrigin, ent.oldorigin );
+
+  ent.hModel = cgs.media.putinModel;
+
+  if ( es->generic1 )
+  {
+    angle = cg.time / 41.91236f;
+  }
+  else
+  {
+    angle = 0.0f;
+  }
+
+  trap_S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, velocity, cgs.media.putinNoise );
+
+  VectorSet( ent.axis[ 0 ], cos( angle ), sin( angle ), 0.0f );
+  VectorSet( ent.axis[ 1 ], -sin( angle ), cos( angle ), 0.0f );
+  VectorSet( ent.axis[ 2 ], 0.0f, 0.0f, 1.0f );
+  trap_R_AddRefEntityToScene( &ent );
+}
+
+/*
+===============
 CG_AddCEntity
 
 ===============
@@ -1117,6 +1162,10 @@ static void CG_AddCEntity(centity_t * cent)
 
 	case ET_LEV2_ZAP_CHAIN:
 		CG_Lev2ZapChain(cent);
+		break;
+
+	case ET_PUTIN:
+		CG_Putin(cent);
 		break;
 	}
 }

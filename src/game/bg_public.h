@@ -1241,6 +1241,8 @@ typedef enum {
 	ET_LIGHTFLARE,
 	ET_LEV2_ZAP_CHAIN,
 
+	ET_PUTIN,
+
 	ET_EVENTS		// any of the EV_* events can be added freestanding
 	    // by setting eType to ET_EVENTS + eventNum
 	    // this avoids having to set eFlags and eventNum

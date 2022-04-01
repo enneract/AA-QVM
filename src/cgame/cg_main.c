@@ -248,6 +248,17 @@ vmCvar_t cg_unlagged;
 
 vmCvar_t cg_pronoun;
 
+vmCvar_t cg_tweak0;
+vmCvar_t cg_tweak1;
+vmCvar_t cg_tweak2;
+vmCvar_t cg_tweak3;
+vmCvar_t cg_tweak4;
+vmCvar_t cg_tweak5;
+vmCvar_t cg_tweak6;
+vmCvar_t cg_tweak7;
+vmCvar_t cg_tweak8;
+vmCvar_t cg_tweak9;
+
 typedef struct {
 	vmCvar_t *vmCvar;
 	char *cvarName;
@@ -399,6 +410,17 @@ static cvarTable_t cvarTable[] = {
 
 	{ &cg_pronoun, "cg_pronoun", "themselves",
 	 CVAR_USERINFO | CVAR_ARCHIVE },
+
+	{ &cg_tweak0, "cg_tweak0", "1", 0 },
+	{ &cg_tweak1, "cg_tweak1", "1", 0 },
+	{ &cg_tweak2, "cg_tweak2", "1", 0 },
+	{ &cg_tweak3, "cg_tweak3", "1", 0 },
+	{ &cg_tweak4, "cg_tweak4", "1", 0 },
+	{ &cg_tweak5, "cg_tweak5", "1", 0 },
+	{ &cg_tweak6, "cg_tweak6", "1", 0 },
+	{ &cg_tweak7, "cg_tweak7", "1", 0 },
+	{ &cg_tweak8, "cg_tweak8", "1", 0 },
+	{ &cg_tweak9, "cg_tweak9", "1", 0 },
 };
 
 static int cvarTableSize = sizeof(cvarTable) / sizeof(cvarTable[0]);
@@ -1027,6 +1049,8 @@ static void CG_RegisterSounds(void)
 
 	cgs.media.lCannonWarningSound =
 	    trap_S_RegisterSound("models/weapons/lcannon/warning.wav", qfalse);
+
+	cgs.media.putinNoise = trap_S_RegisterSound("sound/bunker/putin.wav", qfalse);
 }
 
 //===================================================================================
@@ -1268,6 +1292,8 @@ static void CG_RegisterClients(void)
 	    trap_R_RegisterModel("models/players/human_base/jetpack_flash.md3");
 	cgs.media.battpackModel =
 	    trap_R_RegisterModel("models/players/human_base/battpack.md3");
+
+	cgs.media.putinModel = trap_R_RegisterModel("models/zittrig/tv.md3");
 
 	cg.charModelFraction = 1.0f;
 	trap_UpdateScreen();
