@@ -86,8 +86,8 @@ static qboolean G_CheckPutin(vec3_t origin, int ignore)
 		if (other->s.eType == ET_PLAYER)
 			return qfalse;
 
-		if (other->s.eType == ET_BUILDABLE)
-			return qfalse;
+		// if (other->s.eType == ET_BUILDABLE)
+		// 	return qfalse;
 
 		if (other->s.eType == ET_PUTIN)
 			return qfalse;
