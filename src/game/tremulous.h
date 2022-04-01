@@ -166,7 +166,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define LEVEL0_SPEED                1.3f
 #define LEVEL0_VALUE                AVM(175)
-#define LEVEL0_HEALTH               AHM(25)
+#define LEVEL0_HEALTH               AHM(60)
 #define LEVEL0_REGEN                1
 #define LEVEL0_COST                 EVOS(0)
 
@@ -202,13 +202,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define LEVEL3_UPG_SPEED            1.1f
 #define LEVEL3_UPG_VALUE            AVM(600)
-#define LEVEL3_UPG_HEALTH           AHM(250)
+#define LEVEL3_UPG_HEALTH           AHM(225)
 #define LEVEL3_UPG_REGEN            7
 #define LEVEL3_UPG_COST             EVOS(1)
 
 #define LEVEL4_SPEED                1.2f
 #define LEVEL4_VALUE                AVM(800)
-#define LEVEL4_HEALTH               AHM(400)
+#define LEVEL4_HEALTH               AHM(200)
 #define LEVEL4_REGEN                7
 #define LEVEL4_COST                 EVOS(2)
 
@@ -414,8 +414,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define CHAINGUN_REPEAT             80
 #define CHAINGUN_K_SCALE            1.0f
 #define CHAINGUN_SPREAD             1000
-#define CHAINGUN_DMG                HDM(6)
-#define CHAINGUN_RELOAD             3000
+#define CHAINGUN_DMG                HDM(60)
+#define CHAINGUN_RELOAD             3250
 
 #define PRIFLE_PRICE                400
 #define PRIFLE_CLIPS                50
