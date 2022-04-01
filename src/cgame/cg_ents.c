@@ -1072,11 +1072,13 @@ void CG_Putin( centity_t *cent )
     angle = 0.0f;
   }
 
+  angle += es->number * 319.87775f;
+
   trap_S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, velocity, cgs.media.putinNoise );
 
-  VectorSet( ent.axis[ 0 ], cos( angle ), sin( angle ), 0.0f );
-  VectorSet( ent.axis[ 1 ], -sin( angle ), cos( angle ), 0.0f );
-  VectorSet( ent.axis[ 2 ], 0.0f, 0.0f, 1.0f );
+  VectorSet( ent.axis[ 0 ], cos( angle ) * 0.2F, sin( angle ) * 0.2F, 0.0f );
+  VectorSet( ent.axis[ 1 ], -sin( angle ) * 0.2F, cos( angle ) * 0.2F, 0.0f );
+  VectorSet( ent.axis[ 2 ], 0.0f, 0.0f, 0.2F );
   trap_R_AddRefEntityToScene( &ent );
 }
 

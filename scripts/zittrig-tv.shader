@@ -12,6 +12,5 @@ models/zittrig/tv_screen
 	cull disable
 	{
 		map models/zittrig/tv_screen.jpg
-		rgbGen lightingDiffuse
 	}
 }

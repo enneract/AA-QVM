@@ -1,11 +1,11 @@
 #include "g_local.h"
 
 #define PUTIN_RADIUS 32
-#define PUTIN_HEIGHT 80
+#define PUTIN_HEIGHT 38
 #define PUTIN_RANGE 40
-#define PUTIN_SPAWN_DIST 100.0f // 1000
+#define PUTIN_SPAWN_DIST 1000
 #define MAX_PUTINS 20
-#define PUTIN_PROBABILITY 1.0f // 0.05f
+#define PUTIN_PROBABILITY 0.05f
 
 static const vec3_t rcMins = {-PUTIN_RADIUS, -PUTIN_RADIUS, 0.0f};
 static const vec3_t rcMaxs = {PUTIN_RADIUS, PUTIN_RADIUS, PUTIN_HEIGHT};
@@ -121,6 +121,19 @@ void G_AddPutinCandidate(gentity_t *src, vec3_t origin)
 	putinRingSize++;
 }
 
+void putin_die(gentity_t * self, gentity_t * inflictor, gentity_t * attacker, int damage, int mod)
+{
+	if (attacker && attacker->client) {
+		G_AddCreditToClient(attacker->client, EVO_TO_CREDS_RATE, qtrue);
+		attacker->client->pers.statscounters.earned += EVO_TO_CREDS_RATE;
+		trap_SendServerCommand(-1, va("print \"%s^7 pushed back on Putin's propaganda\"", attacker->client->pers.netname));
+	}
+
+	trap_UnlinkEntity(self);
+	G_FreeEntity(self);
+	self->inuse = qfalse;
+}
+
 gentity_t *G_SpawnPutin(vec3_t origin)
 {
 	gentity_t *ent;
@@ -131,12 +144,16 @@ gentity_t *G_SpawnPutin(vec3_t origin)
 
 	ent->s.pos.trType = TR_GRAVITY;
 	ent->s.pos.trTime = level.time;
-	ent->physicsBounce = 0.95f;
+	ent->physicsBounce = 0.2f;
 	ent->clipmask = MASK_PLAYERSOLID;
 
 	VectorCopy(rcMins, ent->r.mins);
 	VectorCopy(rcMaxs, ent->r.maxs);
 	ent->r.contents = MASK_SOLID;
+
+	ent->health = 50;
+	ent->takedamage = qtrue;
+	ent->die = putin_die;
 
 	trap_LinkEntity(ent);
 	return ent;
