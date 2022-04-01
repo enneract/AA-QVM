@@ -1590,7 +1590,7 @@ classAttributes_t bg_classList[] = {
 	 0.0f,			//float   fallDamage;
 	 LEVEL0_REGEN,		//int     regenRate;
 	 SCA_WALLCLIMBER | SCA_NOWEAPONDRIFT | SCA_FOVWARPS | SCA_ALIENSENSE,	//int     abilities;
-	 WP_ALEVEL0,		//weapon_t  startWeapon
+	 WP_ALEVEL4,		//weapon_t  startWeapon
 	 0.0f,			//float   buildDist;
 	 140,			//int     fov;
 	 0.0f,			//float   bob;
@@ -1628,7 +1628,7 @@ classAttributes_t bg_classList[] = {
 	 0.0f,			//float   fallDamage;
 	 LEVEL1_REGEN,		//int     regenRate;
 	 SCA_NOWEAPONDRIFT | SCA_FOVWARPS | SCA_WALLCLIMBER | SCA_ALIENSENSE,	//int     abilities;
-	 WP_ALEVEL1,		//weapon_t  startWeapon
+	 WP_ALEVEL3,		//weapon_t  startWeapon
 	 0.0f,			//float   buildDist;
 	 120,			//int     fov;
 	 0.001f,		//float   bob;
@@ -1666,7 +1666,7 @@ classAttributes_t bg_classList[] = {
 	 0.0f,			//float   fallDamage;
 	 LEVEL1_UPG_REGEN,	//int     regenRate;
 	 SCA_NOWEAPONDRIFT | SCA_FOVWARPS | SCA_WALLCLIMBER | SCA_ALIENSENSE,	//int     abilities;
-	 WP_ALEVEL1_UPG,	//weapon_t  startWeapon
+	 WP_ALEVEL3_UPG,	//weapon_t  startWeapon
 	 0.0f,			//float   buildDist;
 	 120,			//int     fov;
 	 0.001f,		//float   bob;
@@ -1780,7 +1780,7 @@ classAttributes_t bg_classList[] = {
 	 0.0f,			//float   fallDamage;
 	 LEVEL3_REGEN,		//int     regenRate;
 	 SCA_NOWEAPONDRIFT | SCA_FOVWARPS | SCA_ALIENSENSE,	//int     abilities;
-	 WP_ALEVEL3,		//weapon_t  startWeapon
+	 WP_ALEVEL1,		//weapon_t  startWeapon
 	 0.0f,			//float   buildDist;
 	 110,			//int     fov;
 	 0.0005f,		//float   bob;
@@ -1818,7 +1818,7 @@ classAttributes_t bg_classList[] = {
 	 0.0f,			//float   fallDamage;
 	 LEVEL3_UPG_REGEN,	//int     regenRate;
 	 SCA_NOWEAPONDRIFT | SCA_FOVWARPS | SCA_ALIENSENSE,	//int     abilities;
-	 WP_ALEVEL3_UPG,	//weapon_t  startWeapon
+	 WP_ALEVEL1_UPG,	//weapon_t  startWeapon
 	 0.0f,			//float   buildDist;
 	 110,			//int     fov;
 	 0.0005f,		//float   bob;
@@ -1856,7 +1856,7 @@ classAttributes_t bg_classList[] = {
 	 0.0f,			//float   fallDamage;
 	 LEVEL4_REGEN,		//int     regenRate;
 	 SCA_NOWEAPONDRIFT | SCA_FOVWARPS | SCA_ALIENSENSE,	//int     abilities;
-	 WP_ALEVEL4,		//weapon_t  startWeapon
+	 WP_ALEVEL0,		//weapon_t  startWeapon
 	 0.0f,			//float   buildDist;
 	 90,			//int     fov;
 	 0.001f,		//float   bob;
