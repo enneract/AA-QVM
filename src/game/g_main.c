@@ -262,6 +262,8 @@ vmCvar_t g_sdDestructionBonus;
 
 vmCvar_t g_disablePollVotes;
 
+vmCvar_t g_putin;
+
 static cvarTable_t gameCvarTable[] = {
 	// don't override the cheat state set by the system
 	{ &g_cheats, "sv_cheats", "", 0, 0, qfalse },
@@ -583,6 +585,9 @@ static cvarTable_t gameCvarTable[] = {
 	{ &g_sdDestructionBonus, "g_sdDestructionBonus", "0", CVAR_ARCHIVE, 0,
 	 qtrue },
 	{ &g_disablePollVotes, "g_disablePollVotes", "0", CVAR_ARCHIVE, 0,
+	 qfalse },
+
+	 { &g_putin, "g_putin", "0.05", CVAR_ARCHIVE, 0,
 	 qfalse }
 };
 

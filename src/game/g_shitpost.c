@@ -5,7 +5,7 @@
 #define PUTIN_RANGE 40
 #define PUTIN_SPAWN_DIST 1000
 #define MAX_PUTINS 20
-#define PUTIN_PROBABILITY 0.05f
+#define PUTIN_PROBABILITY g_putin.value
 
 static const vec3_t rcMins = {-PUTIN_RADIUS, -PUTIN_RADIUS, 0.0f};
 static const vec3_t rcMaxs = {PUTIN_RADIUS, PUTIN_RADIUS, PUTIN_HEIGHT};
