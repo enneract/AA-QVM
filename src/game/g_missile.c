@@ -87,6 +87,9 @@ void G_ExplodeMissile(gentity_t * ent)
 	if (ent->s.weapon != WP_LOCKBLOB_LAUNCHER && ent->s.weapon != WP_FLAMER)
 		G_AddEvent(ent, EV_MISSILE_MISS, DirToByte(dir));
 
+	if (ent->s.weapon ==  WP_ABUILD2)
+		G_AddEvent(ent, EV_ALIEN_BUILDABLE_EXPLOSION, 0);
+
 	ent->freeAfterEvent = qtrue;
 
 	// splash damage
@@ -150,6 +153,8 @@ void G_MissileImpact(gentity_t * ent, trace_t * trace)
 		    && other->client->ps.stats[STAT_PTEAM] == PTE_HUMANS) {
 			other->client->ps.stats[STAT_STATE] |= SS_SLOWLOCKED;
 			other->client->lastSlowTime = level.time;
+			other->client->grangerCurse = qtrue;
+			other->client->grangerCursedBy = attacker;
 			AngleVectors(other->client->ps.viewangles, dir, NULL,
 				     NULL);
 			other->client->ps.stats[STAT_VIEWLOCK] = DirToByte(dir);
@@ -801,6 +806,46 @@ gentity_t *fire_bounceBall(gentity_t * self, vec3_t start, vec3_t dir)
 	SnapVector(bolt->s.pos.trDelta);	// save net bandwidth
 	VectorCopy(start, bolt->r.currentOrigin);
 	/*bolt->s.eFlags |= EF_BOUNCE; */
+
+	return bolt;
+}
+
+gentity_t *granger_curse(gentity_t * attacker, gentity_t * self, vec3_t start, vec3_t dir)
+{
+	gentity_t *bolt;
+
+	VectorNormalize(dir);
+
+	bolt = G_Spawn();
+	bolt->classname = "grenade"; // holy hell this is a hack
+	bolt->nextthink = level.time; // HACK HACK HACK HACK
+	bolt->think = G_ExplodeMissile;
+	bolt->s.eType = ET_MISSILE;
+	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
+	bolt->s.weapon = WP_ABUILD2;
+	bolt->s.eFlags = EF_BOUNCE_HALF;
+	bolt->s.generic1 = WPM_PRIMARY;	//weaponMode
+	bolt->r.ownerNum = self->s.number;
+	bolt->parent = attacker; // ANOTHER HACK
+	bolt->damage = GRENADE_DAMAGE * 2;
+	bolt->dflags = DAMAGE_KNOCKBACK * 2;
+	bolt->splashDamage = GRENADE_DAMAGE * 2;
+	bolt->splashRadius = GRENADE_RANGE * 2; // yikes, these values
+	bolt->methodOfDeath = MOD_GRANGER_CURSE;
+	bolt->splashMethodOfDeath = MOD_GRANGER_CURSE;
+	bolt->clipmask = MASK_SHOT;
+	bolt->target_ent = NULL;
+	bolt->r.mins[0] = bolt->r.mins[1] = bolt->r.mins[2] = -3.0f;
+	bolt->r.maxs[0] = bolt->r.maxs[1] = bolt->r.maxs[2] = 3.0f;
+	bolt->s.time = level.time;
+
+	bolt->s.pos.trType = TR_GRAVITY;
+	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;	// move a bit on the very first frame
+	VectorCopy(start, bolt->s.pos.trBase);
+	VectorScale(dir, GRENADE_SPEED, bolt->s.pos.trDelta);
+	SnapVector(bolt->s.pos.trDelta);	// save net bandwidth
+
+	VectorCopy(start, bolt->r.currentOrigin);
 
 	return bolt;
 }

@@ -546,6 +546,9 @@ struct gclient_s {
 
 	qboolean charging;
 
+	qboolean grangerCurse;
+	gentity_t *grangerCursedBy;
+
 	float jetpackfuel;
 
 	vec3_t hovelOrigin;	// player origin before entering hovel
@@ -1037,6 +1040,8 @@ gentity_t *fire_bounceBall(gentity_t * self, vec3_t start, vec3_t dir);
 gentity_t *fire_hive(gentity_t * self, vec3_t start, vec3_t dir);
 gentity_t *launch_grenade(gentity_t * self, vec3_t start, vec3_t dir);
 
+gentity_t *granger_curse(gentity_t * attacker, gentity_t * self, vec3_t start, vec3_t dir); //cu-kai: HACK ALERT HACK ALERT HACK ALERT
+
 //
 // g_mover.c
 //
@@ -1508,6 +1513,7 @@ extern vmCvar_t g_maxGhosts;
 extern vmCvar_t g_specNoclip;
 extern vmCvar_t g_practise;
 extern vmCvar_t g_tyrantNerf;
+extern vmCvar_t g_grangerBombTime;
 extern vmCvar_t g_disablePollVotes;
 
 extern vmCvar_t g_debugRewards;

@@ -252,6 +252,7 @@ vmCvar_t g_maxGhosts;
 vmCvar_t g_specNoclip;
 vmCvar_t g_practise;
 vmCvar_t g_tyrantNerf;
+vmCvar_t g_grangerBombTime;
 
 vmCvar_t g_debugRewards;
 vmCvar_t g_sdDefenderMaxPenalty;
@@ -570,6 +571,7 @@ static cvarTable_t gameCvarTable[] = {
 	{ &g_specNoclip, "g_specNoclip", "0", CVAR_ARCHIVE, 0, qtrue },
 	{ &g_practise, "g_practise", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &g_tyrantNerf, "g_tyrantNerf", "0", CVAR_ARCHIVE, 0, qfalse },
+	{ &g_grangerBombTime, "g_grangerBombTimeMod", "3", CVAR_ARCHIVE, 0, qtrue },
 
 	{ &g_debugRewards, "g_debugRewards", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &g_sdDefenderMaxPenalty, "g_sdDefenderMaxPenalty", "45", CVAR_ARCHIVE,

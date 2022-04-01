@@ -337,6 +337,8 @@ void G_LeaveTeam(gentity_t * self)
 			    && ent->client->lastPoisonClient == self)
 				ent->client->ps.stats[STAT_STATE] &=
 				    ~SS_POISONED;
+			if (ent->client->grangerCurse && ent->client->grangerCursedBy == self)
+				ent->client->grangerCurse = qfalse;
 		}
 	}
 

@@ -225,6 +225,9 @@ static void CG_Obituary(entityState_t * ent)
 			message = "should leave";
 			message2 = "'s buildings alone";
 			break;
+		case MOD_GRANGER_CURSE:
+			message = "was blessed with ^ZThe Curse of the ^zBattle Granger^7 by";
+			break;
 		case MOD_LEVEL0_BITE:
 			message = "was bitten by";
 			break;

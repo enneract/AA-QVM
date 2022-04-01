@@ -2195,6 +2195,8 @@ void HMedistat_Think(gentity_t * self)
 									   BANIM_ATTACK1,
 									   qfalse);
 							self->active = qtrue;
+							if (player->client->grangerCurse == qtrue)
+								player->client->grangerCurse = qfalse; // medistation heals the granger curse
 						}
 					} else
 					    if (!BG_InventoryContainsUpgrade

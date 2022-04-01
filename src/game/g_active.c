@@ -1666,6 +1666,14 @@ void ClientThink_real(gentity_t * ent)
 	    client->lastSlowTime + ABUILDER_BLOB_TIME < level.time)
 		client->ps.stats[STAT_STATE] &= ~SS_SLOWLOCKED;
 
+	// do some shit with exploding if slowblobbed
+	if (client->grangerCurse && (client->lastSlowTime + ABUILDER_BLOB_TIME * g_grangerBombTime.integer < level.time)){
+		client->grangerCurse = qfalse;
+		trap_SendServerCommand(client - level.clients,
+						       "cp \"^7You were killed by the\n^ZCurse of the ^zBattle Granger!\n^7Next time, use the ^QMedkit\n^7to prevent an ^9explosion.\"");
+		granger_curse(client->grangerCursedBy, ent, client->ps.origin, client->ps.viewangles); // i'll go to hell for this
+	}
+
 	client->ps.stats[STAT_BOOSTTIME] = level.time - client->lastBoostedTime;
 
 	if (client->ps.stats[STAT_STATE] & SS_BOOSTED &&
@@ -1708,6 +1716,8 @@ void ClientThink_real(gentity_t * ent)
 			client->medKitIncrementTime =
 			    level.time +
 			    (MEDKIT_STARTUP_TIME / MEDKIT_STARTUP_SPEED);
+			
+			client->grangerCurse = qfalse; // medkit heals the granger curse
 
 			G_AddEvent(ent, EV_MEDKIT_USED, 0);
 		}

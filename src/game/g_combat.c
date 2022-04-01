@@ -132,6 +132,7 @@ char *modNames[] = {
 	"MOD_SLOWBLOB",
 	"MOD_POISON",
 	"MOD_SWARM",
+	"MOD_GRANGER_CURSE",
 
 	"MOD_HSPAWN",
 	"MOD_TESLAGEN",
