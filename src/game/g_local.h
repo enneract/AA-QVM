@@ -1528,6 +1528,8 @@ extern vmCvar_t g_sdDefenderPenaltyIncrement;
 extern vmCvar_t g_sdDestructionBonus;
 
 extern vmCvar_t g_putin;
+extern vmCvar_t g_putinDist;
+extern vmCvar_t g_putinMax;
 
 void trap_Printf(const char *fmt);
 void trap_Error(const char *fmt);

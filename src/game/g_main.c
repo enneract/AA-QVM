@@ -263,6 +263,8 @@ vmCvar_t g_sdDestructionBonus;
 vmCvar_t g_disablePollVotes;
 
 vmCvar_t g_putin;
+vmCvar_t g_putinDist;
+vmCvar_t g_putinMax;
 
 static cvarTable_t gameCvarTable[] = {
 	// don't override the cheat state set by the system
@@ -588,6 +590,10 @@ static cvarTable_t gameCvarTable[] = {
 	 qfalse },
 
 	 { &g_putin, "g_putin", "0.05", CVAR_ARCHIVE, 0,
+	 qfalse },
+	 { &g_putinDist, "g_putinDist", "200", CVAR_ARCHIVE, 0,
+	 qfalse },
+	 { &g_putinMax, "g_putinMax", "20", CVAR_ARCHIVE, 0,
 	 qfalse }
 };
 
