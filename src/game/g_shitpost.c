@@ -126,7 +126,7 @@ void putin_die(gentity_t * self, gentity_t * inflictor, gentity_t * attacker, in
 	if (attacker && attacker->client) {
 		G_AddCreditToClient(attacker->client, EVO_TO_CREDS_RATE, qtrue);
 		attacker->client->pers.statscounters.earned += EVO_TO_CREDS_RATE;
-		trap_SendServerCommand(-1, va("print \"%s^7 pushed back on Putin's propaganda\"", attacker->client->pers.netname));
+		trap_SendServerCommand(-1, va("print \"%s^7 pushed back on Putin's propaganda\n\"", attacker->client->pers.netname));
 	}
 
 	trap_UnlinkEntity(self);
