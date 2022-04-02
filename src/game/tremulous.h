@@ -208,8 +208,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define LEVEL4_SPEED                1.2f
 #define LEVEL4_VALUE                AVM(1000)
-#define LEVEL4_HEALTH               AHM(200)
-#define LEVEL4_REGEN                7
+#define LEVEL4_HEALTH               AHM(150)
+#define LEVEL4_REGEN                6
 #define LEVEL4_COST                 EVOS(2)
 
 /*
