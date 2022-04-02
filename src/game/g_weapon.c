@@ -564,8 +564,17 @@ void lasGunFire(gentity_t * ent)
 	}
 
 	if (traceEnt->takedamage)
-		G_Damage(traceEnt, ent, ent, forward, tr.endpos, LASGUN_DAMAGE,
-			 0, MOD_LASGUN);
+	{
+		if (traceEnt->client)
+		{
+			G_Damage(traceEnt, ent, ent, forward, tr.endpos, (LASGUN_DAMAGE * 
+				BG_FindRegenRateForClass(traceEnt->client->ps.stats[STAT_PCLASS]) > 4 
+				? 4 : BG_FindRegenRateForClass(traceEnt->client->ps.stats[STAT_PCLASS])), 0, MOD_LASGUN);
+			return;
+		}
+		G_Damage(traceEnt, ent, ent, forward, tr.endpos, (LASGUN_DAMAGE * 2) * (g_humanStage.integer + 1),
+			0, MOD_LASGUN);
+	}
 }
 
 /*

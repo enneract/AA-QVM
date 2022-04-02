@@ -165,8 +165,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ABUILDER_UPG_COST           EVOS(0)
 
 #define LEVEL0_SPEED                1.3f
-#define LEVEL0_VALUE                AVM(175)
-#define LEVEL0_HEALTH               AHM(60)
+#define LEVEL0_VALUE                AVM(200)
+#define LEVEL0_HEALTH               AHM(65)
 #define LEVEL0_REGEN                1
 #define LEVEL0_COST                 EVOS(0)
 
@@ -207,7 +207,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define LEVEL3_UPG_COST             EVOS(1)
 
 #define LEVEL4_SPEED                1.2f
-#define LEVEL4_VALUE                AVM(800)
+#define LEVEL4_VALUE                AVM(1000)
 #define LEVEL4_HEALTH               AHM(200)
 #define LEVEL4_REGEN                7
 #define LEVEL4_COST                 EVOS(2)
@@ -394,12 +394,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define SHOTGUN_SPREAD              900
 #define SHOTGUN_DMG                 HDM(56)
 
-#define LASGUN_PRICE                250
+#define LASGUN_PRICE                450
 #define LASGUN_AMMO                 800
-#define LASGUN_REPEAT               50
+#define LASGUN_REPEAT               125
 #define LASGUN_K_SCALE              1.0f
 #define LASGUN_RELOAD               2000
-#define LASGUN_DAMAGE               HDM(2.25)
+#define LASGUN_DAMAGE               HDM(1)
 
 #define MDRIVER_PRICE               350
 #define MDRIVER_CLIPSIZE            5
@@ -415,16 +415,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define CHAINGUN_K_SCALE            1.0f
 #define CHAINGUN_SPREAD             1000
 #define CHAINGUN_DMG                HDM(60)
-#define CHAINGUN_RELOAD             3250
+#define CHAINGUN_RELOAD             2000
 
 #define PRIFLE_PRICE                400
-#define PRIFLE_CLIPS                5
+#define PRIFLE_CLIPS                7
 #define PRIFLE_MAXCLIPS             4
-#define PRIFLE_REPEAT               1000
+#define PRIFLE_REPEAT               1250
 #define PRIFLE_K_SCALE              1.0f
 #define PRIFLE_RELOAD               2000
-#define PRIFLE_DMG                  HDM(180)
-#define PRIFLE_SPEED                50
+#define PRIFLE_DMG                  HDM(50)
+#define PRIFLE_SPEED                500
 
 #define FLAMER_PRICE                450
 #define FLAMER_GAS                  150
