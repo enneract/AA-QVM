@@ -594,19 +594,24 @@ void ClientTimerActions(gentity_t * ent, int msec)
 				client->ps.stats[STAT_STAMINA] = -MAX_STAMINA;
 		}
 
-		if (walking || crouched) {
+		if ((walking || crouched) && g_infiniteStamina.value == 0) {
 			//restore stamina
 			client->ps.stats[STAT_STAMINA] += STAMINA_WALK_RESTORE;
 
 			if (client->ps.stats[STAT_STAMINA] > MAX_STAMINA)
 				client->ps.stats[STAT_STAMINA] = MAX_STAMINA;
-		} else if (stopped) {
+		} else if (stopped && g_infiniteStamina.value == 0) {
 			//restore stamina faster
 			client->ps.stats[STAT_STAMINA] += STAMINA_STOP_RESTORE;
 
 			if (client->ps.stats[STAT_STAMINA] > MAX_STAMINA)
 				client->ps.stats[STAT_STAMINA] = MAX_STAMINA;
 		}
+
+		if (g_infiniteStamina.value > 0) {
+			client->ps.stats[STAT_STAMINA] = MAX_STAMINA;
+		}
+
 		//client is charging up for a pounce
 		if (client->ps.weapon == WP_ALEVEL3
 		    || client->ps.weapon == WP_ALEVEL3_UPG) {

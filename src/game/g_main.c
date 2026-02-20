@@ -60,6 +60,7 @@ vmCvar_t g_maxGameClients;
 vmCvar_t g_dedicated;
 vmCvar_t g_speed;
 vmCvar_t g_gravity;
+vmCvar_t g_infiniteStamina;
 vmCvar_t g_cheats;
 vmCvar_t g_knockback;
 vmCvar_t g_quadfactor;
@@ -339,6 +340,7 @@ static cvarTable_t gameCvarTable[] = {
 
 	{ &g_speed, "g_speed", "320", CVAR_SERVERINFO, 0, qtrue },
 	{ &g_gravity, "g_gravity", "800", CVAR_SERVERINFO, 0, qtrue },
+	{ &g_infiniteStamina, "g_infiniteStamina", "0", CVAR_SERVERINFO, 0, qtrue },
 	{ &g_knockback, "g_knockback", "1000", CVAR_SERVERINFO, 0, qtrue },
 	{ &g_quadfactor, "g_quadfactor", "3", 0, 0, qtrue },
 	{ &g_weaponRespawn, "g_weaponrespawn", "5", 0, 0, qtrue },
